@@ -1,0 +1,31 @@
+(function () {
+  function runSelfTest() {
+    var checks = [];
+    function check(name, fn) {
+      try { fn(); checks.push({ name: name, ok: true }); }
+      catch (error) { checks.push({ name: name, ok: false, detail: error.message || String(error) }); }
+    }
+    check('离线引擎已加载', function () { if (!window.queryPadEngine || !window.queryPadEngine.ready) throw new Error('引擎未加载'); });
+    check('建表与插入', function () { var engine = window.queryPadEngine; engine.execute('CREATE TABLE self_test (id INT, name VARCHAR(20));'); engine.execute("INSERT INTO self_test (id, name) VALUES (1, 'test');"); });
+    check('查询与排序', function () { var result = window.queryPadEngine.execute('SELECT * FROM students ORDER BY score DESC;'); if (!result.values.length || result.values[0][2] < result.values[1][2]) throw new Error('查询结果不正确'); });
+    check('更新与删除', function () { var engine = window.queryPadEngine; engine.execute("UPDATE self_test SET name = 'updated' WHERE id = 1;"); engine.execute('DELETE FROM self_test WHERE id = 1;'); var result = engine.execute('SELECT * FROM self_test;'); if (result.values.length !== 0) throw new Error('删除结果不正确'); });
+    check('多表 JOIN 查询', function () { var result = window.queryPadEngine.execute('SELECT s.name, c.title FROM students s JOIN enrollments e ON s.id = e.student_id JOIN courses c ON c.id = e.course_id;'); if (result.rowCount < 3 || result.columns[0] !== 'name' || result.columns[1] !== 'title' || !result.values.some(function (row) { return row[1] === 'MySQL 基础'; })) throw new Error('JOIN 查询结果不正确'); });
+    check('扩充练习数据集', function () { var engine = window.queryPadEngine; if (engine.table('students').rows.length < 30 || engine.table('courses').rows.length < 15 || engine.table('enrollments').rows.length < 100) throw new Error('练习数据量不足'); });
+    check('无效 WHERE 条件安全拒绝', function () { var engine = window.queryPadEngine; var rows = engine.table('students').rows; var before = rows.map(function (row) { return row.score; }).join(','); var selectRejected = false; var updateRejected = false; var deleteRejected = false; try { engine.execute('SELECT * FROM students WHERE not_a_real_condition;'); } catch (_) { selectRejected = true; } try { engine.execute('UPDATE students SET score = 0 WHERE not_a_real_condition;'); } catch (_) { updateRejected = true; } try { engine.execute('DELETE FROM students WHERE not_a_real_condition;'); } catch (_) { deleteRejected = true; } if (!selectRejected || !updateRejected || !deleteRejected || rows.length < 30 || rows.map(function (row) { return row.score; }).join(',') !== before) throw new Error('无效条件未被安全拒绝，或数据被意外修改'); });
+    check('设计器建表 SQL', function () { var engine = window.queryPadEngine; engine.execute("CREATE TABLE IF NOT EXISTS self_test_ddl (id INT NOT NULL PRIMARY KEY, ref_id INT, CONSTRAINT fk_self_test FOREIGN KEY (ref_id) REFERENCES students (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"); var result = engine.execute('SHOW TABLES;'); if (!result.values.some(function (row) { return row[0] === 'self_test_ddl'; }) || engine.table('self_test_ddl').columns.length !== 2) throw new Error('建表 SQL 执行结果不正确'); });
+    check('ER 图导出', function () { if (typeof window.queryPadErSvg !== 'function') throw new Error('ER 导出模块未加载'); var svg = window.queryPadErSvg(); if (!svg || svg.indexOf('<svg') === -1) throw new Error('SVG 内容为空'); });
+    check('ER 图片识别模块', function () { if (typeof window.queryPadRecognizeEr !== 'function') throw new Error('图片识别模块未加载'); if (typeof window.renderRecognizedEr !== 'function') throw new Error('识别结果渲染器未加载'); var candidate = { entities: [{ name: '识别实体1', fields: [{ name: 'id', type: 'INT', pk: true }], x: 20, y: 20 }], relations: [] }; window.renderRecognizedEr(candidate); if (!document.querySelector('[data-node="识别实体1"]')) throw new Error('识别候选未生成'); });
+    check('ER 自定义实体同步', function () { if (!window.renderErFromSchema || typeof schema === 'undefined') throw new Error('ER 编辑器未加载'); var name = '__self_test_entity'; var original = schema.tables; if (!schema.tables.some(function (table) { return table.name === name; })) schema.tables.push({ name: name, fields: [{ name: 'id', type: 'INT', pk: true }] }); window.renderErFromSchema(); if (!document.querySelector(`[data-node="${name}"]`)) throw new Error('新实体未显示'); schema.tables = original.filter(function (table) { return table.name !== name; }); window.renderErFromSchema(); });
+    check('ER 关系模型', function () { if (!Array.isArray(schema.relations)) throw new Error('关系模型未加载'); var tables = schema.tables.slice(0, 2); if (tables.length < 2) throw new Error('至少需要两个实体'); var relation = { fromTable: tables[0].name, fromColumn: tables[0].fields[0].name, toTable: tables[1].name, toColumn: tables[1].fields[0].name, cardinality: '1:N' }; schema.relations.push(relation); window.renderErFromSchema(); if (!document.querySelector('[data-relation-index]')) throw new Error('关系线未生成'); schema.relations.pop(); window.renderErFromSchema(); });
+    check('项目存储能力', function () { if (!window.localStorage) throw new Error('本地存储不可用'); var key = '__querypad_self_test'; localStorage.setItem(key, 'ok'); if (localStorage.getItem(key) !== 'ok') throw new Error('本地存储读写失败'); localStorage.removeItem(key); });
+    var passed = checks.filter(function (item) { return item.ok; }).length;
+    var failed = checks.length - passed;
+    var detail = checks.map(function (item) { return (item.ok ? '✓ ' : '× ') + item.name + (item.ok ? '' : '：' + item.detail); }).join('\n');
+    var report = document.getElementById('selfTestReport');
+    if (!report) { report = document.createElement('pre'); report.id = 'selfTestReport'; report.style.cssText = 'margin-top:12px;padding:12px;border:1px solid #e5ebf2;border-radius:10px;background:#f8fafc;color:#536881;font:10px/1.6 monospace;white-space:pre-wrap;'; var panel = document.querySelector('#designModal .design-panel'); if (panel) panel.appendChild(report); }
+    if (report) report.textContent = `自检结果：${passed} 项通过，${failed} 项失败\\n\\n${detail}`;
+    if (typeof window.showQueryPadToast === 'function') window.showQueryPadToast(failed ? `自检完成：${passed} 项通过，${failed} 项失败` : `自检完成：${passed} 项全部通过`);
+    return { passed: passed, failed: failed, checks: checks, detail: detail };
+  }
+  window.queryPadSelfTest = runSelfTest;
+})();

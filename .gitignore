@@ -1,0 +1,20 @@
+# Android/Gradle
+.gradle/
+build/
+android/.gradle/
+android/build/
+android/app/build/
+local.properties
+
+# IDE and OS files
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Local exports and temporary files
+*.log
+*.tmp
+exports/
+downloads/

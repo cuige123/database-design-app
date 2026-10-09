@@ -1,0 +1,734 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#f4f7fb" />
+  <meta name="description" content="适用于移动端和网页端的 MySQL 学习工具" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='20' fill='%2316345f'/%3E%3Ctext x='32' y='43' fill='white' font-family='Arial' font-size='30' font-weight='700' text-anchor='middle'%3E%E5%B4%94%3C/text%3E%3C/svg%3E" />
+  <title>崔哥MySQL实验室 · MySQL 练习工具</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --panel: #ffffff;
+      --panel-soft: #f8fafc;
+      --ink: #142338;
+      --muted: #708097;
+      --line: #e5ebf2;
+      --navy: #16345f;
+      --blue: #2d6cdf;
+      --blue-soft: #eaf1ff;
+      --green: #209b69;
+      --green-soft: #e6f8ef;
+      --orange: #f49b44;
+      --shadow: 0 12px 32px rgba(29, 54, 89, .08);
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink); font-family: Manrope, system-ui, sans-serif; }
+    button, textarea { font: inherit; }
+    button { border: 0; cursor: pointer; }
+    .shell { width: min(1160px, 100%); margin: 0 auto; padding: 26px 22px 100px; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
+    .brand { display: flex; align-items: center; gap: 11px; }
+    .mark { display: block; width: 40px; height: 40px; border-radius: 13px; object-fit: cover; object-position: center; box-shadow: 0 8px 16px rgba(22,52,95,.2); }
+    .brand h1 { font-size: 18px; margin: 0; letter-spacing: -.4px; }
+    .brand p { margin: 3px 0 0; color: var(--muted); font-size: 11px; font-weight: 600; }
+    .top-actions { display: flex; gap: 8px; align-items: center; }
+    .icon-btn { width: 38px; height: 38px; border-radius: 12px; background: var(--panel); color: var(--muted); border: 1px solid var(--line); display: grid; place-items: center; font-size: 16px; }
+    .avatar { width: 38px; height: 38px; border-radius: 50%; background: #e7eefb; color: var(--navy); display:grid; place-items:center; font-size: 12px; font-weight: 800; }
+    .connection { background: var(--panel); border: 1px solid var(--line); border-radius: 15px; box-shadow: var(--shadow); padding: 11px 14px; display:flex; justify-content:space-between; align-items:center; gap: 12px; margin-bottom: 16px; }
+    .connection-left { display:flex; align-items:center; gap: 10px; min-width: 0; }
+    .pulse { width: 9px; height: 9px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 4px var(--green-soft); flex: 0 0 auto; }
+    .connection strong { display:block; font-size: 12px; }
+    .connection span { display:block; font-size: 11px; color: var(--muted); white-space: nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .connection .switch { color: var(--blue); background: var(--blue-soft); padding: 8px 11px; border-radius: 9px; font-size: 11px; font-weight: 800; flex:0 0 auto; }
+    .layout { display: grid; grid-template-columns: 280px minmax(0,1fr); gap: 18px; }
+    .sidebar { display:flex; flex-direction:column; gap: 14px; }
+    .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .side-card { padding: 16px; }
+    .side-title { display:flex; justify-content:space-between; align-items:center; margin-bottom: 13px; }
+    .side-title h2 { font-size: 12px; margin: 0; letter-spacing: .2px; }
+    .side-title button { color: var(--blue); background: none; font-size: 16px; }
+    .db-row { display:flex; gap: 9px; align-items:center; padding: 9px 7px; border-radius: 10px; color: var(--muted); font-size: 12px; cursor:pointer; }
+    .db-row.active { color: var(--navy); background: #f1f5fc; font-weight: 800; }
+    .db-row .db-icon { color: #59739d; width: 17px; }
+    .table-list { padding-left: 25px; }
+    .table-row { display:flex; justify-content:space-between; align-items:center; padding: 8px 4px; color: var(--muted); font-size: 11px; cursor:pointer; }
+    .table-row:hover { color: var(--blue); }
+    .table-row em { font-style: normal; color: #a5b2c3; font-family: 'DM Mono', monospace; font-size: 10px; }
+    .history-item { border-top: 1px solid var(--line); padding: 12px 0 2px; cursor:pointer; }
+    .history-item:first-of-type { border-top:0; padding-top:0; }
+    .history-item code { font-family: 'DM Mono', monospace; color: #4d6688; font-size: 10px; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .history-item span { color: #a0acbb; font-size: 10px; display:block; margin-top: 5px; }
+    .main { min-width: 0; }
+    .workspace-head { display:flex; align-items:flex-start; justify-content:space-between; gap: 14px; margin-bottom: 13px; }
+    .workspace-head h2 { font-size: 21px; letter-spacing: -.7px; margin: 0; }
+    .workspace-head p { font-size: 11px; color: var(--muted); margin: 5px 0 0; }
+    .head-actions { display:flex; align-items:center; gap:7px; }
+    .lesson-select, .schema-toggle { border: 1px solid var(--line); background: var(--panel); border-radius: 11px; padding: 9px 10px; color: var(--muted); font-size: 11px; white-space:nowrap; }
+    .schema-toggle { color: var(--blue); background: var(--blue-soft); border-color:#d6e3ff; font-weight:800; }
+    .challenge { margin: 0 0 14px; padding: 14px 16px; border: 1px solid #dbe7fb; background: linear-gradient(135deg,#f5f8ff,#fff); border-radius: 15px; display:flex; align-items:center; justify-content:space-between; gap: 14px; }
+    .challenge-copy { min-width:0; }
+    .challenge-kicker { color:var(--blue); font-size:10px; font-weight:800; margin-bottom:5px; }
+    .challenge h3 { margin:0; font-size:13px; }
+    .challenge p { margin:5px 0 0; color:var(--muted); font-size:10px; line-height:1.5; }
+    .challenge-progress { display:flex; align-items:center; gap:8px; flex:0 0 auto; }
+    .progress-ring { width:38px; height:38px; border-radius:50%; background:conic-gradient(var(--blue) 25%, #e8eef8 0); display:grid; place-items:center; position:relative; }
+    .progress-ring::after { content:""; position:absolute; inset:5px; background:#f8faff; border-radius:50%; }
+    .progress-ring span { position:relative; z-index:1; color:var(--blue); font-size:10px; font-weight:800; }
+    .challenge.done { border-color:#bfead4; background:linear-gradient(135deg,#f2fcf7,#fff); }
+    .challenge.done .challenge-kicker, .challenge.done .progress-ring span { color:var(--green); }
+    .challenge.done .progress-ring { background:conic-gradient(var(--green) 100%, #e8f5ee 0); }
+    .challenge-progress { flex-wrap:wrap; justify-content:flex-end; }
+    .exercise-nav { display:flex; gap:5px; }
+    .exercise-nav button { padding:6px 8px; border:1px solid #dbe7fb; border-radius:8px; color:var(--blue); background:#fff; font-size:9px; white-space:nowrap; }
+    .exercise-modal { position:fixed; inset:0; z-index:9; display:flex; align-items:center; justify-content:center; padding:20px; background:rgba(12,28,45,.42); opacity:0; pointer-events:none; transition:opacity .2s ease; }
+    .exercise-modal.open { opacity:1; pointer-events:auto; }
+    .exercise-panel { width:min(680px,100%); max-height:90vh; overflow:auto; background:var(--panel); border:1px solid var(--line); border-radius:18px; box-shadow:0 24px 70px rgba(18,35,56,.25); }
+    .exercise-head { position:sticky; top:0; z-index:1; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:15px 17px; border-bottom:1px solid var(--line); background:rgba(255,255,255,.96); }
+    .exercise-head h2 { margin:0; font-size:16px; }
+    .exercise-head p { margin:4px 0 0; color:var(--muted); font-size:10px; }
+    .exercise-close { width:32px; height:32px; flex:0 0 auto; border-radius:9px; background:var(--panel-soft); color:var(--muted); font-size:20px; }
+    .exercise-list { display:grid; gap:7px; padding:12px; }
+    .exercise-option { display:flex; align-items:center; gap:10px; width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:#fff; text-align:left; }
+    .exercise-option:hover, .exercise-option[aria-current="true"] { border-color:#cbdcff; background:var(--blue-soft); }
+    .exercise-number { display:grid; place-items:center; width:27px; height:27px; flex:0 0 auto; border-radius:8px; color:var(--blue); background:#f1f5fc; font-size:10px; font-weight:800; }
+    .exercise-option-copy { min-width:0; flex:1; }
+    .exercise-option-copy strong { display:block; color:var(--ink); font-size:11px; }
+    .exercise-option-copy small { display:block; margin-top:3px; color:var(--muted); font-size:9px; }
+    .exercise-complete { color:var(--green); font-size:10px; font-weight:800; }
+    .editor-card { overflow:hidden; }
+    .editor-toolbar { padding: 11px 14px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--line); }
+    .file-label { color: var(--muted); font-size: 11px; display:flex; gap:7px; align-items:center; }
+    .sql-dot { width: 7px; height: 7px; background:#4b9af5; border-radius: 50%; }
+    .toolbar-actions { display:flex; gap: 5px; }
+    .tool { background: var(--panel-soft); border:1px solid var(--line); border-radius: 8px; padding: 6px 8px; color:var(--muted); font-size: 10px; }
+    .editor-wrap { position:relative; background:#0f1c2e; min-height: 216px; }
+    textarea { width:100%; min-height:216px; resize:vertical; display:block; border:0; outline:0; padding: 18px 17px 55px; color:#d9e8ff; background:transparent; font: 13px/1.75 'DM Mono', monospace; tab-size:2; }
+    textarea::selection { background:#2c5c9e; }
+    .editor-footer { position:absolute; left:0; right:0; bottom:0; padding: 10px 12px; display:flex; align-items:center; justify-content:space-between; background:linear-gradient(0deg,#0f1c2e 68%,transparent); }
+    .editor-footer span { color:#8497b5; font: 10px 'DM Mono', monospace; }
+    .run-btn { background:#34c58b; color:#063c29; padding: 9px 15px; border-radius:9px; font-size:11px; font-weight:800; display:flex; align-items:center; gap: 7px; box-shadow: 0 5px 15px rgba(52,197,139,.2); }
+    .run-btn.running { opacity:.7; }
+    .examples { display:flex; gap: 7px; overflow:auto; padding: 13px 0 2px; scrollbar-width:none; }
+    .examples::-webkit-scrollbar { display:none; }
+    .chip { white-space:nowrap; background:var(--panel); border:1px solid var(--line); color:var(--muted); border-radius: 99px; padding: 8px 11px; font-size:10px; }
+    .chip.active { background:var(--blue-soft); border-color:#d6e3ff; color:var(--blue); font-weight:800; }
+    .result-card { margin-top: 16px; overflow:hidden; }
+    .result-head { display:flex; align-items:center; justify-content:space-between; gap: 10px; padding: 15px 16px 12px; }
+    .result-title { display:flex; align-items:center; gap: 9px; }
+    .result-title h3 { margin:0; font-size:13px; }
+    .success { color:var(--green); background:var(--green-soft); border-radius:99px; padding:4px 7px; font-size:9px; font-weight:800; }
+    .result-meta { color:var(--muted); font-size:10px; }
+    .table-scroll { overflow:auto; border-top:1px solid var(--line); }
+    table { border-collapse:collapse; width:100%; min-width:540px; font-size:11px; }
+    th { background:#f8fafc; color:#7c8da4; font-size:10px; text-align:left; padding:10px 15px; font-weight:800; white-space:nowrap; }
+    td { padding:11px 15px; border-top:1px solid #edf1f6; color:#42536b; white-space:nowrap; }
+    td:first-child { color:#a0afc0; font-family:'DM Mono',monospace; }
+    .null { color:#b6c1ce; font-style:italic; }
+    .result-foot { padding:11px 15px; color:var(--muted); font-size:10px; display:flex; justify-content:space-between; }
+    .mobile-nav { display:none; }
+    .er-modal { position:fixed; inset:0; z-index:8; display:flex; align-items:center; justify-content:center; padding:20px; background:rgba(12,28,45,.36); opacity:0; pointer-events:none; transition:opacity .2s ease; }
+    .er-modal.open { opacity:1; pointer-events:auto; }
+    .er-panel { width:min(980px, 100%); height:min(700px, 92vh); display:flex; flex-direction:column; overflow:hidden; background:var(--panel); border:1px solid var(--line); border-radius:20px; box-shadow:0 24px 70px rgba(18,35,56,.25); transform:translateY(12px); transition:transform .2s ease; }
+    .er-modal.open .er-panel { transform:translateY(0); }
+    .er-head { position:relative; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px 60px 16px 18px; border-bottom:1px solid var(--line); }
+    .er-head h2 { margin:0; font-size:17px; letter-spacing:-.4px; }
+    .er-head p { margin:4px 0 0; color:var(--muted); font-size:10px; }
+    .er-actions { display:flex; align-items:center; gap:6px; }
+    .er-action { padding:8px 10px; border-radius:9px; border:1px solid var(--line); background:var(--panel-soft); color:var(--muted); font-size:10px; white-space:nowrap; }
+    .er-action.primary { background:var(--blue); border-color:var(--blue); color:#fff; font-weight:800; }
+    .er-close { position:absolute; top:50%; right:16px; display:grid; place-items:center; width:32px; height:32px; padding:0; border:1px solid var(--line); border-radius:9px; background:var(--panel-soft); color:var(--muted); font-size:21px; line-height:1; transform:translateY(-50%); cursor:pointer; }
+    .er-close:hover { background:var(--blue-soft); color:var(--blue); }
+    .er-body { display:flex; flex:1; min-height:0; }
+    .er-side { width:190px; padding:15px; border-right:1px solid var(--line); background:#fbfcfe; }
+    .er-side h3 { margin:0 0 5px; font-size:11px; }
+    .er-side p { margin:0 0 12px; color:var(--muted); font-size:10px; line-height:1.5; }
+    .er-legend { display:flex; align-items:center; gap:7px; color:var(--muted); font-size:10px; margin:9px 0; }
+    .legend-line { width:22px; height:0; border-top:1px solid #6b8bb7; position:relative; }
+    .legend-line::after { content:'1:N'; position:absolute; top:-8px; left:25px; color:#8da0b7; font:9px 'DM Mono',monospace; }
+    .legend-key { width:9px; height:9px; border-radius:2px; background:#f5b851; }
+    .er-canvas-wrap { position:relative; display:flex; align-items:center; justify-content:center; flex:1; min-width:0; min-height:0; overflow:auto; padding:76px 12px 12px; box-sizing:border-box; background:#f7f9fc; }
+    .er-canvas { position:relative; flex:0 0 760px; width:760px; height:510px; min-width:760px; min-height:510px; margin:auto; background-image:radial-gradient(#d9e2ee 1px, transparent 1px); background-size:18px 18px; }
+    .er-lines { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+    .er-line { stroke:#7790b0; stroke-width:1.5; fill:none; }
+    .er-line-label { fill:#7890ac; font:11px 'DM Mono',monospace; }
+    .er-node { position:absolute; width:178px; border:1px solid #c9d8eb; border-radius:10px; background:#fff; box-shadow:0 8px 18px rgba(48,76,111,.10); cursor:grab; user-select:none; touch-action:none; overflow:hidden; }
+    .er-node:active { cursor:grabbing; box-shadow:0 12px 24px rgba(48,76,111,.18); }
+    .er-node-head { display:flex; align-items:center; justify-content:space-between; padding:9px 10px; background:#eaf1ff; color:#315a9b; font-size:12px; font-weight:800; }
+    .er-node-head span { color:#8fa3bd; font:9px 'DM Mono',monospace; }
+    .er-field { display:flex; align-items:center; gap:7px; padding:7px 10px; border-top:1px solid #edf1f6; color:#536881; font:10px 'DM Mono',monospace; }
+    .er-field em { margin-left:auto; color:#a1afbf; font-style:normal; font-size:9px; }
+    .er-key { color:#e7a630; font-size:10px; }
+    .er-fk { color:#6b91ce; font-size:10px; }
+    .er-note { margin-top:13px; padding:10px; border-radius:9px; background:#fff7e8; color:#8b6c36; font-size:10px; line-height:1.5; }
+    .er-file { display:none; }
+    .design-modal { position:fixed; inset:0; z-index:8; display:flex; align-items:center; justify-content:center; padding:20px; background:rgba(12,28,45,.36); opacity:0; pointer-events:none; transition:opacity .2s ease; }
+    .design-modal.open { opacity:1; pointer-events:auto; }
+    .design-panel { width:min(860px, 100%); max-height:92vh; overflow:auto; background:var(--panel); border:1px solid var(--line); border-radius:20px; box-shadow:0 24px 70px rgba(18,35,56,.25); padding:18px; }
+    .design-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:14px; }
+    .design-head h2 { margin:0; font-size:17px; }
+    .design-head p { margin:4px 0 0; color:var(--muted); font-size:10px; }
+    .design-close { width:32px; height:32px; border-radius:9px; background:var(--panel-soft); color:var(--muted); font-size:18px; }
+    .design-toolbar { display:flex; gap:7px; flex-wrap:wrap; margin-bottom:13px; }
+    .design-tool { padding:8px 10px; border-radius:9px; border:1px solid var(--line); background:var(--panel-soft); color:var(--muted); font-size:10px; }
+    .design-tool.primary { color:#fff; background:var(--blue); border-color:var(--blue); font-weight:800; }
+    .table-picker { display:flex; gap:6px; overflow:auto; margin-bottom:12px; }
+    .table-tab { white-space:nowrap; border:1px solid var(--line); border-radius:99px; background:#fff; color:var(--muted); padding:8px 11px; font-size:10px; }
+    .table-tab.active { color:var(--blue); background:var(--blue-soft); border-color:#d6e3ff; font-weight:800; }
+    .field-editor { border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+    .field-row { display:grid; grid-template-columns:1.1fr .8fr .55fr .55fr 28px; align-items:center; gap:6px; padding:8px 10px; border-top:1px solid #edf1f6; }
+    .field-row:first-child { border-top:0; background:#f8fafc; color:#7c8da4; font-size:10px; font-weight:800; }
+    .field-row input, .field-row select { min-width:0; width:100%; border:1px solid var(--line); border-radius:7px; padding:7px 7px; color:var(--ink); background:#fff; font-size:10px; }
+    .field-row .field-length { max-width:62px; }
+    .field-row .field-default { grid-column:1 / span 2; }
+    .field-row .field-comment { grid-column:3 / span 2; }
+    .relation-editor { margin-top:13px; border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+    .relation-head { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 12px; background:#f8fafc; }
+    .relation-head strong { font-size:11px; }
+    .relation-head button { border:1px solid var(--line); background:#fff; color:var(--blue); border-radius:7px; padding:6px 8px; font-size:9px; }
+    .relation-editor-hint { margin:0; padding:8px 12px; color:var(--muted); background:#fbfcfe; font-size:9px; line-height:1.5; }
+    .relation-row { display:grid; grid-template-columns:1fr .65fr 1fr .6fr .85fr 25px; align-items:center; gap:6px; padding:8px 10px; border-top:1px solid #edf1f6; }
+    .relation-row select { min-width:0; width:100%; border:1px solid var(--line); border-radius:7px; padding:7px; color:var(--ink); background:#fff; font-size:9px; }
+    .relation-row input[data-relation-custom] { min-width:0; width:100%; box-sizing:border-box; border:1px solid var(--line); border-radius:7px; padding:7px; color:var(--ink); background:#fff; font-size:9px; }
+    .relation-row input[data-relation-custom][hidden] { display:none; }
+    .engine-panel { margin-top:13px; padding:12px; border:1px solid #d9e5f7; border-radius:12px; background:#f8fbff; }
+    .engine-panel-head { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .engine-panel strong { font-size:11px; }
+    .engine-panel p { color:var(--muted); font-size:10px; line-height:1.5; margin:7px 0 0; }
+    .engine-switch { display:flex; align-items:center; gap:6px; color:var(--blue); font-size:9px; font-weight:800; }
+    .engine-switch input { accent-color:var(--blue); }
+    .field-row input[type="checkbox"] { width:15px; height:15px; accent-color:var(--blue); justify-self:center; }
+    .remove-field { width:26px; height:26px; border-radius:7px; background:#fff1ee; color:#c56b53; font-size:14px; }
+    .sql-preview { margin-top:13px; }
+    .sql-preview label { display:block; margin-bottom:6px; color:var(--muted); font-size:10px; font-weight:800; }
+    .sql-preview pre { margin:0; max-height:150px; overflow:auto; border-radius:10px; background:#0f1c2e; color:#d9e8ff; padding:12px; font:11px/1.6 'DM Mono',monospace; white-space:pre-wrap; }
+    .design-foot { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:12px; color:var(--muted); font-size:10px; }
+    .engine-status { display:inline-flex; align-items:center; gap:5px; color:var(--green); background:var(--green-soft); border-radius:99px; padding:5px 8px; font-size:9px; font-weight:800; }
+    .engine-status i { width:6px; height:6px; border-radius:50%; background:var(--green); }
+    .project-actions { display:flex; gap:6px; }
+    .project-actions button { border:1px solid var(--line); background:var(--panel); color:var(--muted); border-radius:8px; padding:6px 8px; font-size:9px; }
+    .project-list { display:grid; gap:8px; margin: 8px 0 15px; }
+    .project-item { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px; border:1px solid var(--line); background:#fff; border-radius:11px; cursor:pointer; text-align:left; }
+    .project-item.active { background:var(--blue-soft); border-color:#cbdcff; }
+    .project-item strong { display:block; font-size:12px; }
+    .project-item span { display:block; margin-top:4px; color:var(--muted); font-size:10px; }
+    .project-check { color:var(--blue); font-size:14px; }
+    .project-new { display:flex; gap:7px; padding-top:12px; border-top:1px solid var(--line); }
+    .project-new input { min-width:0; flex:1; border:1px solid var(--line); border-radius:9px; padding:9px 10px; font-size:11px; color:var(--ink); }
+    .project-new button { border-radius:9px; padding:9px 11px; color:#fff; background:var(--blue); font-size:10px; font-weight:800; }
+    .toast { position:fixed; left:50%; bottom:22px; transform:translate(-50%, 20px); opacity:0; pointer-events:none; background:#17283f; color:white; border-radius:10px; padding:10px 14px; font-size:11px; transition:all .22s ease; z-index:10; box-shadow:var(--shadow); }
+    .toast.show { opacity:1; transform:translate(-50%,0); }
+    .help-modal { position:fixed; inset:0; z-index:9; display:flex; align-items:center; justify-content:center; padding:20px; background:rgba(12,28,45,.42); opacity:0; pointer-events:none; transition:opacity .2s ease; }
+    .help-modal.open { opacity:1; pointer-events:auto; }
+    .help-panel { width:min(820px,100%); max-height:92vh; overflow:auto; background:var(--panel); border:1px solid var(--line); border-radius:18px; box-shadow:0 24px 70px rgba(18,35,56,.25); transform:translateY(10px); transition:transform .2s ease; }
+    .help-modal.open .help-panel { transform:translateY(0); }
+    .help-head { position:sticky; top:0; z-index:1; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px 18px; border-bottom:1px solid var(--line); background:rgba(255,255,255,.96); backdrop-filter:blur(10px); }
+    .help-head h2 { margin:0; font-size:17px; }
+    .help-head p { margin:4px 0 0; color:var(--muted); font-size:10px; }
+    .help-close { width:32px; height:32px; flex:0 0 auto; border-radius:9px; background:var(--panel-soft); color:var(--muted); font-size:20px; }
+    .help-content { padding:16px 18px 20px; }
+    .help-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+    .help-section { padding:13px; border:1px solid var(--line); border-radius:12px; background:#fff; }
+    .help-section h3 { margin:0 0 7px; font-size:12px; color:var(--navy); }
+    .help-section p, .help-section li { color:var(--muted); font-size:10px; line-height:1.65; }
+    .help-section p { margin:0; }
+    .help-section ul { margin:0; padding-left:17px; }
+    .help-section li + li { margin-top:3px; }
+    .help-callout { margin-top:12px; padding:12px 13px; border:1px solid #f0dfb8; border-radius:11px; background:#fff9ed; color:#806632; font-size:10px; line-height:1.65; }
+    @media (max-width:740px) {
+      .help-modal { padding:8px; }
+      .help-panel { max-height:calc(100vh - 16px); border-radius:15px; }
+      .help-head { padding:13px; }
+      .help-content { padding:12px; }
+      .help-grid { grid-template-columns:1fr; gap:8px; }
+    }
+    .drawer-backdrop { position:fixed; inset:0; background:rgba(18,35,56,.25); opacity:0; pointer-events:none; transition:opacity .2s; z-index:5; }
+    .schema-drawer { position:fixed; z-index:6; top:0; right:0; bottom:0; width:min(360px, 92vw); background:var(--panel); box-shadow:-12px 0 35px rgba(22,52,95,.16); transform:translateX(100%); transition:transform .24s ease; padding:20px; overflow:auto; }
+    .drawer-open .drawer-backdrop { opacity:1; pointer-events:auto; }
+    .drawer-open .schema-drawer { transform:translateX(0); }
+    .drawer-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+    .drawer-head h2 { font-size:17px; margin:0; }
+    .drawer-close { width:32px; height:32px; border-radius:9px; background:var(--panel-soft); color:var(--muted); font-size:18px; }
+    .drawer-sub { color:var(--muted); font-size:10px; margin:0 0 15px; }
+    .database-tabs { display:flex; gap:6px; padding:3px; margin-bottom:14px; border-radius:10px; background:var(--panel-soft); }
+    .database-tab { flex:1; border-radius:8px; padding:8px; background:transparent; color:var(--muted); font-size:10px; }
+    .database-tab.active { background:#fff; color:var(--blue); font-weight:800; box-shadow:0 2px 7px rgba(22,52,95,.08); }
+    .schema-block { border:1px solid var(--line); border-radius:12px; overflow:hidden; margin-bottom:10px; }
+    .schema-block-head { display:flex; align-items:center; justify-content:space-between; padding:11px 12px; background:#f8fafc; font-size:12px; font-weight:800; }
+    .schema-block-head button { color:var(--blue); background:none; font-size:10px; }
+    .schema-field { display:flex; justify-content:space-between; gap:8px; padding:9px 12px; border-top:1px solid #edf1f6; font:10px 'DM Mono',monospace; color:#50627a; }
+    .schema-field em { color:#a0afc0; font-style:normal; }
+    .error-cell { color:#b95b22!important; background:#fff8f1; font-family:Manrope,sans-serif!important; white-space:normal!important; }
+    @media (max-width: 740px) {
+      .shell { padding: 17px 14px 88px; }
+      .topbar { margin-bottom: 15px; }
+      .layout { display:block; }
+      .sidebar { display:none; }
+      .workspace-head { margin-top: 17px; align-items:center; }
+      .workspace-head h2 { font-size:19px; }
+      .workspace-head p { margin-top:4px; font-size:10px; }
+      .head-actions { gap:5px; }
+      .lesson-select, .schema-toggle { font-size:10px; padding:8px 8px; }
+      .schema-toggle { font-size:0; width:34px; height:34px; display:grid; place-items:center; }
+      .schema-toggle::before { content:'▦'; font-size:15px; }
+      #erBtn::before { content:'◇'; }
+      #projectBtnTop::before { content:'▤'; }
+      .challenge { padding:12px 13px; }
+      .challenge p { max-width:220px; }
+      .challenge-progress { gap:5px; }
+      .exercise-nav { width:100%; justify-content:flex-end; }
+      .exercise-modal { padding:8px; }
+      .exercise-panel { max-height:calc(100vh - 16px); border-radius:15px; }
+      .connection { margin-bottom: 13px; }
+      .editor-card { border-radius:15px; }
+      textarea { min-height: 200px; font-size:12px; padding:15px 14px 53px; }
+      .editor-wrap { min-height:200px; }
+      .tool { padding:6px 7px; }
+      .result-card { border-radius:15px; margin-top:14px; }
+      .mobile-nav { display:flex; position:fixed; z-index:2; left:8px; right:8px; bottom:10px; height:62px; background:rgba(255,255,255,.94); backdrop-filter:blur(12px); border:1px solid var(--line); border-radius:18px; box-shadow:0 12px 32px rgba(29,54,89,.16); justify-content:space-around; align-items:center; }
+      .nav-item { color:#99a7b8; font-size:10px; text-align:center; display:flex; flex-direction:column; gap:4px; align-items:center; }
+      .nav-item strong { font-size:16px; line-height:1; font-weight:500; }
+      .nav-item.active { color:var(--blue); font-weight:800; }
+      .nav-run { width:43px; height:43px; border-radius:50%; background:var(--navy); color:#fff; display:grid; place-items:center; font-size:17px; margin-top:-22px; border:5px solid var(--bg); }
+      .er-modal { padding:8px; }
+      .er-panel { height:calc(100vh - 16px); border-radius:16px; }
+      .er-head { align-items:flex-start; padding:13px 52px 13px 13px; }
+      .er-head p { display:none; }
+      .er-actions { max-width:60vw; overflow-x:auto; padding-bottom:2px; }
+      .er-close { top:13px; right:13px; transform:none; }
+      .er-action { padding:7px 8px; font-size:9px; }
+      .er-side { width:145px; padding:12px; flex:0 0 145px; }
+      .er-canvas-wrap { justify-content:flex-start; }
+      .er-canvas { flex-basis:700px; width:700px; height:500px; min-width:700px; min-height:500px; }
+      .design-modal { padding:8px; }
+      .design-panel { max-height:calc(100vh - 16px); border-radius:16px; padding:13px; }
+      .field-row { grid-template-columns:1fr .75fr .45fr 28px; }
+      .field-row .field-nullable { display:none; }
+      .field-row .field-length { display:none; }
+      .field-row .field-default, .field-row .field-comment { grid-column:auto; }
+      .relation-row { grid-template-columns:1fr .55fr 1fr .6fr .8fr 25px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand"><img class="mark" src="brand-logo.jpg" alt="崔哥MySQL实验室标识"><div><h1>崔哥MySQL实验室</h1><p>移动端＋网页端MySQL</p></div></div>
+      <div class="top-actions"><button class="icon-btn" id="helpBtn" aria-label="帮助">?</button></div>
+    </header>
+
+    <section class="connection"><div class="connection-left"><i class="pulse"></i><div><strong>本地演示环境 · MySQL 8.0</strong><span>training-db / student_workspace · 不连接真实数据库</span></div></div><button class="switch" id="switchBtn">切换环境</button></section>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="card side-card"><div class="side-title"><h2>数据库</h2><button id="refreshBtn" aria-label="刷新">↻</button></div><div class="db-row active"><span class="db-icon">▣</span><span>student_workspace</span></div><div class="table-list"><div class="table-row" data-insert="students"><span>▦ students</span><em>4 列</em></div><div class="table-row" data-insert="courses"><span>▦ courses</span><em>3 列</em></div><div class="table-row" data-insert="enrollments"><span>▦ enrollments</span><em>4 列</em></div></div></div>
+        <div class="card side-card"><div class="side-title"><h2>最近运行</h2><button id="clearHistory" aria-label="清空历史">⌫</button></div><div id="history"><div class="history-item" data-query="SELECT name, score FROM students ORDER BY score DESC;"><code>SELECT name, score FROM students...</code><span>刚刚 · 4 行</span></div><div class="history-item" data-query="SELECT * FROM courses;"><code>SELECT * FROM courses;</code><span>今天 · 3 行</span></div></div></div>
+      </aside>
+
+      <main class="main">
+        <div class="workspace-head"><div><h2>SQL 工作台</h2><p>输入语句，运行后查看结果</p></div><div class="head-actions"><button class="schema-toggle" id="projectBtnTop">项目</button><button class="schema-toggle" id="erBtn">ER 图</button><button class="schema-toggle" id="designBtn">设计表</button><button class="schema-toggle" id="schemaBtn">表结构</button><button class="lesson-select" id="lessonBtn">第 02 题 · 查询排序⌄</button></div></div>
+        <section class="challenge" id="challenge"><div class="challenge-copy"><div class="challenge-kicker" id="challengeKicker">当前练习 · 02 / 12</div><h3 id="challengeTitle">找出成绩最高的 4 位同学</h3><p id="challengeText">查询 students 表，返回姓名和成绩，并按成绩从高到低排列。</p></div><div class="challenge-progress"><div class="progress-ring"><span id="progressText">02/12</span></div><div class="exercise-nav"><button id="previousExercise" type="button">← 上一题</button><button id="nextExercise" type="button">下一题 →</button></div></div></section>
+        <section class="card editor-card">
+          <div class="editor-toolbar"><span class="file-label"><i class="sql-dot"></i> untitled.sql</span><div class="toolbar-actions"><button class="tool" id="formatBtn">格式化</button><button class="tool" id="clearBtn">清空</button></div></div>
+          <div class="editor-wrap"><textarea id="sqlEditor" spellcheck="false">SELECT name, score
+FROM students
+ORDER BY score DESC;</textarea><div class="editor-footer"><span id="cursorPos">Ln 1, Col 1</span><button class="run-btn" id="runBtn"><span>▶</span> 运行 SQL</button></div></div>
+        </section>
+        <div class="examples"><button class="chip active" data-query="SELECT name, score\nFROM students\nORDER BY score DESC;">查询并排序</button><button class="chip" data-query="SELECT major, COUNT(*) AS total\nFROM students\nGROUP BY major;">分组统计</button><button class="chip" data-query="SELECT s.name, c.title\nFROM students s\nJOIN enrollments e ON s.id = e.student_id\nJOIN courses c ON c.id = e.course_id;">多表连接</button></div>
+
+        <section class="card result-card"><div class="result-head"><div class="result-title"><h3>运行结果</h3><span class="success" id="statusLabel">执行成功</span></div><span class="result-meta" id="resultMeta">4 行 · 12 ms</span></div><div class="table-scroll"><table id="resultTable"><thead><tr><th>#</th><th>name</th><th>score</th><th>major</th></tr></thead><tbody><tr><td>01</td><td>陈思远</td><td>96</td><td>计算机科学</td></tr><tr><td>02</td><td>林晓雨</td><td>92</td><td>软件工程</td></tr><tr><td>03</td><td>周子航</td><td>88</td><td>计算机科学</td></tr><tr><td>04</td><td>赵可欣</td><td>85</td><td>数据科学</td></tr></tbody></table></div><div class="result-foot"><span id="resultFoot">结果已保存到本次练习</span><span>MySQL 兼容模式</span></div></section>
+      </main>
+    </div>
+  </div>
+  <nav class="mobile-nav"><button class="nav-item active" id="workbenchNav"><strong>⌘</strong><span>工作台</span></button><button class="nav-item" id="databaseNav"><strong>▦</strong><span>数据库</span></button><button class="nav-item" id="erNav"><strong>◇</strong><span>ER 图</span></button><button class="nav-item" id="projectNav"><strong>▤</strong><span>项目</span></button><button class="nav-item" id="practiceNav"><strong>✓</strong><span>练习</span></button><button class="nav-item" id="toolsNav"><strong>⚒</strong><span>工具</span></button></nav>
+  <div class="toast" id="toast"></div>
+  <section class="exercise-modal" id="exerciseModal" aria-hidden="true"><div class="exercise-panel" role="dialog" aria-modal="true" aria-labelledby="exercisePickerTitle"><div class="exercise-head"><div><h2 id="exercisePickerTitle">选择数据库练习题</h2><p>共 50 题；练习数据含 30 名学生、16 门课程和 123 条选课记录</p></div><button class="exercise-close" id="exerciseClose" type="button" aria-label="关闭题目列表">×</button></div><div class="exercise-list" id="exerciseList"></div></div></section>
+  <section class="help-modal" id="helpModal" aria-hidden="true"><div class="help-panel" role="dialog" aria-modal="true" aria-labelledby="helpTitle" aria-describedby="helpIntro"><div class="help-head"><div><h2 id="helpTitle">功能帮助</h2><p id="helpIntro">崔哥MySQL实验室 · 移动端与网页端 MySQL 学习工具</p></div><button class="help-close" id="helpClose" type="button" aria-label="关闭帮助">×</button></div><div class="help-content"><div class="help-grid">
+    <section class="help-section"><h3>SQL 工作台</h3><ul><li>在编辑区输入 SQL，点击“运行 SQL”查看结果和错误提示。</li><li>“格式化”整理常见 SQL 子句；“清空”清除编辑区。</li><li>下方示例按钮可快速载入排序、分组统计和多表连接示例。</li><li>左侧数据库表名可载入该表的查询模板；“最近运行”可点选历史语句或清空历史。</li></ul></section>
+    <section class="help-section"><h3>查看数据库与表结构</h3><ul><li>左侧列出当前练习数据库及 students、courses、enrollments 示例表。</li><li>点击顶部“表结构”打开侧栏；切换表结构/ER 图视图，点字段可插入到 SQL 编辑区。</li><li>数据库侧栏可直接打开数据表设计器或 ER 图画布。</li><li>表结构刷新按钮目前只提示状态，不会连接外部数据库。</li></ul></section>
+    <section class="help-section"><h3>表结构设计器</h3><ul><li>“设计表”可新建数据表和字段，并编辑字段名、类型、长度、主键、NULL、默认值及备注。</li><li>可维护表关系/外键和关系类型；设计器会生成建表 SQL。</li><li>可复制 SQL、在本地轻量引擎中试运行、导出数据字典，并运行基础范式检查。</li><li>“运行自检”可检查页面内置功能状态。</li></ul></section>
+    <section class="help-section"><h3>ER 图设计器</h3><ul><li>拖动实体可调整位置；点画布空白处或“新建实体”可添加实体。</li><li>实体标题处的连接操作可进入关系连接模式；点击关系线选中后可删除。</li><li>可在实体上添加/删除字段、自动布局，并收起或展开左侧说明。</li><li>关系支持 1:1、1:N、N:1、N:N 和自定义标注；多对多建表建议使用中间表。</li><li>可将 ER 图导出为 PNG 或 SVG。</li></ul></section>
+    <section class="help-section"><h3>导入图片与识别</h3><p>在 ER 图设计器中选择“导入图片 / OCR”。普通浏览器当前只检测版面候选框，不识别图片中的文字或关系；生成的实体候选需要人工核对。Android 环境可调用本地 OCR，但识别结果也建议复核。</p></section>
+    <section class="help-section"><h3>项目与本地数据</h3><ul><li>“项目”可创建并切换项目；每个项目的表结构和 ER 布局保存在本机浏览器。</li><li>SQL 编辑内容和最近运行记录也保存在本机，但不随项目分别保存。</li><li>表设计器可导入/导出项目 JSON；项目窗口可导出当前项目。数据不会自动同步到其他设备，也没有连接服务器。</li></ul></section>
+    <section class="help-section"><h3>手机与网页端操作</h3><p>页面会根据屏幕宽度调整布局。手机底部导航可快速进入工作台、数据库、ER 图、项目、练习和工具入口；ER 图画布较宽时可在画布内滚动。网页端可直接使用顶部的项目、ER 图、设计表和表结构入口。</p></section>
+    <section class="help-section"><h3>练习、环境与其他按钮</h3><ul><li>题目按钮可打开题库；选择题目后会显示要求并载入参考查询，上一题/下一题可切换题目。</li><li>提交 SQL 后会按当前题目要求检查查询结构和结果；已完成题目会保存在本机。示例查询按钮也可载入 SQL。</li><li>“切换环境”目前只显示当前为练习环境；页面不会连接真实 MySQL。</li><li>帮助按钮显示本功能说明；底部导航中的练习入口打开题库，工具入口打开表设计器。</li></ul></section>
+  </div><div class="help-callout"><strong>重要限制：</strong>离线引擎是教学用轻量兼容层，支持基础 CREATE TABLE、INSERT、SELECT、WHERE、INNER JOIN、GROUP BY / COUNT、ORDER BY、LIMIT、UPDATE、DELETE 以及 SHOW TABLES / DESCRIBE 等常见操作；不等于完整 MySQL，暂不支持 LEFT/RIGHT/FULL/CROSS JOIN 等部分语法。运行结果只来自本地示例/练习数据。</div></div></div></section>
+  <section class="er-modal" id="erModal" aria-hidden="true"><div class="er-panel"><div class="er-head"><div><h2>ER 图设计器</h2><p>拖动实体调整布局，关系来自当前数据库表结构</p></div><div class="er-actions"><button class="er-action" id="autoLayoutBtn">自动布局</button><button class="er-action" id="importErBtn">导入图片 / OCR</button><button class="er-action primary" id="exportErBtn">导出图片</button></div><button class="er-close" id="erClose" aria-label="退出 ER 图设计器" title="退出 ER 图设计器">×</button></div><div class="er-body"><aside class="er-side"><h3>实体关系</h3><p>当前数据库已识别 3 个实体和 2 条关系。</p><div class="er-legend"><i class="legend-key"></i><span>主键 / PK</span></div><div class="er-legend"><i class="legend-line"></i><span>一对多关系</span></div><div class="er-note">浏览器仅检测图片版面框线，不识别文字；实体和字段为候选占位。Android 环境可使用本地 OCR 识别文字。</div><input class="er-file" id="erFile" type="file" accept="image/*" /></aside><div class="er-canvas-wrap"><div class="er-canvas" id="erCanvas"><svg class="er-lines" viewBox="0 0 760 510" preserveAspectRatio="none"><path id="studentLine" class="er-line" d="M 210 148 C 250 148, 250 276, 300 276"/><text id="studentLabel" class="er-line-label" x="235" y="204">1 : N</text><path id="courseLine" class="er-line" d="M 478 276 C 540 276, 540 148, 585 148"/><text id="courseLabel" class="er-line-label" x="525" y="204">1 : N</text></svg><article class="er-node" data-node="students" style="left:32px;top:72px"><div class="er-node-head"><span>实体</span>students</div><div class="er-field"><b class="er-key">◆</b> id <em>INT</em></div><div class="er-field"><b>·</b> name <em>VARCHAR</em></div><div class="er-field"><b>·</b> score <em>INT</em></div><div class="er-field"><b>·</b> major <em>VARCHAR</em></div></article><article class="er-node" data-node="enrollments" style="left:300px;top:200px"><div class="er-node-head"><span>实体</span>enrollments</div><div class="er-field"><b class="er-key">◆</b> id <em>INT</em></div><div class="er-field"><b class="er-fk">↗</b> student_id <em>INT</em></div><div class="er-field"><b class="er-fk">↗</b> course_id <em>INT</em></div><div class="er-field"><b>·</b> enrolled_at <em>DATE</em></div></article>  <article class="er-node" data-node="courses" style="left:585px;top:72px"><div class="er-node-head"><span>实体</span>courses</div><div class="er-field"><b class="er-key">◆</b> id <em>INT</em></div><div class="er-field"><b>·</b> title <em>VARCHAR</em></div><div class="er-field"><b>·</b> credits <em>INT</em></div></article></div></div></div></div></section>
+  <section class="design-modal" id="designModal" aria-hidden="true"><div class="design-panel"><div class="design-head"><div><h2>表结构设计器</h2><p>编辑字段后，建表 SQL、数据字典和范式检查会同步更新</p></div><button class="design-close" id="designClose" aria-label="关闭">×</button></div><div class="design-toolbar"><button class="design-tool primary" id="addTableBtn">＋ 新建数据表</button><button class="design-tool" id="addFieldBtn">＋ 添加字段</button><button class="design-tool" id="normalFormBtn">范式检查</button><button class="design-tool" id="dictBtn">导出数据字典</button><button class="design-tool" id="projectBtn">导出项目</button><button class="design-tool" id="importProjectBtn">导入项目</button><input class="er-file" id="projectFile" type="file" accept="application/json,.json" /></div><div class="table-picker" id="designTablePicker"></div><div class="field-editor" id="fieldEditor"></div><div class="relation-editor"><div class="relation-head"><strong>表关系 / 外键</strong><button id="addRelationBtn">＋ 添加关系</button></div><div id="relationList"></div></div><div class="engine-panel"><div class="engine-panel-head"><strong>本地 SQL 引擎</strong><label class="engine-switch"><input id="engineEnabled" type="checkbox" checked> 启用离线执行</label></div><p id="engineMessage">轻量引擎已就绪，支持课程常用的建表、插入、查询、排序、聚合和连接语句。</p></div><div class="sql-preview"><label>自动生成的建表 SQL</label><pre id="designSql"></pre></div><div class="design-foot"><span class="engine-status"><i></i>本地练习引擎 · 离线演示</span><div class="project-actions"><button id="copyDesignSql">复制 SQL</button><button id="runDesignSql">执行建表</button></div></div></div></section>
+  <section class="design-modal" id="projectModal" aria-hidden="true"><div class="design-panel"><div class="design-head"><div><h2>本地项目</h2><p>每个项目独立保存表结构、ER 图和练习草稿</p></div><button class="design-close" id="projectClose" aria-label="关闭">×</button></div><div class="project-list" id="projectList"></div><div class="project-new"><input id="projectNameInput" placeholder="输入新项目名称" maxlength="32"><button id="createProjectBtn">新建项目</button></div><div class="design-foot"><span class="engine-status"><i></i>数据只保存在本机</span><div class="project-actions"><button id="exportCurrentProject">导出当前项目</button></div></div></div></section>
+  <div class="drawer-backdrop" id="drawerBackdrop"></div>
+  <aside class="schema-drawer" id="schemaDrawer"><div class="drawer-head"><h2>数据库</h2><button class="drawer-close" id="drawerClose" aria-label="关闭">×</button></div><div class="database-tabs"><button class="database-tab active" id="databaseTablesTab">表结构</button><button class="database-tab" id="databaseErTab">ER 图</button></div><div id="databaseTablesView"><p class="drawer-sub">点击字段即可插入到当前 SQL 中</p><div class="schema-block"><div class="schema-block-head"><span>▦ students</span><button data-drawer-insert="students">插入表名</button></div><div class="schema-field" data-field="id"><span>id</span><em>INT · 主键</em></div><div class="schema-field" data-field="name"><span>name</span><em>VARCHAR(50)</em></div><div class="schema-field" data-field="score"><span>score</span><em>INT</em></div><div class="schema-field" data-field="major"><span>major</span><em>VARCHAR(50)</em></div></div><div class="schema-block"><div class="schema-block-head"><span>▦ courses</span><button data-drawer-insert="courses">插入表名</button></div><div class="schema-field" data-field="id"><span>id</span><em>INT · 主键</em></div><div class="schema-field" data-field="title"><span>title</span><em>VARCHAR(80)</em></div><div class="schema-field" data-field="credits"><span>credits</span><em>INT</em></div></div><div class="schema-block"><div class="schema-block-head"><span>▦ enrollments</span><button data-drawer-insert="enrollments">插入表名</button></div><div class="schema-field" data-field="student_id"><span>student_id</span><em>INT · 外键</em></div><div class="schema-field" data-field="course_id"><span>course_id</span><em>INT · 外键</em></div><div class="schema-field" data-field="enrolled_at"><span>enrolled_at</span><em>DATE</em></div></div><button class="design-tool primary" id="openDatabaseDesigner">编辑数据表</button></div><div id="databaseErView" hidden><p class="drawer-sub">拖动实体设计表关系</p><button class="design-tool primary" id="openDatabaseEr">打开 ER 图画布</button></div></aside>
+  <script src="offline-engine.js"></script>
+  <script src="er-recognizer.js"></script>
+  <script src="er-editor.js"></script>
+  <script src="self-test.js"></script>
+  <script>
+    const editor = document.querySelector('#sqlEditor');
+    const toast = document.querySelector('#toast');
+    const status = document.querySelector('#statusLabel');
+    const meta = document.querySelector('#resultMeta');
+    const foot = document.querySelector('#resultFoot');
+    const table = document.querySelector('#resultTable');
+    const rows = {
+      select: [['01','陈思远','96','计算机科学'],['02','林晓雨','92','软件工程'],['03','周子航','88','计算机科学'],['04','赵可欣','85','数据科学']],
+      group: [['01','计算机科学','2','—'],['02','软件工程','1','—'],['03','数据科学','1','—']],
+      join: [['01','陈思远','MySQL 基础','—'],['02','林晓雨','Web 开发实战','—'],['03','周子航','MySQL 基础','—']]
+    };
+    const storage = { get(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch (_) { return fallback; } }, set(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch (_) {} } };
+    const schemaKey = 'querypad-schema';
+    const defaultSchema = { active: 'students', tables: [
+      { name:'students', comment:'学生信息', fields:[{name:'id',type:'INT',length:'',pk:true,nullable:false,comment:'主键'},{name:'name',type:'VARCHAR',length:'50',pk:false,nullable:false,comment:'姓名'},{name:'score',type:'INT',length:'',pk:false,nullable:true,comment:'成绩'},{name:'major',type:'VARCHAR',length:'50',pk:false,nullable:true,comment:'专业'}] },
+      { name:'courses', comment:'课程信息', fields:[{name:'id',type:'INT',length:'',pk:true,nullable:false,comment:'主键'},{name:'title',type:'VARCHAR',length:'80',pk:false,nullable:false,comment:'课程名'},{name:'credits',type:'INT',length:'',pk:false,nullable:true,comment:'学分'}] },
+      { name:'enrollments', comment:'选课关系', fields:[{name:'id',type:'INT',length:'',pk:true,nullable:false,comment:'主键'},{name:'student_id',type:'INT',length:'',pk:false,nullable:false,comment:'学生外键'},{name:'course_id',type:'INT',length:'',pk:false,nullable:false,comment:'课程外键'},{name:'enrolled_at',type:'DATE',length:'',pk:false,nullable:true,comment:'选课日期'}] }
+    ]};
+    let schema = storage.get(schemaKey, defaultSchema);
+    if (!Array.isArray(schema.relations)) schema.relations = [
+      { fromTable:'enrollments', fromColumn:'student_id', toTable:'students', toColumn:'id', cardinality:'N:1' },
+      { fromTable:'enrollments', fromColumn:'course_id', toTable:'courses', toColumn:'id', cardinality:'N:1' }
+    ];
+    let activeDesignTable = schema.active || schema.tables[0].name;
+    const projectKey = 'querypad-projects';
+    const activeProjectKey = 'querypad-active-project';
+    let projects = storage.get(projectKey, null);
+    if (!Array.isArray(projects) || !projects.length) {
+      projects = [{ id:'default', name:'我的第一个实验', updatedAt:Date.now(), schema }];
+      storage.set(projectKey, projects);
+    }
+    let activeProjectId = storage.get(activeProjectKey, projects[0].id);
+    if (!projects.some(project => project.id === activeProjectId)) activeProjectId = projects[0].id;
+    function activeProject() { return projects.find(project => project.id === activeProjectId) || projects[0]; }
+    function saveProjects() { const current = activeProject(); if (current) { current.schema = schema; current.updatedAt = Date.now(); } storage.set(projectKey, projects); storage.set(activeProjectKey, activeProjectId); }
+    function renderProjectList() { const list = document.querySelector('#projectList'); if (!list) return; list.innerHTML = projects.map(project => `<button class="project-item ${project.id === activeProjectId ? 'active' : ''}" data-project-id="${project.id}"><span><strong>${project.name}</strong><span>最近保存 · ${new Date(project.updatedAt).toLocaleDateString('zh-CN')}</span></span><b class="project-check">${project.id === activeProjectId ? '✓' : '›'}</b></button>`).join(''); list.querySelectorAll('[data-project-id]').forEach(item => item.addEventListener('click', () => { const project = projects.find(entry => entry.id === item.dataset.projectId); if (!project) return; saveProjects(); activeProjectId = project.id; schema = project.schema; activeDesignTable = schema.active || schema.tables[0].name; storage.set(schemaKey, schema); storage.set(activeProjectKey, activeProjectId); renderProjectList(); showToast(`已切换到项目：${project.name}`); })); }
+    function openProjects() { renderProjectList(); document.querySelector('#projectModal').classList.add('open'); document.querySelector('#projectModal').setAttribute('aria-hidden','false'); }
+    function closeProjects() { document.querySelector('#projectModal').classList.remove('open'); document.querySelector('#projectModal').setAttribute('aria-hidden','true'); }
+    function currentDesignTable() { return schema.tables.find(item => item.name === activeDesignTable) || schema.tables[0]; }
+    function persistSchema(skipErRefresh) { schema.active = activeDesignTable; storage.set(schemaKey, schema); saveProjects(); if (!skipErRefresh && window.renderErFromSchema) window.renderErFromSchema(); }
+    function makeCreateSql(table) {
+      const columns = table.fields.map(field => `  \`${field.name || 'new_field'}\` ${field.type}${field.length ? `(${field.length})` : ''}${field.nullable ? '' : ' NOT NULL'}${field.pk ? ' PRIMARY KEY' : ''}${field.defaultValue ? ` DEFAULT ${/^\d+$/.test(field.defaultValue) ? field.defaultValue : `'${field.defaultValue}'`}` : ''}${field.comment ? ` COMMENT '${field.comment.replace(/'/g, "''")}'` : ''}`).join(',\n');
+      const relations = (schema.relations || []).filter(relation => relation.fromTable === table.name && relation.cardinality !== 'N:N').map(relation => `  CONSTRAINT \`fk_${relation.fromTable}_${relation.fromColumn}\` FOREIGN KEY (\`${relation.fromColumn}\`) REFERENCES \`${relation.toTable}\` (\`${relation.toColumn}\`)`).join(',\n');
+      return `CREATE TABLE IF NOT EXISTS \`${table.name}\` (\n${[columns, relations].filter(Boolean).join(',\n')}\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`;
+    }
+    function renderDesign() { const picker = document.querySelector('#designTablePicker'); const editor = document.querySelector('#fieldEditor'); const table = currentDesignTable(); const tableOptions = schema.tables.map(item => `<option value="${item.name}">${item.name}</option>`).join(''); picker.innerHTML = schema.tables.map(item => `<button class="table-tab ${item.name === table.name ? 'active' : ''}" data-design-table="${item.name}">${item.name}</button>`).join(''); editor.innerHTML = `<div class="field-row"><span>字段名</span><span>类型</span><span>主键</span><span class="field-nullable">允许 NULL</span><span></span></div>${table.fields.map((field,index) => `<div class="field-row" data-field-index="${index}"><input data-field-key="name" value="${field.name || ''}" placeholder="字段名"><select data-field-key="type"><option ${field.type==='INT'?'selected':''}>INT</option><option ${field.type==='VARCHAR'?'selected':''}>VARCHAR</option><option ${field.type==='TEXT'?'selected':''}>TEXT</option><option ${field.type==='DATE'?'selected':''}>DATE</option><option ${field.type==='DECIMAL'?'selected':''}>DECIMAL</option></select><input class="field-length" data-field-key="length" value="${field.length || ''}" placeholder="长度"><input type="checkbox" data-field-key="pk" ${field.pk?'checked':''} aria-label="主键"><input class="field-nullable" type="checkbox" data-field-key="nullable" ${field.nullable?'checked':''} aria-label="允许 NULL"><input class="field-default" data-field-key="defaultValue" value="${field.defaultValue || ''}" placeholder="默认值"><input class="field-comment" data-field-key="comment" value="${field.comment || ''}" placeholder="字段备注"><button class="remove-field" data-remove-field="${index}" aria-label="删除字段">×</button></div>`).join('')}`; const relationList = document.querySelector('#relationList'); relationList.innerHTML = (schema.relations || []).map((relation,index) => `<div class="relation-row" data-relation-index="${index}"><select data-relation-key="fromTable">${tableOptions}</select><select data-relation-key="fromColumn"></select><select data-relation-key="toTable">${tableOptions}</select><select data-relation-key="cardinality"><option value="N:1">N:1</option><option value="1:N">1:N</option><option value="1:1">1:1</option></select><button class="remove-field" data-remove-relation="${index}" aria-label="删除关系">×</button></div>`).join('') || '<div class="relation-row"><span style="grid-column:1/-1;color:#9aa8b8;font-size:10px">暂无外键关系</span></div>'; relationList.querySelectorAll('[data-relation-index]').forEach(row => { const relation = schema.relations[Number(row.dataset.relationIndex)]; const fromTable = row.querySelector('[data-relation-key="fromTable"]'); const toTable = row.querySelector('[data-relation-key="toTable"]'); fromTable.value = relation.fromTable; toTable.value = relation.toTable; const fillColumns = (select, name) => { const target = schema.tables.find(item => item.name === name); select.innerHTML = (target?.fields || []).map(field => `<option value="${field.name}">${field.name}</option>`).join(''); }; const fromColumn = row.querySelector('[data-relation-key="fromColumn"]'); fillColumns(fromColumn, relation.fromTable); fromColumn.value = relation.fromColumn; const toColumn = row.querySelector('[data-relation-key="toColumn"]'); if (toColumn) fillColumns(toColumn, relation.toTable); row.querySelectorAll('[data-relation-key]').forEach(input => input.addEventListener('change', () => { const key = input.dataset.relationKey; relation[key] = input.value; if (key === 'fromTable' || key === 'toTable') renderDesign(); else { persistSchema(); document.querySelector('#designSql').textContent = makeCreateSql(table); } })); }); document.querySelector('#designSql').textContent = makeCreateSql(table); document.querySelectorAll('[data-design-table]').forEach(button => button.addEventListener('click', () => { activeDesignTable = button.dataset.designTable; persistSchema(); renderDesign(); })); document.querySelectorAll('[data-field-index] input, [data-field-index] select').forEach(input => input.addEventListener('input', () => { const row = input.closest('[data-field-index]'); const field = table.fields[Number(row.dataset.fieldIndex)]; const key = input.dataset.fieldKey; field[key] = input.type === 'checkbox' ? input.checked : input.value; persistSchema(); document.querySelector('#designSql').textContent = makeCreateSql(table); })); document.querySelectorAll('[data-remove-field]').forEach(button => button.addEventListener('click', () => { table.fields.splice(Number(button.dataset.removeField), 1); persistSchema(); renderDesign(); })); document.querySelectorAll('[data-remove-relation]').forEach(button => button.addEventListener('click', () => { schema.relations.splice(Number(button.dataset.removeRelation), 1); persistSchema(); renderDesign(); })); }
+    function configureRelationTypes() {
+      const builtInTypes = ['1:1', '1:N', 'N:1', 'N:N'];
+      const relationEditor = document.querySelector('.relation-editor');
+      if (relationEditor && !relationEditor.querySelector('.relation-editor-hint')) {
+        const hint = document.createElement('p');
+        hint.className = 'relation-editor-hint';
+        hint.textContent = '支持 1:1、1:N、N:1、N:N 和自定义标注。N:N 是概念关系，实际建表建议通过中间表拆成两条 N:1。';
+        relationEditor.insertBefore(hint, document.querySelector('#relationList'));
+      }
+      document.querySelectorAll('#relationList [data-relation-index]').forEach(row => {
+        const relation = schema.relations[Number(row.dataset.relationIndex)];
+        const select = row.querySelector('[data-relation-key="cardinality"]');
+        const removeButton = row.querySelector('[data-remove-relation]');
+        if (!relation || !select || !removeButton) return;
+        select.innerHTML = builtInTypes.map(type => `<option value="${type}">${type}</option>`).join('') + '<option value="CUSTOM">自定义…</option>';
+        const custom = document.createElement('input');
+        custom.type = 'text';
+        custom.maxLength = 40;
+        custom.placeholder = '自定义关系';
+        custom.setAttribute('aria-label', '自定义关系类型');
+        custom.dataset.relationCustom = '';
+        const isBuiltIn = builtInTypes.includes(relation.cardinality);
+        select.value = isBuiltIn ? relation.cardinality : 'CUSTOM';
+        custom.value = isBuiltIn ? '' : relation.cardinality;
+        custom.hidden = isBuiltIn;
+        row.insertBefore(custom, removeButton);
+        select.addEventListener('change', event => {
+          event.stopImmediatePropagation();
+          const customSelected = select.value === 'CUSTOM';
+          custom.hidden = !customSelected;
+          if (!customSelected) {
+            relation.cardinality = select.value;
+            persistSchema();
+            document.querySelector('#designSql').textContent = makeCreateSql(currentDesignTable());
+          } else {
+            custom.focus();
+          }
+        }, true);
+        custom.addEventListener('change', () => {
+          const value = custom.value.trim();
+          if (!value) { showToast('自定义关系类型不能为空'); custom.focus(); return; }
+          relation.cardinality = value;
+          persistSchema();
+          document.querySelector('#designSql').textContent = makeCreateSql(currentDesignTable());
+        });
+      });
+    }
+    const renderDesignWithRelationTypes = renderDesign;
+    renderDesign = function () { renderDesignWithRelationTypes(); configureRelationTypes(); };
+    function downloadText(filename, content, type='application/json') { const blob = new Blob([content], { type }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = filename; link.click(); setTimeout(() => URL.revokeObjectURL(link.href), 500); }
+    function dataDictionary() { return schema.tables.map(table => `## ${table.name}\\n\\n| 字段 | 类型 | 主键 | NULL | 说明 |\\n|---|---|---|---|---|\\n${table.fields.map(field => `| ${field.name} | ${field.type}${field.length ? `(${field.length})` : ''} | ${field.pk ? '是' : '否'} | ${field.nullable ? '是' : '否'} | ${field.comment || ''} |`).join('\\n')}`).join('\\n\\n'); }
+    function checkNormalForm() { const problems = []; schema.tables.forEach(table => { if (!table.fields.some(field => field.pk)) problems.push(`${table.name} 没有主键，建议增加能唯一标识记录的字段。`); if (table.fields.some(field => /,|;/.test(field.comment || ''))) problems.push(`${table.name} 可能包含重复组，请检查字段是否保持原子性（1NF）。`); }); showToast(problems.length ? `范式检查发现 ${problems.length} 个提醒` : '基础范式检查通过'); document.querySelector('#designSql').textContent = problems.length ? '范式检查提醒：\\n- ' + problems.join('\\n- ') : '范式检查通过：已发现主键，字段未发现明显重复组。'; }
+    const savedSql = storage.get('querypad-sql', '');
+    if (savedSql) editor.value = savedSql;
+    function saveSql() { storage.set('querypad-sql', editor.value); }
+    function showToast(message) { toast.textContent = message; toast.classList.add('show'); clearTimeout(window.toastTimer); window.toastTimer = setTimeout(() => toast.classList.remove('show'), 1800); }
+    function setQuery(query, chip) { editor.value = query.replace(/\\n/g, '\n'); saveSql(); document.querySelectorAll('.chip').forEach(item => item.classList.remove('active')); if (chip) chip.classList.add('active'); editor.focus(); }
+    const exercises = [
+      { id:'all-student-details', topic:'基础查询', title:'查看所有学生的完整信息', description:'查询 students 表中的所有学生，并返回每位学生的全部字段信息。', sql:'SELECT *\nFROM students;', validate:(sql,result) => /\bselect\s+\*/.test(sql) && /\bfrom\s+students\b/.test(sql) },
+      { id:'student-fields', topic:'基础查询', title:'查看学生基本信息', description:'查询所有学生的学号、姓名和专业，只返回这三个字段。', sql:'SELECT id, name, major\nFROM students;', validate:(sql,result) => sql.includes('from students') && result.columns.join(',') === 'id,name,major' && result.rowCount === 4 },
+      { id:'student-ranking', topic:'查询排序', title:'找出成绩最高的 4 位同学', description:'查询 students 表，返回姓名和成绩，并按成绩从高到低排列，只显示前 4 位。', sql:'SELECT name, score\nFROM students\nORDER BY score DESC\nLIMIT 4;', validate:(sql,result) => sql.includes('from students') && result.columns.join(',') === 'name,score' && /order by score desc/.test(sql) && /limit 4\b/.test(sql) && result.rowCount === 4 && result.values[0][1] >= result.values[3][1] },
+      { id:'high-scores', topic:'WHERE 筛选', title:'筛选成绩不低于 90 分的学生', description:'返回姓名和成绩，并用 WHERE 条件筛选 score 大于等于 90 的记录。', sql:'SELECT name, score\nFROM students\nWHERE score >= 90\nORDER BY score DESC;', validate:(sql,result) => sql.includes('from students') && /where score\s*>=\s*90/.test(sql) && result.columns.join(',') === 'name,score' && result.rowCount === 2 && result.values.every(row => row[1] >= 90) },
+      { id:'major-students', topic:'组合筛选', title:'查询计算机科学专业学生', description:'筛选 major 为“计算机科学”的学生，并按成绩从高到低显示姓名和成绩。', sql:"SELECT name, score\nFROM students\nWHERE major = '计算机科学'\nORDER BY score DESC;", validate:(sql,result) => sql.includes('from students') && /where major\s*=\s*['"]计算机科学['"]/.test(sql) && /order by score desc/.test(sql) && result.columns.join(',') === 'name,score' && result.rowCount === 2 },
+      { id:'lowest-two', topic:'排序与 LIMIT', title:'找出成绩最低的两位同学', description:'返回姓名和成绩，按成绩升序排列，并只取前两条记录。', sql:'SELECT name, score\nFROM students\nORDER BY score ASC\nLIMIT 2;', validate:(sql,result) => sql.includes('from students') && /order by score asc/.test(sql) && /limit 2\b/.test(sql) && result.columns.join(',') === 'name,score' && result.rowCount === 2 && result.values[0][1] <= result.values[1][1] },
+      { id:'major-count', topic:'分组统计', title:'统计每个专业的学生人数', description:'使用 GROUP BY 和 COUNT，按专业统计学生人数。', sql:'SELECT major, COUNT(*) AS total\nFROM students\nGROUP BY major;', validate:(sql,result) => sql.includes('from students') && /group by major/.test(sql) && /count\s*\(/.test(sql) && result.columns.join(',') === 'major,total' && result.values.reduce((sum,row) => sum + row[1],0) === 4 && result.rowCount === 3 },
+      { id:'course-credits', topic:'WHERE 与排序', title:'查询学分不少于 3 的课程', description:'查询学分大于等于 3 的课程名称和学分，并按学分降序排列。', sql:'SELECT title, credits\nFROM courses\nWHERE credits >= 3\nORDER BY credits DESC;', validate:(sql,result) => sql.includes('from courses') && /where credits\s*>=\s*3/.test(sql) && /order by credits desc/.test(sql) && result.columns.join(',') === 'title,credits' && result.rowCount === 2 && result.values.every(row => row[1] >= 3) },
+      { id:'recent-enrollments', topic:'日期筛选', title:'查询 9 月 2 日及之后的选课记录', description:'筛选 enrolled_at 不早于 2026-09-02 的记录，显示学生编号和课程编号。', sql:"SELECT student_id, course_id\nFROM enrollments\nWHERE enrolled_at >= '2026-09-02';", validate:(sql,result) => sql.includes('from enrollments') && /where enrolled_at\s*>=\s*['"]2026-09-02['"]/.test(sql) && result.columns.join(',') === 'student_id,course_id' && result.rowCount === 2 },
+      { id:'student-course-join', topic:'多表连接', title:'列出学生及其所选课程', description:'连接 students、enrollments 和 courses，返回学生姓名及课程名称。', sql:'SELECT s.name, c.title\nFROM students s\nJOIN enrollments e ON s.id = e.student_id\nJOIN courses c ON c.id = e.course_id;', validate:(sql,result) => sql.includes('from students') && sql.includes('join enrollments') && sql.includes('join courses') && result.columns.join(',') === 'name,title' && result.rowCount === 3 },
+      { id:'mysql-students', topic:'连接与筛选', title:'查询选修 MySQL 基础的学生', description:'连接三张表，筛选课程名称包含“MySQL”的选课记录，并返回学生姓名。', sql:"SELECT s.name, c.title\nFROM courses c\nJOIN enrollments e ON c.id = e.course_id\nJOIN students s ON s.id = e.student_id\nWHERE c.title LIKE '%MySQL%';", validate:(sql,result) => sql.includes('join enrollments') && sql.includes('join students') && /where c\.title like ['"]%mysql%['"]/.test(sql) && result.columns.join(',') === 'name,title' && result.rowCount === 2 && result.values.every(row => row[1].includes('MySQL')) },
+      { id:'course-count', topic:'聚合函数', title:'统计课程总数', description:'使用 COUNT(*) 统计 courses 表中的课程总数，并将统计列命名为 total。', sql:'SELECT COUNT(*) AS total\nFROM courses;', validate:(sql,result) => sql.includes('from courses') && /count\s*\(\s*\*\s*\)\s*as total/.test(sql) && result.columns.join(',') === 'total' && result.rowCount === 1 && result.values[0][0] === 3 },
+      { id:'highest-credit', topic:'综合查询', title:'找出学分最高的课程', description:'返回课程名称和学分，按学分降序排列并只显示第一条。', sql:'SELECT title, credits\nFROM courses\nORDER BY credits DESC\nLIMIT 1;', validate:(sql,result) => sql.includes('from courses') && /order by credits desc/.test(sql) && /limit 1\b/.test(sql) && result.columns.join(',') === 'title,credits' && result.rowCount === 1 && result.values[0][1] === 4 },
+      { id:'student-by-id', topic:'WHERE 筛选', title:'查询学号为 1 的学生', description:'使用学号条件查询该学生的姓名和成绩。', sql:'SELECT name, score\nFROM students\nWHERE id = 1;', validate:(sql,result) => /where id\s*=\s*1\b/.test(sql) && result.columns.join(',') === 'name,score' && result.rowCount === 1 && result.values[0][0] === '陈思远' },
+      { id:'below-ninety', topic:'比较筛选', title:'查找 90 分以下的学生', description:'查询成绩低于 90 分的学生姓名和成绩。', sql:'SELECT name, score\nFROM students\nWHERE score < 90;', validate:(sql,result) => /where score\s*<\s*90\b/.test(sql) && result.columns.join(',') === 'name,score' && result.rowCount === 2 && result.values.every(row => row[1] < 90) },
+      { id:'name-contains-lin', topic:'LIKE 模糊查询', title:'查找姓名含“林”的学生', description:'使用 LIKE 查询姓名中包含“林”的学生。', sql:"SELECT name, major\nFROM students\nWHERE name LIKE '%林%';", validate:(sql,result) => /where name like ['"]%林%['"]/.test(sql) && result.columns.join(',') === 'name,major' && result.rowCount === 1 && result.values[0][0] === '林晓雨' },
+      { id:'not-computer-major', topic:'不等于筛选', title:'查询非计算机科学专业学生', description:'使用不等于条件排除计算机科学专业，返回姓名和专业。', sql:"SELECT name, major\nFROM students\nWHERE major <> '计算机科学';", validate:(sql,result) => /where major\s*<>\s*['"]计算机科学['"]/.test(sql) && result.columns.join(',') === 'name,major' && result.rowCount === 2 && result.values.every(row => row[1] !== '计算机科学') },
+      { id:'student-id-range', topic:'AND 组合条件', title:'查询学号为 2 至 3 的学生', description:'使用两个条件组合筛选 id 大于等于 2 且小于等于 3 的学生。', sql:'SELECT id, name\nFROM students\nWHERE id >= 2 AND id <= 3\nORDER BY id ASC;', validate:(sql,result) => /where id\s*>=\s*2 and id\s*<=\s*3/.test(sql) && result.columns.join(',') === 'id,name' && result.rowCount === 2 && result.values[0][0] === 2 && result.values[1][0] === 3 },
+      { id:'above-ninety', topic:'比较筛选', title:'查找 90 分以上的学生', description:'查询成绩大于 90 分的学生姓名和成绩。', sql:'SELECT name, score\nFROM students\nWHERE score > 90\nORDER BY score DESC;', validate:(sql,result) => /where score\s*>\s*90\b/.test(sql) && result.columns.join(',') === 'name,score' && result.rowCount === 2 && result.values.every(row => row[1] > 90) },
+      { id:'exclude-top-student', topic:'不等于筛选', title:'排除学号为 1 的学生', description:'使用不等于条件查询其他学生的学号和姓名。', sql:'SELECT id, name\nFROM students\nWHERE id != 1\nORDER BY id ASC;', validate:(sql,result) => /where id\s*!=\s*1\b/.test(sql) && result.columns.join(',') === 'id,name' && result.rowCount === 3 && result.values.every(row => row[0] !== 1) },
+      { id:'students-name-order', topic:'字符串排序', title:'按姓名升序排列学生', description:'查询所有学生姓名，并按姓名升序排列。', sql:'SELECT name\nFROM students\nORDER BY name ASC;', validate:(sql,result) => /order by name asc/.test(sql) && result.columns.join(',') === 'name' && result.rowCount === 4 && result.values.every((row,index,rows) => index === 0 || rows[index - 1][0] <= row[0]) },
+      { id:'top-three-scores', topic:'排序与 LIMIT', title:'列出成绩前三名', description:'按成绩从高到低列出前三名学生的姓名和成绩。', sql:'SELECT name, score\nFROM students\nORDER BY score DESC\nLIMIT 3;', validate:(sql,result) => /order by score desc/.test(sql) && /limit 3\b/.test(sql) && result.columns.join(',') === 'name,score' && result.rowCount === 3 && result.values[0][1] === 96 && result.values[2][1] === 88 },
+      { id:'data-science-student', topic:'专业筛选', title:'查询数据科学专业学生', description:'筛选数据科学专业，显示学生姓名和成绩。', sql:"SELECT name, score\nFROM students\nWHERE major = '数据科学';", validate:(sql,result) => /where major\s*=\s*['"]数据科学['"]/.test(sql) && result.columns.join(',') === 'name,score' && result.rowCount === 1 && result.values[0][0] === '赵可欣' },
+      { id:'course-overview', topic:'基础查询', title:'查看课程及学分', description:'查询 courses 表中的课程名称和学分。', sql:'SELECT title, credits\nFROM courses;', validate:(sql,result) => sql.includes('from courses') && result.columns.join(',') === 'title,credits' && result.rowCount === 3 },
+      { id:'three-credit-course', topic:'WHERE 筛选', title:'查询 3 学分课程', description:'查找学分正好为 3 的课程，显示课程名和学分。', sql:'SELECT title, credits\nFROM courses\nWHERE credits = 3;', validate:(sql,result) => /where credits\s*=\s*3\b/.test(sql) && result.columns.join(',') === 'title,credits' && result.rowCount === 1 && result.values[0][0] === 'MySQL 基础' },
+      { id:'under-four-credits', topic:'比较筛选', title:'查询 4 学分以下课程', description:'筛选学分少于 4 的课程，并显示名称和学分。', sql:'SELECT title, credits\nFROM courses\nWHERE credits < 4;', validate:(sql,result) => /where credits\s*<\s*4\b/.test(sql) && result.columns.join(',') === 'title,credits' && result.rowCount === 2 && result.values.every(row => row[1] < 4) },
+      { id:'course-title-like', topic:'LIKE 模糊查询', title:'查找名称含“开发”的课程', description:'使用 LIKE 筛选课程名称中包含“开发”的课程。', sql:"SELECT title, credits\nFROM courses\nWHERE title LIKE '%开发%';", validate:(sql,result) => /where title like ['"]%开发%['"]/.test(sql) && result.columns.join(',') === 'title,credits' && result.rowCount === 1 && result.values[0][0] === 'Web 开发实战' },
+      { id:'course-by-id', topic:'WHERE 筛选', title:'查询课程编号为 3 的课程', description:'根据课程编号查询课程名称和学分。', sql:'SELECT title, credits\nFROM courses\nWHERE id = 3;', validate:(sql,result) => /where id\s*=\s*3\b/.test(sql) && result.columns.join(',') === 'title,credits' && result.rowCount === 1 && result.values[0][0] === '数据结构' },
+      { id:'course-credit-or', topic:'OR 组合条件', title:'查询 2 或 4 学分课程', description:'用 OR 条件查询学分为 2 或 4 的课程。', sql:'SELECT title, credits\nFROM courses\nWHERE credits = 2 OR credits = 4\nORDER BY credits ASC;', validate:(sql,result) => /where credits\s*=\s*2 or credits\s*=\s*4/.test(sql) && result.columns.join(',') === 'title,credits' && result.rowCount === 2 && result.values[0][1] === 2 && result.values[1][1] === 4 },
+      { id:'course-title-order', topic:'字符串排序', title:'按课程名称升序排列', description:'列出所有课程名，并按课程名称升序排列。', sql:'SELECT title\nFROM courses\nORDER BY title ASC;', validate:(sql,result) => /order by title asc/.test(sql) && result.columns.join(',') === 'title' && result.rowCount === 3 && result.values.every((row,index,rows) => index === 0 || rows[index - 1][0] <= row[0]) },
+      { id:'two-low-credit-courses', topic:'排序与 LIMIT', title:'查看学分最低的两门课程', description:'按学分升序排列课程，只显示前两门。', sql:'SELECT title, credits\nFROM courses\nORDER BY credits ASC\nLIMIT 2;', validate:(sql,result) => /order by credits asc/.test(sql) && /limit 2\b/.test(sql) && result.columns.join(',') === 'title,credits' && result.rowCount === 2 && result.values[0][1] === 2 && result.values[1][1] === 3 },
+      { id:'count-course-credits', topic:'COUNT 聚合', title:'统计有学分值的课程数量', description:'使用 COUNT(credits) 统计已填写学分值的课程数量，并命名为 total。', sql:'SELECT COUNT(credits) AS total\nFROM courses;', validate:(sql,result) => /count\s*\(\s*credits\s*\)\s*as total/.test(sql) && result.columns.join(',') === 'total' && result.rowCount === 1 && result.values[0][0] === 3 },
+      { id:'enrollment-detail', topic:'基础查询', title:'查看选课学生和日期', description:'查询 enrollments 中的学生编号及选课日期。', sql:'SELECT student_id, enrolled_at\nFROM enrollments;', validate:(sql,result) => sql.includes('from enrollments') && result.columns.join(',') === 'student_id,enrolled_at' && result.rowCount === 3 },
+      { id:'enrollment-by-id', topic:'WHERE 筛选', title:'查询编号为 2 的选课记录', description:'根据选课记录 id 查找学生编号和课程编号。', sql:'SELECT student_id, course_id\nFROM enrollments\nWHERE id = 2;', validate:(sql,result) => /where id\s*=\s*2\b/.test(sql) && result.columns.join(',') === 'student_id,course_id' && result.rowCount === 1 && result.values[0][0] === 2 && result.values[0][1] === 2 },
+      { id:'mysql-enrollments', topic:'WHERE 筛选', title:'查找选修课程 1 的学生编号', description:'筛选 course_id 为 1 的选课记录，显示学生编号。', sql:'SELECT student_id\nFROM enrollments\nWHERE course_id = 1\nORDER BY student_id ASC;', validate:(sql,result) => /where course_id\s*=\s*1\b/.test(sql) && result.columns.join(',') === 'student_id' && result.rowCount === 2 && result.values[0][0] === 1 && result.values[1][0] === 3 },
+      { id:'enrollments-after-sep-three', topic:'日期筛选', title:'查询 9 月 3 日及之后的记录', description:'筛选 enrolled_at 大于等于 2026-09-03 的记录。', sql:"SELECT student_id, enrolled_at\nFROM enrollments\nWHERE enrolled_at >= '2026-09-03';", validate:(sql,result) => /where enrolled_at\s*>=\s*['"]2026-09-03['"]/.test(sql) && result.columns.join(',') === 'student_id,enrolled_at' && result.rowCount === 1 && result.values[0][1] === '2026-09-03' },
+      { id:'enrollments-until-sep-two', topic:'日期筛选', title:'查询 9 月 2 日及之前的记录', description:'筛选 enrolled_at 小于等于 2026-09-02 的记录。', sql:"SELECT student_id, enrolled_at\nFROM enrollments\nWHERE enrolled_at <= '2026-09-02';", validate:(sql,result) => /where enrolled_at\s*<=\s*['"]2026-09-02['"]/.test(sql) && result.columns.join(',') === 'student_id,enrolled_at' && result.rowCount === 2 },
+      { id:'enrollments-date-order', topic:'日期排序', title:'按选课日期从新到旧排列', description:'显示选课记录 id 和日期，并按日期降序排列。', sql:'SELECT id, enrolled_at\nFROM enrollments\nORDER BY enrolled_at DESC;', validate:(sql,result) => /order by enrolled_at desc/.test(sql) && result.columns.join(',') === 'id,enrolled_at' && result.rowCount === 3 && result.values[0][1] === '2026-09-03' && result.values[2][1] === '2026-09-01' },
+      { id:'count-enrollments', topic:'COUNT 聚合', title:'统计选课记录总数', description:'使用 COUNT(*) 统计 enrollments 中的记录数。', sql:'SELECT COUNT(*) AS total\nFROM enrollments;', validate:(sql,result) => /count\s*\(\s*\*\s*\)\s*as total/.test(sql) && sql.includes('from enrollments') && result.columns.join(',') === 'total' && result.values[0][0] === 3 },
+      { id:'enrollment-count-by-course', topic:'分组统计', title:'统计每门课程的选课人数', description:'按 course_id 分组并统计各课程对应的选课记录数量。', sql:'SELECT course_id, COUNT(*) AS total\nFROM enrollments\nGROUP BY course_id\nORDER BY course_id ASC;', validate:(sql,result) => /group by course_id/.test(sql) && /count\s*\(/.test(sql) && result.columns.join(',') === 'course_id,total' && result.rowCount === 2 && result.values[0][0] === 1 && result.values[0][1] === 2 && result.values[1][1] === 1 },
+      { id:'student-enrollment-join', topic:'INNER JOIN', title:'查看学生及选课日期', description:'连接学生表与选课表，列出每条选课记录对应的学生姓名和日期。', sql:'SELECT s.name, e.enrolled_at\nFROM students s\nJOIN enrollments e ON s.id = e.student_id\nORDER BY e.enrolled_at ASC;', validate:(sql,result) => sql.includes('join enrollments') && /order by e\.enrolled_at asc/.test(sql) && result.columns.join(',') === 'name,enrolled_at' && result.rowCount === 3 && result.values[0][0] === '陈思远' },
+      { id:'course-enrollment-join', topic:'INNER JOIN', title:'查看课程及选课学生编号', description:'连接 courses 和 enrollments，返回课程名称与学生编号。', sql:'SELECT c.title, e.student_id\nFROM courses c\nJOIN enrollments e ON c.id = e.course_id\nORDER BY e.student_id ASC;', validate:(sql,result) => sql.includes('join enrollments') && /order by e\.student_id asc/.test(sql) && result.columns.join(',') === 'title,student_id' && result.rowCount === 3 && result.values[0][0] === 'MySQL 基础' },
+      { id:'high-credit-enrollments', topic:'连接与筛选', title:'查询高学分课程的选课记录', description:'连接课程和选课表，找出 credits 大于等于 3 的选课记录。', sql:'SELECT c.title, e.student_id\nFROM courses c\nJOIN enrollments e ON c.id = e.course_id\nWHERE c.credits >= 3\nORDER BY e.student_id ASC;', validate:(sql,result) => sql.includes('join enrollments') && /where c\.credits\s*>=\s*3/.test(sql) && result.columns.join(',') === 'title,student_id' && result.rowCount === 2 && result.values.every(row => row[0] === 'MySQL 基础') },
+      { id:'computer-major-enrollments', topic:'连接与筛选', title:'查询计算机科学专业的选课记录', description:'连接学生和选课表，返回计算机科学专业学生的姓名与课程编号。', sql:"SELECT s.name, e.course_id\nFROM students s\nJOIN enrollments e ON s.id = e.student_id\nWHERE s.major = '计算机科学'\nORDER BY s.id ASC;", validate:(sql,result) => sql.includes('join enrollments') && /where s\.major\s*=\s*['"]计算机科学['"]/.test(sql) && result.columns.join(',') === 'name,course_id' && result.rowCount === 2 && result.values[0][0] === '陈思远' && result.values[1][0] === '周子航' },
+      { id:'web-course-students', topic:'三表连接', title:'查询选修 Web 开发实战的学生', description:'连接三张表，筛选 Web 开发实战课程并返回学生姓名。', sql:"SELECT s.name, c.title\nFROM courses c\nJOIN enrollments e ON c.id = e.course_id\nJOIN students s ON s.id = e.student_id\nWHERE c.title LIKE '%Web%';", validate:(sql,result) => sql.includes('join enrollments') && sql.includes('join students') && /where c\.title like ['"]%web%['"]/.test(sql) && result.columns.join(',') === 'name,title' && result.rowCount === 1 && result.values[0][0] === '林晓雨' },
+      { id:'mysql-course-enrollees', topic:'三表连接', title:'查询选修 MySQL 基础的学生', description:'连接课程、选课和学生表，查找 MySQL 基础课程的学生及姓名。', sql:"SELECT s.name, c.title\nFROM courses c\nJOIN enrollments e ON c.id = e.course_id\nJOIN students s ON s.id = e.student_id\nWHERE c.title LIKE '%MySQL%'\nORDER BY s.name ASC;", validate:(sql,result) => sql.includes('join enrollments') && sql.includes('join students') && /where c\.title like ['"]%mysql%['"]/.test(sql) && /order by s\.name asc/.test(sql) && result.columns.join(',') === 'name,title' && result.rowCount === 2 && result.values.every(row => row[1] === 'MySQL 基础') },
+      { id:'high-grade-course-list', topic:'三表连接与筛选', title:'查看高分学生的选课课程', description:'连接学生、选课和课程表，筛选成绩不低于 90 分，显示学生姓名和课程名。', sql:'SELECT s.name, c.title\nFROM students s\nJOIN enrollments e ON s.id = e.student_id\nJOIN courses c ON c.id = e.course_id\nWHERE s.score >= 90\nORDER BY s.id ASC;', validate:(sql,result) => sql.includes('join enrollments') && sql.includes('join courses') && /where s\.score\s*>=\s*90/.test(sql) && result.columns.join(',') === 'name,title' && result.rowCount === 2 && result.values.every(row => row[0] === '陈思远' || row[0] === '林晓雨') },
+      { id:'recent-enrollment-names', topic:'三表连接与日期', title:'查询 9 月 2 日及之后选课的学生', description:'连接学生和选课表，按日期筛选并显示学生姓名与选课日期。', sql:"SELECT s.name, e.enrolled_at\nFROM students s\nJOIN enrollments e ON s.id = e.student_id\nWHERE e.enrolled_at >= '2026-09-02'\nORDER BY e.enrolled_at ASC;", validate:(sql,result) => sql.includes('join enrollments') && /where e\.enrolled_at\s*>=\s*['"]2026-09-02['"]/.test(sql) && result.columns.join(',') === 'name,enrolled_at' && result.rowCount === 2 && result.values[0][0] === '林晓雨' },
+      { id:'enrollment-count-by-student', topic:'连接与分组统计', title:'统计每位学生的选课次数', description:'连接学生与选课表，按学生编号分组统计选课记录数。', sql:'SELECT e.student_id, COUNT(*) AS total\nFROM enrollments e\nJOIN students s ON s.id = e.student_id\nGROUP BY e.student_id\nORDER BY e.student_id ASC;', validate:(sql,result) => sql.includes('join students') && /group by e\.student_id/.test(sql) && /count\s*\(/.test(sql) && result.columns.join(',') === 'student_id,total' && result.rowCount === 3 && result.values.reduce((sum,row) => sum + row[1],0) === 3 },
+      { id:'course-title-enrollment-count', topic:'连接与分组统计', title:'按课程名称统计选课人数', description:'连接课程和选课表，按课程名称分组统计人数。', sql:'SELECT c.title, COUNT(*) AS total\nFROM courses c\nJOIN enrollments e ON c.id = e.course_id\nGROUP BY c.title\nORDER BY c.title ASC;', validate:(sql,result) => sql.includes('join enrollments') && /group by c\.title/.test(sql) && /count\s*\(/.test(sql) && result.columns.join(',') === 'title,total' && result.rowCount === 2 && result.values.reduce((sum,row) => sum + row[1],0) === 3 },
+      { id:'non-null-scores', topic:'NULL 判断', title:'查询成绩已填写的学生', description:'使用 IS NOT NULL 筛选成绩不为空的学生，按学号从高到低只显示两条。', sql:'SELECT id, name, score\nFROM students\nWHERE score IS NOT NULL\nORDER BY id DESC\nLIMIT 2;', validate:(sql,result) => /where score is not null/.test(sql) && /order by id desc/.test(sql) && /limit 2\b/.test(sql) && result.columns.join(',') === 'id,name,score' && result.rowCount === 2 && result.values.every(row => row[2] !== null) }
+    ];
+    const completedExercises = new Set(storage.get('querypad-completed-exercises', []).filter(id => exercises.some(exercise => exercise.id === id)));
+    let activeExerciseIndex = Math.max(0, exercises.findIndex(exercise => exercise.id === 'student-ranking'));
+    const legacyRankingSql = 'SELECT name, score FROM students ORDER BY score DESC;';
+    if (exercises[activeExerciseIndex]?.id === 'student-ranking' && editor.value.replace(/\s+/g, ' ').trim().toLowerCase() === legacyRankingSql.toLowerCase()) {
+      editor.value = exercises[activeExerciseIndex].sql;
+      saveSql();
+    }
+    const exerciseModal = document.querySelector('#exerciseModal');
+    const exerciseList = document.querySelector('#exerciseList');
+    const exercisePickerButton = document.querySelector('#lessonBtn');
+    function renderExerciseList() {
+      exerciseList.innerHTML = exercises.map((exercise,index) => `<button class="exercise-option" type="button" data-exercise-index="${index}" aria-current="${index === activeExerciseIndex}"><span class="exercise-number">${String(index + 1).padStart(2,'0')}</span><span class="exercise-option-copy"><strong>${exercise.title}</strong><small>${exercise.topic} · ${exercise.description}</small></span>${completedExercises.has(exercise.id) ? '<span class="exercise-complete">已完成 ✓</span>' : ''}</button>`).join('');
+      exerciseList.querySelectorAll('[data-exercise-index]').forEach(button => button.addEventListener('click', () => selectExercise(Number(button.dataset.exerciseIndex))));
+    }
+    function selectExercise(index, loadQuery = true) {
+      activeExerciseIndex = (index + exercises.length) % exercises.length;
+      const exercise = exercises[activeExerciseIndex];
+      document.querySelector('#challengeKicker').textContent = `当前练习 · ${String(activeExerciseIndex + 1).padStart(2,'0')} / ${String(exercises.length).padStart(2,'0')} · ${exercise.topic}`;
+      document.querySelector('#challengeTitle').textContent = exercise.title;
+      document.querySelector('#challengeText').textContent = exercise.description;
+      document.querySelector('#progressText').textContent = `${String(activeExerciseIndex + 1).padStart(2,'0')}/${String(exercises.length).padStart(2,'0')}`;
+      document.querySelector('.progress-ring').style.background = `conic-gradient(var(--blue) ${Math.round((activeExerciseIndex + 1) / exercises.length * 100)}%, #e8eef8 0)`;
+      exercisePickerButton.textContent = `第 ${String(activeExerciseIndex + 1).padStart(2,'0')} 题 · ${exercise.topic}⌄`;
+      document.querySelector('#challenge').classList.toggle('done', completedExercises.has(exercise.id));
+      if (loadQuery) setQuery(exercise.sql, null);
+      renderExerciseList();
+      exerciseModal.classList.remove('open');
+      exerciseModal.setAttribute('aria-hidden','true');
+    }
+    function openExercisePicker() { renderExerciseList(); exerciseModal.classList.add('open'); exerciseModal.setAttribute('aria-hidden','false'); exerciseList.querySelector(`[data-exercise-index="${activeExerciseIndex}"]`)?.scrollIntoView({block:'nearest'}); }
+    function exerciseAnswerMatches(exercise, query, result, expected) {
+      const submitted = query.toLowerCase();
+      const reference = exercise.sql.toLowerCase();
+      const requiredClauses = [
+        [/\bwhere\b/, /\bwhere\b/],
+        [/\bgroup\s+by\b/, /\bgroup\s+by\b/],
+        [/\border\s+by\b/, /\border\s+by\b/],
+        [/\blimit\b/, /\blimit\b/]
+      ];
+      if (requiredClauses.some(([required, provided]) => required.test(reference) && !provided.test(submitted))) return false;
+      const requiredJoins = (reference.match(/\bjoin\b/g) || []).length;
+      if ((submitted.match(/\bjoin\b/g) || []).length < requiredJoins) return false;
+      if (JSON.stringify(result.columns) !== JSON.stringify(expected.columns) || result.rowCount !== expected.rowCount) return false;
+      const serializeRows = rows => rows.map(row => JSON.stringify(row));
+      const actualRows = serializeRows(result.values);
+      const expectedRows = serializeRows(expected.values);
+      if (/\border\s+by\b/i.test(exercise.sql)) return actualRows.every((row,index) => row === expectedRows[index]);
+      const sortedActualRows = actualRows.sort();
+      const sortedExpectedRows = expectedRows.sort();
+      return sortedActualRows.every((row,index) => row === sortedExpectedRows[index]);
+    }
+    function exerciseFailureHint(exercise, query, result, expected) {
+      const submitted = query.toLowerCase();
+      if (exercise.id === 'student-ranking' && !/\blimit\s+4\b/.test(submitted)) return `未通过：当前返回 ${result.rowCount} 条记录，题目要求成绩前 4 名。请在排序后添加 LIMIT 4。`;
+      if (/\border\s+by\b/i.test(exercise.sql) && !/\border\s+by\b/.test(submitted)) return '未通过：题目要求排序，请添加对应的 ORDER BY 子句。';
+      if (/\blimit\b/i.test(exercise.sql) && !/\blimit\b/.test(submitted)) return '未通过：题目要求限制返回条数，请添加 LIMIT。';
+      if (result.rowCount !== expected.rowCount) return `未通过：当前返回 ${result.rowCount} 行，按题目条件应返回 ${expected.rowCount} 行；请检查筛选、分组或连接条件。`;
+      return '未通过：查询结果与题目要求不一致，请检查返回字段及筛选、分组、排序和连接条件。';
+    }
+    exercisePickerButton.addEventListener('click', openExercisePicker);
+    document.querySelector('#exerciseClose').addEventListener('click', () => { exerciseModal.classList.remove('open'); exerciseModal.setAttribute('aria-hidden','true'); });
+    exerciseModal.addEventListener('click', event => { if (event.target === exerciseModal) { exerciseModal.classList.remove('open'); exerciseModal.setAttribute('aria-hidden','true'); } });
+    document.querySelector('#previousExercise').addEventListener('click', () => selectExercise(activeExerciseIndex - 1));
+    document.querySelector('#nextExercise').addEventListener('click', () => selectExercise(activeExerciseIndex + 1));
+    document.addEventListener('keydown', event => { if (event.key === 'Escape' && exerciseModal.classList.contains('open')) { exerciseModal.classList.remove('open'); exerciseModal.setAttribute('aria-hidden','true'); } });
+    selectExercise(activeExerciseIndex, false);
+    function renderResult(kind, duration = 12) { const data = rows[kind]; const heads = kind === 'select' ? ['#','name','score','major'] : kind === 'group' ? ['#','major','total','备注'] : ['#','name','title','备注']; table.querySelector('thead tr').innerHTML = heads.map(h => `<th>${h}</th>`).join(''); table.querySelector('tbody').innerHTML = data.map(row => `<tr>${row.map((cell, i) => `<td class="${cell === '—' ? 'null' : ''}">${cell}</td>`).join('')}</tr>`).join(''); status.textContent = '执行成功'; status.style.color = 'var(--green)'; status.style.background = 'var(--green-soft)'; meta.textContent = `${data.length} 行 · ${duration} ms`; foot.textContent = '结果已保存到本次练习'; }
+    function showError(message) { status.textContent = '需要修改'; status.style.color='#b95b22'; status.style.background='#fff0df'; meta.textContent='未返回结果'; foot.innerHTML = `<span class="error-cell">${message}</span>`; table.querySelector('tbody').innerHTML = '<tr><td colspan="4" class="error-cell">请检查 SQL 关键字、表名和排序条件后重试。</td></tr>'; }
+    function gradeQuery(query, kind) { const lower = query.toLowerCase(); if (kind === 'select' && lower.includes('from students') && lower.includes('order by') && lower.includes('score')) return true; if (kind === 'group' && lower.includes('group by') && lower.includes('count')) return true; if (kind === 'join' && lower.includes('join') && lower.includes('enrollments')) return true; return false; }
+    function runQuery() { const button = document.querySelector('#runBtn'); const query = editor.value.trim(); if (!query) { status.textContent = '请输入 SQL'; status.style.color='#b95b22'; status.style.background='#fff0df'; meta.textContent='等待输入'; foot.textContent='编辑器为空'; showToast('先输入一条 SQL 语句'); return; } button.classList.add('running'); button.innerHTML = '<span>◌</span> 执行中'; setTimeout(() => { const lower = query.toLowerCase(); let kind = lower.includes('join') ? 'join' : lower.includes('group by') || lower.includes('count') ? 'group' : 'select'; const validTable = lower.includes('from students') || lower.includes('from courses') || lower.includes('from enrollments'); if (!validTable) { showError('找不到这张表：请从左侧或表结构中选择可用表名。'); button.classList.remove('running'); button.innerHTML = '<span>▶</span> 运行 SQL'; showToast('SQL 执行失败'); return; } renderResult(kind, Math.floor(Math.random()*10)+8); const passed = gradeQuery(query, kind); const challenge = document.querySelector('#challenge'); if (passed) { challenge.classList.add('done'); document.querySelector('#challengeTitle').textContent = '练习完成，结果符合要求'; document.querySelector('#challengeText').textContent = '做得很好！可以继续挑战下一道题。'; document.querySelector('#progressText').textContent = '2/4'; foot.textContent = '自动判题：通过'; showToast('执行成功，练习通过'); } else { foot.textContent = 'SQL 已执行 · 题目条件尚未满足'; showToast('语句已执行，但还没有满足题目要求'); } button.classList.remove('running'); button.innerHTML = '<span>▶</span> 运行 SQL'; addHistory(query, rows[kind].length); }, 520); }
+    function addHistory(query, count) { const holder = document.querySelector('#history'); const item = document.createElement('div'); item.className = 'history-item'; item.dataset.query = query; item.innerHTML = `<code>${query.replace(/\\s+/g,' ').slice(0,34)}${query.length > 34 ? '...' : ''}</code><span>${count === '历史' ? '历史记录' : `刚刚 · ${count} 行`}</span>`; item.addEventListener('click', () => setQuery(item.dataset.query)); holder.prepend(item); while (holder.children.length > 4) holder.lastElementChild.remove(); storage.set('querypad-history', Array.from(holder.children).map(entry => entry.dataset.query)); }
+    function renderOfflineResult(result) { const headers = result.columns || []; table.querySelector('thead tr').innerHTML = ['#', ...headers].map(header => `<th>${header}</th>`).join(''); table.querySelector('tbody').innerHTML = (result.values || []).map((row, index) => `<tr><td>${String(index + 1).padStart(2, '0')}</td>${row.map(value => `<td class="${value === null ? 'null' : ''}">${value === null ? 'NULL' : value}</td>`).join('')}</tr>`).join('') || '<tr><td colspan="5" class="null">没有返回数据</td></tr>'; status.textContent = '离线执行成功'; status.style.color = 'var(--green)'; status.style.background = 'var(--green-soft)'; meta.textContent = `${result.rowCount || 0} 行 · 本地`; foot.textContent = '结果来自本机轻量 SQL 引擎'; }
+    const simulatedRunQuery = runQuery;
+    runQuery = function () {
+      const query = editor.value.trim();
+      const button = document.querySelector('#runBtn');
+      if (!query) { simulatedRunQuery(); return; }
+      button.classList.add('running');
+      button.innerHTML = '<span>◌</span> 执行中';
+      setTimeout(() => {
+        try {
+          const result = window.queryPadEngine.execute(query);
+          renderOfflineResult(result);
+          addHistory(query, result.rowCount || 0);
+          const exercise = exercises[activeExerciseIndex];
+          const normalizedQuery = query.replace(/`/g,'').replace(/\s+/g,' ').trim().toLowerCase();
+          const expected = window.queryPadEngine.execute(exercise.sql);
+          const passed = exerciseAnswerMatches(exercise, normalizedQuery, result, expected);
+          const challenge = document.querySelector('#challenge');
+          if (passed) {
+            completedExercises.add(exercise.id);
+            storage.set('querypad-completed-exercises', Array.from(completedExercises));
+            challenge.classList.add('done');
+            status.textContent = '练习通过';
+            foot.textContent = '自动判题：通过';
+            renderExerciseList();
+            showToast('回答正确，练习通过');
+          } else {
+            challenge.classList.toggle('done', completedExercises.has(exercise.id));
+            status.textContent = '未通过';
+            status.style.color = '#b95b22';
+            status.style.background = '#fff0df';
+            const hint = exerciseFailureHint(exercise, normalizedQuery, result, expected);
+            foot.textContent = hint;
+            showToast(hint);
+          }
+        } catch (error) {
+          showError(error.message);
+          showToast('离线引擎无法执行这条 SQL');
+        } finally {
+          button.classList.remove('running');
+          button.innerHTML = '<span>▶</span> 运行 SQL';
+        }
+      }, 120);
+    };
+    document.querySelectorAll('.chip').forEach(chip => chip.addEventListener('click', () => setQuery(chip.dataset.query, chip)));
+    document.querySelectorAll('.history-item').forEach(item => item.addEventListener('click', () => setQuery(item.dataset.query)));
+    document.querySelectorAll('.table-row').forEach(item => item.addEventListener('click', () => { editor.value = `SELECT *\nFROM ${item.dataset.insert}\nLIMIT 20;`; showToast(`已插入表名：${item.dataset.insert}`); editor.focus(); }));
+    document.querySelector('#runBtn').addEventListener('click', runQuery);
+    const mobileRunButton = document.querySelector('#mobileRun');
+    if (mobileRunButton) mobileRunButton.addEventListener('click', runQuery);
+    document.querySelector('#clearBtn').addEventListener('click', () => { editor.value=''; saveSql(); editor.focus(); showToast('编辑器已清空'); });
+    document.querySelector('#formatBtn').addEventListener('click', () => { editor.value = editor.value.replace(/\\s+/g,' ').replace(/\\s+(FROM|WHERE|ORDER BY|GROUP BY|JOIN|LIMIT)\\s+/gi, '\n$1 ').trim(); showToast('SQL 已格式化'); });
+    document.querySelector('#refreshBtn').addEventListener('click', () => showToast('数据库结构已是最新'));
+    document.querySelector('#clearHistory').addEventListener('click', () => { document.querySelector('#history').innerHTML=''; showToast('运行历史已清空'); });
+    document.querySelector('#switchBtn').addEventListener('click', () => showToast('当前为老师提供的练习环境'));
+    const helpModal = document.querySelector('#helpModal');
+    const helpButton = document.querySelector('#helpBtn');
+    const helpCloseButton = document.querySelector('#helpClose');
+    function openHelp() { helpModal.classList.add('open'); helpModal.setAttribute('aria-hidden', 'false'); helpCloseButton.focus(); }
+    function closeHelp() { if (!helpModal.classList.contains('open')) return; helpModal.classList.remove('open'); helpModal.setAttribute('aria-hidden', 'true'); helpButton.focus(); }
+    helpButton.addEventListener('click', openHelp);
+    helpCloseButton.addEventListener('click', closeHelp);
+    helpModal.addEventListener('click', event => { if (event.target === helpModal) closeHelp(); });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') closeHelp(); });
+    function openDrawer() { document.body.classList.add('drawer-open'); }
+    function closeDrawer() { document.body.classList.remove('drawer-open'); }
+    document.querySelector('#schemaBtn').addEventListener('click', openDrawer); document.querySelector('#drawerClose').addEventListener('click', closeDrawer); document.querySelector('#drawerBackdrop').addEventListener('click', closeDrawer);
+    document.querySelectorAll('[data-drawer-insert]').forEach(item => item.addEventListener('click', () => { editor.value += `${editor.value.endsWith('\\n') || !editor.value ? '' : '\\n'}SELECT * FROM ${item.dataset.drawerInsert};`; closeDrawer(); showToast(`已插入 ${item.dataset.drawerInsert}`); editor.focus(); }));
+    document.querySelectorAll('.schema-field').forEach(item => item.addEventListener('click', () => { editor.value += ` ${item.dataset.field}`; closeDrawer(); showToast(`已插入字段：${item.dataset.field}`); editor.focus(); }));
+    const historyNav = document.querySelector('#historyNav');
+    if (historyNav) historyNav.addEventListener('click', () => { document.querySelector('.history-item')?.scrollIntoView({behavior:'smooth'}); showToast('已定位到最近运行'); });
+    const settingsNav = document.querySelector('#settingsNav');
+    if (settingsNav) settingsNav.addEventListener('click', () => showToast('练习设置：MySQL 8.0 兼容模式'));
+    editor.addEventListener('input', saveSql);
+    editor.addEventListener('keyup', () => { const before = editor.value.slice(0, editor.selectionStart); const lines = before.split('\n'); document.querySelector('#cursorPos').textContent = `Ln ${lines.length}, Col ${lines[lines.length-1].length + 1}`; });
+    const savedHistory = storage.get('querypad-history', []);
+    savedHistory.slice(0, 4).reverse().forEach(query => addHistory(query, '历史'));
+    function bindRecognizedNode(node) { let dragging = false; let offsetX = 0; let offsetY = 0; node.addEventListener('pointerdown', event => { dragging = true; const rect = node.getBoundingClientRect(); offsetX = event.clientX - rect.left; offsetY = event.clientY - rect.top; node.setPointerCapture?.(event.pointerId); }); node.addEventListener('pointermove', event => { if (!dragging) return; const canvas = document.querySelector('#erCanvas').getBoundingClientRect(); node.style.left = `${Math.max(8, Math.min(760 - node.offsetWidth - 8, event.clientX - canvas.left - offsetX))}px`; node.style.top = `${Math.max(8, Math.min(510 - node.offsetHeight - 8, event.clientY - canvas.top - offsetY))}px`; }); node.addEventListener('pointerup', () => { dragging = false; }); node.addEventListener('pointercancel', () => { dragging = false; }); }
+    window.renderRecognizedEr = function (result) { const canvas = document.querySelector('#erCanvas'); if (!canvas) return; canvas.querySelectorAll('.er-node').forEach(node => node.remove()); const svg = canvas.querySelector('.er-lines'); svg.innerHTML = ''; const entities = result.entities || []; entities.forEach((entity, index) => { const node = document.createElement('article'); node.className = 'er-node'; node.dataset.node = entity.name || `识别实体${index + 1}`; node.style.left = `${entity.x || 30 + index * 235}px`; node.style.top = `${entity.y || 60 + (index % 2) * 150}px`; const head = document.createElement('div'); head.className = 'er-node-head'; head.innerHTML = `<span>识别实体</span>${entity.name || `识别实体${index + 1}`}`; node.appendChild(head); (entity.fields || []).forEach(field => { const row = document.createElement('div'); row.className = 'er-field'; row.innerHTML = `<b class="${field.pk ? 'er-key' : ''}">${field.pk ? '◆' : '·'}</b> ${field.name || 'field'} <em>${field.type || 'TEXT'}</em>`; node.appendChild(row); }); canvas.appendChild(node); bindRecognizedNode(node); }); (result.relations || []).forEach(relation => { const from = entities[relation.from]; const to = entities[relation.to]; if (!from || !to) return; const x1 = (from.x || 0) + 178; const y1 = (from.y || 0) + 60; const x2 = to.x || 0; const y2 = (to.y || 0) + 60; const path = document.createElementNS('http://www.w3.org/2000/svg', 'path'); path.setAttribute('class', 'er-line'); path.setAttribute('d', `M ${x1} ${y1} C ${(x1 + x2) / 2} ${y1}, ${(x1 + x2) / 2} ${y2}, ${x2} ${y2}`); svg.appendChild(path); const label = document.createElementNS('http://www.w3.org/2000/svg', 'text'); label.setAttribute('class', 'er-line-label'); label.setAttribute('x', (x1 + x2) / 2); label.setAttribute('y', (y1 + y2) / 2 - 8); label.textContent = relation.cardinality || '1:N'; svg.appendChild(label); }); };
+    const erModal = document.querySelector('#erModal');
+    function syncErNodes() { schema.tables.slice(0, 3).forEach(table => { const node = document.querySelector(`[data-node="${table.name}"]`); if (!node) return; const header = node.querySelector('.er-node-head'); if (header) header.innerHTML = `<span>实体</span>${table.name}`; node.querySelectorAll('.er-field').forEach(field => field.remove()); table.fields.slice(0, 6).forEach(field => { const row = document.createElement('div'); row.className = 'er-field'; row.innerHTML = `<b class="${field.pk ? 'er-key' : ''}">${field.pk ? '◆' : '·'}</b> ${field.name} <em>${field.type}${field.length ? `(${field.length})` : ''}</em>`; node.appendChild(row); }); }); }
+    function openEr() { syncErNodes(); erModal.classList.add('open'); erModal.setAttribute('aria-hidden', 'false'); }
+    function closeEr() { erModal.classList.remove('open'); erModal.setAttribute('aria-hidden', 'true'); }
+    document.querySelector('#erBtn').addEventListener('click', openEr); document.querySelector('#erClose').addEventListener('click', closeEr); erModal.addEventListener('click', event => { if (event.target === erModal) closeEr(); });
+    function updateErLines() { const read = name => { const node = document.querySelector(`[data-node="${name}"]`); return { x: parseFloat(node.style.left) || 0, y: parseFloat(node.style.top) || 0, w: node.offsetWidth || 178, h: node.offsetHeight || 150 }; }; const students = read('students'); const enrollments = read('enrollments'); const courses = read('courses'); const sx = students.x + students.w, sy = students.y + students.h / 2, ex = enrollments.x, ey = enrollments.y + enrollments.h / 2, ecx = enrollments.x + enrollments.w, cy = enrollments.y + enrollments.h / 2, cx = courses.x, ccy = courses.y + courses.h / 2; document.querySelector('#studentLine').setAttribute('d', `M ${sx} ${sy} C ${(sx + ex) / 2} ${sy}, ${(sx + ex) / 2} ${ey}, ${ex} ${ey}`); document.querySelector('#studentLabel').setAttribute('x', (sx + ex) / 2 - 10); document.querySelector('#studentLabel').setAttribute('y', (sy + ey) / 2 - 8); document.querySelector('#courseLine').setAttribute('d', `M ${ecx} ${cy} C ${(ecx + cx) / 2} ${cy}, ${(ecx + cx) / 2} ${ccy}, ${cx} ${ccy}`); document.querySelector('#courseLabel').setAttribute('x', (ecx + cx) / 2 - 10); document.querySelector('#courseLabel').setAttribute('y', (cy + ccy) / 2 - 8); }
+    document.querySelector('#importErBtn').addEventListener('click', () => { document.querySelector('#erFile').click(); });
+    function xmlEscape(value) { return String(value).replace(/[<>&'"]/g, character => ({ '<':'&lt;', '>':'&gt;', '&':'&amp;', "'":'&apos;', '"':'&quot;' }[character])); }
+    function erSvgMarkup() { const canvas = document.querySelector('#erCanvas'); const width = Math.max(760, canvas.scrollWidth || 760); const height = Math.max(510, canvas.scrollHeight || 510); const lines = Array.from(canvas.querySelectorAll('.er-line')).map(line => `<path d="${line.getAttribute('d') || ''}" fill="none" stroke="#7790b0" stroke-width="1.5"/>`).join(''); const labels = Array.from(canvas.querySelectorAll('.er-line-label')).map(label => `<text x="${label.getAttribute('x') || 0}" y="${label.getAttribute('y') || 0}" fill="#7890ac" font-family="monospace" font-size="11">${xmlEscape(label.textContent)}</text>`).join(''); const nodes = Array.from(canvas.querySelectorAll('.er-node')).map(node => { const x = parseFloat(node.style.left) || 0; const y = parseFloat(node.style.top) || 0; const title = node.querySelector('.er-node-head')?.textContent?.trim() || '实体'; const fields = Array.from(node.querySelectorAll('.er-field')).map((field, index) => { const text = field.textContent.trim(); return `<text x="${x + 12}" y="${y + 58 + index * 24}" fill="#536881" font-family="monospace" font-size="10">${xmlEscape(text)}</text>`; }).join(''); const height = 42 + Math.max(1, node.querySelectorAll('.er-field').length) * 24; return `<g><rect x="${x}" y="${y}" width="178" height="${height}" rx="10" fill="#fff" stroke="#c9d8eb"/><rect x="${x}" y="${y}" width="178" height="34" rx="10" fill="#eaf1ff"/><text x="${x + 10}" y="${y + 22}" fill="#315a9b" font-family="sans-serif" font-size="12" font-weight="700">${xmlEscape(title)}</text>${fields}</g>`; }).join(''); return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="100%" height="100%" fill="#f7f9fc"/>${lines}${labels}${nodes}</svg>`; }
+    function downloadBlob(filename, blob) { const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = filename; link.click(); setTimeout(() => URL.revokeObjectURL(link.href), 500); }
+    window.queryPadErSvg = erSvgMarkup;
+    window.showQueryPadToast = showToast;
+    function exportErSvg() { downloadBlob('querypad-er-diagram.svg', new Blob([erSvgMarkup()], { type:'image/svg+xml;charset=utf-8' })); showToast('ER 图 SVG 已导出'); }
+    function exportErPng() { const svgBlob = new Blob([erSvgMarkup()], { type:'image/svg+xml;charset=utf-8' }); const url = URL.createObjectURL(svgBlob); const image = new Image(); image.onload = () => { const canvas = document.createElement('canvas'); canvas.width = image.width * 2; canvas.height = image.height * 2; const context = canvas.getContext('2d'); context.scale(2, 2); context.drawImage(image, 0, 0); canvas.toBlob(blob => { if (blob) downloadBlob('querypad-er-diagram.png', blob); URL.revokeObjectURL(url); showToast('ER 图 PNG 已导出'); }, 'image/png'); }; image.onerror = () => { URL.revokeObjectURL(url); showToast('PNG 导出失败，请改用 SVG'); }; image.src = url; }
+    document.querySelector('#erFile').addEventListener('change', event => { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => { const canvas = document.querySelector('#erCanvas'); canvas.style.backgroundImage = `url("${reader.result}")`; canvas.style.backgroundRepeat = 'no-repeat'; canvas.style.backgroundPosition = 'center'; canvas.style.backgroundSize = 'contain'; canvas.dataset.importedImage = 'true'; }; reader.readAsDataURL(file); if (window.queryPadRecognizeEr) window.queryPadRecognizeEr(file); else showToast('识别模块尚未加载，请刷新页面'); });
+    document.querySelector('#autoLayoutBtn').addEventListener('click', () => window.queryPadAutoLayout());
+    document.querySelector('#exportErBtn').addEventListener('click', exportErPng);
+    if (!document.querySelector('#exportErSvgBtn')) { const svgButton = document.createElement('button'); svgButton.id = 'exportErSvgBtn'; svgButton.className = 'er-action'; svgButton.textContent = '导出 SVG'; document.querySelector('#erModal .er-actions').insertBefore(svgButton, document.querySelector('#exportErBtn')); }
+    document.querySelector('#exportErSvgBtn').addEventListener('click', exportErSvg);
+    document.querySelector('#erModal .er-head').addEventListener('contextmenu', event => { event.preventDefault(); exportErSvg(); });
+    document.querySelectorAll('.er-node').forEach(node => { let dragging = false; let offsetX = 0; let offsetY = 0; const start = event => { dragging = true; const point = event.touches ? event.touches[0] : event; const rect = node.getBoundingClientRect(); offsetX = point.clientX - rect.left; offsetY = point.clientY - rect.top; node.setPointerCapture?.(event.pointerId); }; const move = event => { if (!dragging) return; const point = event.touches ? event.touches[0] : event; const canvas = document.querySelector('#erCanvas').getBoundingClientRect(); const x = Math.max(8, Math.min(760 - node.offsetWidth - 8, point.clientX - canvas.left - offsetX)); const y = Math.max(8, Math.min(510 - node.offsetHeight - 8, point.clientY - canvas.top - offsetY)); node.style.left = `${x}px`; node.style.top = `${y}px`; updateErLines(); }; const end = () => { dragging = false; }; node.addEventListener('pointerdown', start); node.addEventListener('pointermove', move); node.addEventListener('pointerup', end); node.addEventListener('pointercancel', end); });
+    updateErLines();
+    const designModal = document.querySelector('#designModal');
+    function openDesign() { renderDesign(); designModal.classList.add('open'); designModal.setAttribute('aria-hidden','false'); }
+    function closeDesign() { designModal.classList.remove('open'); designModal.setAttribute('aria-hidden','true'); }
+    document.querySelector('#designBtn').addEventListener('click', openDesign); document.querySelector('#designClose').addEventListener('click', closeDesign); designModal.addEventListener('click', event => { if (event.target === designModal) closeDesign(); });
+    document.querySelector('#addTableBtn').addEventListener('click', () => { const name = `table_${schema.tables.length + 1}`; schema.tables.push({ name, comment:'', fields:[{name:'id',type:'INT',length:'',pk:true,nullable:false,comment:'主键'}] }); activeDesignTable = name; persistSchema(); renderDesign(); showToast(`已新建表：${name}`); });
+    document.querySelector('#addFieldBtn').addEventListener('click', () => { currentDesignTable().fields.push({name:`field_${currentDesignTable().fields.length + 1}`,type:'VARCHAR',length:'50',pk:false,nullable:true,defaultValue:'',comment:''}); persistSchema(); renderDesign(); showToast('已添加字段'); });
+    document.querySelector('#addRelationBtn').addEventListener('click', () => { const first = schema.tables.find(table => table.name === 'enrollments') || schema.tables[0]; const target = schema.tables.find(table => table.name !== first.name) || schema.tables[0]; schema.relations = schema.relations || []; schema.relations.push({ fromTable:first.name, fromColumn:first.fields[0]?.name || 'id', toTable:target.name, toColumn:target.fields[0]?.name || 'id', cardinality:'N:1' }); persistSchema(); renderDesign(); showToast('已添加表关系'); });
+    document.querySelector('#normalFormBtn').addEventListener('click', checkNormalForm);
+    document.querySelector('#dictBtn').addEventListener('click', () => { downloadText('querypad-data-dictionary.md', dataDictionary(), 'text/markdown'); showToast('数据字典已导出'); });
+    document.querySelector('#projectBtn').addEventListener('click', () => { downloadText('querypad-project.json', JSON.stringify({ project:'QueryPad 本地项目', version:1, schema, exportedAt:new Date().toISOString() }, null, 2)); showToast('项目已导出'); });
+    document.querySelector('#importProjectBtn').addEventListener('click', () => document.querySelector('#projectFile').click());
+    document.querySelector('#projectFile').addEventListener('change', event => { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => { try { const data = JSON.parse(reader.result); if (!data.schema || !Array.isArray(data.schema.tables)) throw new Error('invalid'); schema = data.schema; activeDesignTable = schema.active || schema.tables[0].name; persistSchema(); renderDesign(); showToast('项目已导入'); } catch (_) { showToast('项目文件格式不正确'); } }; reader.readAsText(file); });
+    document.querySelector('#projectBtnTop').addEventListener('click', openProjects); document.querySelector('#projectClose').addEventListener('click', closeProjects); document.querySelector('#projectModal').addEventListener('click', event => { if (event.target.id === 'projectModal') closeProjects(); });
+    document.querySelector('#projectNav').addEventListener('click', openProjects);
+    document.querySelector('#workbenchNav').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    document.querySelector('#databaseNav').addEventListener('click', () => { document.body.classList.add('drawer-open'); document.querySelector('#databaseTablesTab').click(); });
+    document.querySelector('#erNav').addEventListener('click', openEr);
+    document.querySelector('#practiceNav').addEventListener('click', () => { document.querySelector('#lessonBtn').click(); });
+    document.querySelector('#toolsNav').addEventListener('click', () => { document.querySelector('#designBtn').click(); });
+    document.querySelector('#databaseTablesTab').addEventListener('click', () => { document.querySelector('#databaseTablesTab').classList.add('active'); document.querySelector('#databaseErTab').classList.remove('active'); document.querySelector('#databaseTablesView').hidden = false; document.querySelector('#databaseErView').hidden = true; });
+    document.querySelector('#databaseErTab').addEventListener('click', () => { document.querySelector('#databaseErTab').classList.add('active'); document.querySelector('#databaseTablesTab').classList.remove('active'); document.querySelector('#databaseTablesView').hidden = true; document.querySelector('#databaseErView').hidden = false; });
+    document.querySelector('#openDatabaseDesigner').addEventListener('click', () => { document.body.classList.remove('drawer-open'); openDesign(); });
+    document.querySelector('#openDatabaseEr').addEventListener('click', () => { document.body.classList.remove('drawer-open'); openEr(); });
+    document.querySelector('#createProjectBtn').addEventListener('click', () => { const input = document.querySelector('#projectNameInput'); const name = input.value.trim(); if (!name) { showToast('请输入项目名称'); return; } saveProjects(); const next = { id:`project-${Date.now()}`, name, updatedAt:Date.now(), schema:JSON.parse(JSON.stringify(defaultSchema)) }; projects.unshift(next); activeProjectId = next.id; schema = next.schema; activeDesignTable = schema.tables[0].name; storage.set(schemaKey, schema); saveProjects(); input.value=''; renderProjectList(); showToast(`已创建项目：${name}`); });
+    document.querySelector('#exportCurrentProject').addEventListener('click', () => { const project = activeProject(); if (project) downloadText(`${project.name}.json`, JSON.stringify(project, null, 2)); showToast('当前项目已导出'); });
+    document.querySelector('#copyDesignSql').addEventListener('click', async () => { try { await navigator.clipboard.writeText(document.querySelector('#designSql').textContent); showToast('建表 SQL 已复制'); } catch (_) { showToast('请长按 SQL 内容复制'); } });
+    if (!document.querySelector('#selfTestBtn')) { const testButton = document.createElement('button'); testButton.id = 'selfTestBtn'; testButton.className = 'design-tool'; testButton.textContent = '运行自检'; document.querySelector('#designModal .design-toolbar').appendChild(testButton); }
+    document.querySelector('#selfTestBtn').addEventListener('click', () => { const result = window.queryPadSelfTest ? window.queryPadSelfTest() : null; if (result && result.failed) console.warn(result.detail); });
+    document.querySelector('#runDesignSql').addEventListener('click', () => { try { window.queryPadEngine.execute(document.querySelector('#designSql').textContent); showToast('本地引擎已执行建表 SQL'); } catch (error) { showToast(error.message); } });
+    if (/^select\b/i.test(editor.value.trim())) {
+      try { renderOfflineResult(window.queryPadEngine.execute(editor.value)); }
+      catch (error) { showError(error.message); }
+    }
+    if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(() => {});
+  </script>
+  <script src="fallback.js"></script>
+</body>
+</html>
