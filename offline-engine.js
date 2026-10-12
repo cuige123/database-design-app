@@ -3,7 +3,43 @@
     constructor() {
       this.tables = {};
       this.ready = false;
+      this.restoreError = '';
       this.seed();
+      this.restore();
+    }
+
+    restore() {
+      try {
+        const saved = window.localStorage && window.localStorage.getItem('querypad-database');
+        if (!saved) return;
+        const tables = JSON.parse(saved);
+        if (!tables || typeof tables !== 'object' || Array.isArray(tables)) throw new Error('保存的练习数据库格式无效');
+        Object.keys(tables).forEach(name => {
+          const table = tables[name];
+          if (!table || !Array.isArray(table.columns) || !Array.isArray(table.rows) || table.rows.some(row => !row || typeof row !== 'object' || Array.isArray(row))) {
+            throw new Error(`保存的练习数据表格式无效：${name}`);
+          }
+        });
+        this.tables = tables;
+      } catch (error) {
+        this.restoreError = `保存的练习数据库无法加载，当前使用初始样例数据：${error.message}`;
+        console.error(this.restoreError, error);
+      }
+    }
+
+    persist() {
+      if (!window.localStorage) return;
+      try {
+        window.localStorage.setItem('querypad-database', JSON.stringify(this.tables));
+      } catch (error) {
+        throw new Error(`练习数据库无法保存到浏览器：${error.message}`);
+      }
+    }
+
+    reset() {
+      this.tables = {};
+      this.seed();
+      this.persist();
     }
 
     seed() {
@@ -200,12 +236,16 @@
       const statement = this.normalize(sql).replace(/;$/, '');
       if (!statement) throw new Error('请输入 SQL 语句');
       if (/^select\s+/i.test(statement)) return this.select(statement);
-      if (/^create\s+table\s+/i.test(statement)) return this.create(statement);
-      if (/^insert\s+into\s+/i.test(statement)) return this.insert(statement);
-      if (/^update\s+/i.test(statement)) return this.update(statement);
-      if (/^delete\s+from\s+/i.test(statement)) return this.remove(statement);
-      if (/^(?:show\s+tables(?:\s|$)|describe\s+|desc\s+)/i.test(statement)) return this.metadata(statement);
-      throw new Error('离线引擎暂不支持这条语句，请使用课程常用的增删改查 SQL。');
+      let result;
+      if (/^create\s+table\s+/i.test(statement)) result = this.create(statement);
+      else if (/^drop\s+table\s+/i.test(statement)) result = this.drop(statement);
+      else if (/^insert\s+into\s+/i.test(statement)) result = this.insert(statement);
+      else if (/^update\s+/i.test(statement)) result = this.update(statement);
+      else if (/^delete\s+from\s+/i.test(statement)) result = this.remove(statement);
+      else if (/^(?:show\s+tables(?:\s|$)|describe\s+|desc\s+)/i.test(statement)) return this.metadata(statement);
+      else throw new Error('离线引擎暂不支持这条语句，请使用课程常用的增删改查 SQL。');
+      this.persist();
+      return result;
     }
 
     table(name) {
@@ -247,6 +287,15 @@
       if (columns.length !== definitions.filter(part => !/^(?:constraint\b|primary\s+key\b|foreign\s+key\b|unique\b|key\b|index\b)/i.test(part)).length) throw new Error('CREATE TABLE 字段定义无法识别');
       this.tables[key] = { columns, rows: [] };
       return { columns: ['message'], values: [['已创建表 ' + name]], rowCount: 1, kind: 'message' };
+    }
+
+    drop(sql) {
+      const match = sql.match(/^drop\s+table\s+(if\s+exists\s+)?`?([\w-]+)`?$/i);
+      if (!match) throw new Error('DROP TABLE 语法无法识别');
+      const key = match[2].toLowerCase();
+      if (!this.tables[key] && !match[1]) throw new Error(`找不到数据表：${match[2]}`);
+      delete this.tables[key];
+      return { columns: ['message'], values: [[`已删除表 ${match[2]}`]], rowCount: 1, kind: 'message' };
     }
 
     insert(sql) {
@@ -449,5 +498,7 @@
     }
   }
 
-  window.queryPadEngine = new OfflineEngine();
+  window.OfflineEngine = OfflineEngine;
+  window.queryPadLegacyEngine = new OfflineEngine();
+  window.queryPadEngine = window.queryPadLegacyEngine;
 })();

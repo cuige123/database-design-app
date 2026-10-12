@@ -33,8 +33,19 @@
       if (!table || !result) return;
       var columns = result.columns || [];
       var values = result.values || [];
-      table.querySelector('thead tr').innerHTML = ['#'].concat(columns).map(function (item) { return '<th>' + item + '</th>'; }).join('');
-      table.querySelector('tbody').innerHTML = values.map(function (row, index) { return '<tr><td>' + String(index + 1).padStart(2, '0') + '</td>' + row.map(function (value) { return '<td>' + (value == null ? 'NULL' : value) + '</td>'; }).join('') + '</tr>'; }).join('');
+      var header = document.createDocumentFragment();
+      ['#'].concat(columns).forEach(function (item) { var cell = document.createElement('th'); cell.textContent = String(item); header.appendChild(cell); });
+      table.querySelector('thead tr').replaceChildren(header);
+      var body = document.createDocumentFragment();
+      values.forEach(function (valuesRow, index) {
+        var row = document.createElement('tr');
+        var number = document.createElement('td');
+        number.textContent = String(index + 1).padStart(2, '0');
+        row.appendChild(number);
+        valuesRow.forEach(function (value) { var cell = document.createElement('td'); cell.textContent = value == null ? 'NULL' : String(value); row.appendChild(cell); });
+        body.appendChild(row);
+      });
+      table.querySelector('tbody').replaceChildren(body);
       var meta = document.getElementById('resultMeta');
       if (meta) meta.textContent = (result.rowCount || values.length) + ' 行 · 本地';
     }

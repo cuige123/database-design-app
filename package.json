@@ -1,0 +1,9 @@
+{
+  "name": "database-design-app",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Offline MySQL learning and database design app",
+  "dependencies": {
+    "sql.js": "1.13.0"
+  }
+}

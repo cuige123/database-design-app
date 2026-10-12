@@ -17,6 +17,7 @@
     .er-node .er-node-head { cursor:grab; }
     .er-node .er-node-head button { border:0; width:20px; height:20px; padding:0; border-radius:6px; color:#2d6cdf; background:#fff; font-size:14px; line-height:20px; cursor:pointer; }
     .er-node .er-node-head .er-connect-handle { margin-left:auto; color:#fff; background:#2d6cdf; border-radius:50%; font-size:11px; }
+    .er-node .er-node-head .er-delete-entity { color:#c56b53; background:#fff1ee; }
     .er-node .er-field { position:relative; padding-right:30px; }
     .er-node .er-field button { position:absolute; right:7px; width:18px; height:18px; border:0; border-radius:5px; color:#c56b53; background:#fff1ee; font-size:12px; line-height:16px; cursor:pointer; }
     .er-node.er-connect-source { outline:2px solid #f49b44; outline-offset:3px; }
@@ -45,6 +46,14 @@
   var inputForm;
   var inputTitle;
   var inputControl;
+  // Zoom / pinch state
+  var scale = 1;
+  var minScale = 0.5;
+  var maxScale = 2.5;
+  var scaleStep = 0.1;
+  var pointers = new Map();
+  var pinchStartDistance = 0;
+  var pinchStartScale = 1;
   function toast(text) { if (typeof window.showQueryPadToast === 'function') window.showQueryPadToast(text); else if (typeof showToast === 'function') showToast(text); }
   function save() { if (typeof persistSchema === 'function') persistSchema(true); else if (window.localStorage) localStorage.setItem('querypad-schema', JSON.stringify(schema)); }
   function ensureModel() {
@@ -60,17 +69,31 @@
   function pointFor(node) { return { x: (parseFloat(node.style.left) || 0) + node.offsetWidth / 2, y: (parseFloat(node.style.top) || 0) + node.offsetHeight / 2 }; }
   function canvasPoint(event) { var rect = canvas.getBoundingClientRect(); var wrap = canvas.parentElement; return { x: event.clientX - rect.left + wrap.scrollLeft, y: event.clientY - rect.top + wrap.scrollTop }; }
 
+  function setScale(s) {
+    scale = Math.max(minScale, Math.min(maxScale, s));
+    if (canvas) {
+      canvas.style.transformOrigin = '0 0';
+      canvas.style.transform = 'scale(' + scale + ')';
+    }
+  }
+  function zoomIn() { setScale(scale + scaleStep); }
+  function zoomOut() { setScale(scale - scaleStep); }
+  function zoomReset() { setScale(1); }
+
   function createToolbar() {
     var wrap = canvas.parentElement;
     if (wrap.querySelector('.er-edit-toolbar')) return;
     var toolbar = document.createElement('div');
     toolbar.className = 'er-edit-toolbar';
-    toolbar.innerHTML = '<button class="primary" data-er-tool="new">＋ 新建实体</button><button data-er-tool="connect">↗ 连接关系</button><button data-er-tool="delete">删除选中关系</button><button data-er-tool="layout">自动布局</button><span class="er-hint">空白处新建实体；连接：拖动实体到另一实体；删除：先点关系线选中</span>';
+    toolbar.innerHTML = '<button class="primary" data-er-tool="new">＋ 新建实体</button><button data-er-tool="connect">↗ 连接关系</button><button data-er-tool="delete">删除选中关系</button><button data-er-tool="layout">自动布局</button><button data-er-tool="zoom-in">＋ 放大</button><button data-er-tool="zoom-out">－ 缩小</button><button data-er-tool="zoom-reset">重置缩放</button><span class="er-hint">空白处新建实体；连接：拖动实体到另一实体；删除：先点关系线选中；按 Ctrl + 滚轮 缩放</span>';
     wrap.insertBefore(toolbar, canvas);
     toolbar.querySelector('[data-er-tool="new"]').addEventListener('click', function () { createEntity(); });
     toolbar.querySelector('[data-er-tool="connect"]').addEventListener('click', function () { setConnectMode(!connectMode); });
     toolbar.querySelector('[data-er-tool="delete"]').addEventListener('click', function () { deleteSelectedRelation(); });
     toolbar.querySelector('[data-er-tool="layout"]').addEventListener('click', function () { autoLayout(); });
+    toolbar.querySelector('[data-er-tool="zoom-in"]').addEventListener('click', function () { zoomIn(); });
+    toolbar.querySelector('[data-er-tool="zoom-out"]').addEventListener('click', function () { zoomOut(); });
+    toolbar.querySelector('[data-er-tool="zoom-reset"]').addEventListener('click', function () { zoomReset(); });
   }
 
   function createInputDialog() {
@@ -168,6 +191,27 @@
     save(); render(); toast('属性已删除');
   }
 
+  function removeEntity(name) {
+    var table = schema.tables.find(function (item) { return item.name === name; });
+    if (!table) { toast('找不到要删除的实体'); return; }
+    if (schema.tables.length <= 1) { toast('至少保留一个实体'); return; }
+    if (!window.confirm('确定删除实体“' + name + '”及其关联关系吗？此操作不可撤销。')) return;
+    try {
+      window.queryPadEngine.execute('DROP TABLE IF EXISTS `' + name + '`;');
+    } catch (error) {
+      toast('删除实体失败：' + error.message);
+      return;
+    }
+    schema.tables = schema.tables.filter(function (item) { return item.name !== name; });
+    schema.relations = schema.relations.filter(function (relation) { return relation.fromTable !== name && relation.toTable !== name; });
+    delete schema.erLayout[name];
+    if (activeDesignTable === name) activeDesignTable = schema.tables[0].name;
+    selectedRelation = -1;
+    save();
+    render();
+    toast('实体已删除：' + name);
+  }
+
   function setConnectMode(enabled) {
     connectMode = enabled;
     if (!enabled) { connectStart = null; removeTempPath(); }
@@ -248,6 +292,7 @@
     node.addEventListener('pointercancel', function () { dragging = false; if (connectStart) { removeTempPath(); connectStart = null; } });
     node.addEventListener('click', function () { document.querySelectorAll('.er-node').forEach(function (item) { item.classList.remove('er-selected'); }); node.classList.add('er-selected'); });
     node.querySelector('[data-add-field]')?.addEventListener('click', function (event) { event.stopPropagation(); createField(schema.tables.find(function (table) { return table.name === node.dataset.node; })); });
+    node.querySelector('[data-delete-entity]')?.addEventListener('click', function (event) { event.stopPropagation(); removeEntity(node.dataset.node); });
     node.querySelector('[data-connect-from]')?.addEventListener('pointerdown', function (event) { event.stopPropagation(); connectMode = true; beginConnection(node, event); });
     node.querySelectorAll('[data-remove-field]').forEach(function (button) { button.addEventListener('click', function (event) { event.stopPropagation(); removeField(schema.tables.find(function (table) { return table.name === node.dataset.node; }), Number(button.dataset.removeField)); }); });
   }
@@ -271,7 +316,7 @@
     schema.tables.forEach(function (table, index) {
       var position = nodePosition(table, index); schema.erLayout[table.name] = position;
       var node = document.createElement('article'); node.className = 'er-node'; node.dataset.node = table.name; node.style.left = position.x + 'px'; node.style.top = position.y + 'px';
-      var header = document.createElement('div'); header.className = 'er-node-head'; header.innerHTML = `<span>实体</span><span style="color:#315a9b;font:inherit">${table.name}</span><button data-connect-from="${table.name}" class="er-connect-handle" title="拖动创建关系">↗</button><button data-add-field="${table.name}" title="添加属性">＋</button>`; node.appendChild(header);
+      var header = document.createElement('div'); header.className = 'er-node-head'; header.innerHTML = `<span>实体</span><span style="color:#315a9b;font:inherit">${table.name}</span><button data-connect-from="${table.name}" class="er-connect-handle" title="拖动创建关系">↗</button><button data-add-field="${table.name}" title="添加属性">＋</button><button data-delete-entity="${table.name}" class="er-delete-entity" title="删除实体" aria-label="删除实体 ${table.name}">×</button>`; node.appendChild(header);
       table.fields.forEach(function (field, fieldIndex) { var row = document.createElement('div'); row.className = 'er-field'; row.innerHTML = `<b class="${field.pk ? 'er-key' : field.foreignKey ? 'er-fk' : ''}">${field.pk ? '◆' : field.foreignKey ? '↗' : '·'}</b> ${field.name} <em>${field.type || 'TEXT'}${field.length ? '(' + field.length + ')' : ''}</em><button data-remove-field="${fieldIndex}" title="删除属性">×</button>`; node.appendChild(row); });
       canvas.appendChild(node); bindNode(node);
     });
@@ -283,9 +328,42 @@
     canvas = document.querySelector('#erCanvas'); if (!canvas || typeof schema === 'undefined') return;
     ensureModel(); createToolbar(); createSideToggle(); createInputDialog(); render();
     window.queryPadAutoLayout = autoLayout;
+    // enable touch/pointer based pinch zoom and ctrl+wheel zoom
+    try { canvas.style.touchAction = 'none'; } catch (e) { /* ignore */ }
+    canvas.addEventListener('wheel', function (e) {
+      if (e.ctrlKey || e.metaKey) { e.preventDefault(); if (e.deltaY > 0) zoomOut(); else zoomIn(); }
+    }, { passive: false });
+    canvas.addEventListener('pointerdown', function (e) {
+      if (e.pointerType !== 'touch') return;
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pointers.size === 2) {
+        var it = pointers.values(); var p1 = it.next().value; var p2 = it.next().value;
+        pinchStartDistance = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+        pinchStartScale = scale;
+      }
+    });
+    canvas.addEventListener('pointermove', function (e) {
+      if (e.pointerType === 'touch') {
+        if (!pointers.has(e.pointerId)) return;
+        pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (pointers.size === 2 && pinchStartDistance > 0) {
+          var it = pointers.values(); var p1 = it.next().value; var p2 = it.next().value;
+          var dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+          if (dist > 0) setScale(pinchStartScale * dist / pinchStartDistance);
+        }
+        return;
+      }
+      if (connectMode && connectStart) moveConnection(e);
+    });
+    canvas.addEventListener('pointerup', function (e) {
+      if (e.pointerType === 'touch') {
+        pointers.delete(e.pointerId);
+        if (pointers.size < 2) { pinchStartDistance = 0; pinchStartScale = scale; }
+      }
+      if (connectMode && connectStart) finishConnection(e);
+    });
+    canvas.addEventListener('pointercancel', function (e) { pointers.delete(e.pointerId); if (pointers.size < 2) { pinchStartDistance = 0; pinchStartScale = scale; } });
     canvas.addEventListener('click', function (event) { if (connectMode || event.target.closest?.('.er-node') || event.target.closest?.('.er-line') || event.target.closest?.('.er-line-label')) return; var point = canvasPoint(event); createEntity(point.x - 89, point.y - 30); });
-    canvas.addEventListener('pointermove', function (event) { if (connectMode && connectStart) moveConnection(event); });
-    canvas.addEventListener('pointerup', function (event) { if (connectMode && connectStart) finishConnection(event); });
     document.addEventListener('click', function (event) { if (event.target.closest('#erBtn, #erNav, #openDatabaseEr')) window.setTimeout(render, 30); });
     window.renderErFromSchema = render;
   }

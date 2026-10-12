@@ -24,6 +24,7 @@ android {
         getByName("main") {
             assets.srcDirs("../../")
             assets.exclude("android/**")
+            assets.exclude("node_modules/**")
             assets.exclude(".git/**")
             assets.exclude(".codex/**")
             assets.exclude(".agents/**")

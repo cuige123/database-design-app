@@ -1,5 +1,6 @@
 # Android/Gradle
 .gradle/
+node_modules/
 build/
 android/.gradle/
 android/build/

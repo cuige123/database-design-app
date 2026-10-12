@@ -1,5 +1,5 @@
-const CACHE_NAME = 'querypad-offline-v1';
-const APP_SHELL = ['./', './index.html', './manifest.json', './brand-logo.jpg', './offline-engine.js', './er-recognizer.js', './er-editor.js', './self-test.js', './fallback.js'];
+const CACHE_NAME = 'querypad-offline-v3';
+const APP_SHELL = ['./', './index.html', './assistant.css', './ai-assistant.js', './manifest.json', './brand-logo.jpg', './offline-engine.js', './sqlite-engine.js', './vendor/sql.js/sql-wasm.js', './vendor/sql.js/sql-wasm.wasm', './er-recognizer.js', './er-editor.js', './self-test.js', './fallback.js'];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)));

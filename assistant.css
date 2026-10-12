@@ -1,0 +1,44 @@
+.ai-launch { border:1px solid #d6e3ff; border-radius:11px; padding:9px 13px; background:var(--blue-soft); color:var(--blue); font-size:11px; font-weight:800; white-space:nowrap; }
+.ai-launch:hover { background:#dfeaff; }
+.ai-modal { position:fixed; inset:0; z-index:11; display:flex; align-items:center; justify-content:center; padding:20px; background:rgba(12,28,45,.48); opacity:0; pointer-events:none; transition:opacity .2s ease; }
+.ai-modal.open { opacity:1; pointer-events:auto; }
+.ai-panel { width:min(720px,100%); max-height:min(850px,92vh); display:flex; flex-direction:column; overflow:hidden; background:var(--panel); border:1px solid var(--line); border-radius:18px; box-shadow:0 24px 70px rgba(18,35,56,.28); transform:translateY(8px); transition:transform .2s ease; }
+.ai-modal.open .ai-panel { transform:translateY(0); }
+.ai-head { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:17px 19px; border-bottom:1px solid var(--line); }
+.ai-head h2 { margin:0; font-size:16px; }
+.ai-head p { margin:4px 0 0; color:var(--muted); font-size:10px; }
+.ai-close { width:32px; height:32px; flex:0 0 auto; border-radius:9px; background:var(--panel-soft); color:var(--muted); font-size:20px; }
+.ai-connection { display:flex; align-items:center; gap:8px; margin:12px 16px 0; padding:9px 11px; border:1px solid #f0dfb8; border-radius:10px; background:#fff9ed; color:#806632; font-size:10px; line-height:1.5; }
+.ai-connection.error { border-color:#f1c8c4; background:#fff4f2; color:#a3443b; }
+.ai-connection.ready { border-color:#bfead4; background:#f2fcf7; color:#247851; }
+.ai-status-dot { width:7px; height:7px; flex:0 0 auto; border-radius:50%; background:#e2a039; }
+.ai-connection.error .ai-status-dot { background:#d35c51; }
+.ai-connection.ready .ai-status-dot { background:#209b69; }
+.ai-privacy { display:flex; gap:8px; margin:9px 16px 0; padding:9px 11px; border-radius:10px; background:#f6f8fb; color:#66768b; font-size:10px; line-height:1.55; }
+.ai-privacy strong { flex:0 0 auto; color:#415671; }
+.ai-task-picker { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin:12px 16px 0; padding:4px; border-radius:11px; background:#f3f6fa; }
+.ai-task { border-radius:8px; padding:9px 7px; background:transparent; color:var(--muted); font-size:11px; }
+.ai-task.active { background:#fff; color:var(--blue); font-weight:800; box-shadow:0 2px 7px rgba(22,52,95,.08); }
+.ai-messages { min-height:170px; flex:1; overflow:auto; display:flex; flex-direction:column; gap:10px; padding:15px 16px; }
+.ai-message { max-width:92%; padding:11px 12px; border:1px solid var(--line); border-radius:13px; background:#fff; color:var(--ink); font-size:11px; line-height:1.65; overflow-wrap:anywhere; }
+.ai-message.user { align-self:flex-end; border-color:#d6e3ff; background:#f0f5ff; }
+.ai-message strong { display:block; margin-bottom:4px; color:#526783; font-size:9px; }
+.ai-message p { margin:0; white-space:pre-wrap; }
+.ai-message-actions { display:flex; gap:7px; margin-top:9px; }
+.ai-message-actions button { padding:6px 8px; border:1px solid #d8e2ef; border-radius:7px; background:#fff; color:#47658e; font-size:9px; }
+.ai-composer { padding:12px 16px 15px; border-top:1px solid var(--line); background:#fff; }
+.ai-composer label { display:block; margin-bottom:6px; color:#425772; font-size:10px; font-weight:800; }
+.ai-composer textarea { display:block; width:100%; resize:vertical; min-height:76px; max-height:180px; padding:10px 11px; border:1px solid #dce5ef; border-radius:10px; outline:none; color:var(--ink); background:#fcfdff; font-size:11px; line-height:1.6; }
+.ai-composer textarea:focus { border-color:#8db2f5; box-shadow:0 0 0 3px rgba(45,108,223,.1); }
+.ai-form-foot { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:8px; color:#99a5b5; font-size:9px; }
+.ai-send { min-width:78px; padding:8px 14px; border-radius:9px; background:var(--blue); color:#fff; font-size:10px; font-weight:800; }
+.ai-send:disabled { cursor:wait; opacity:.6; }
+@media (max-width:740px) {
+  .ai-modal { padding:8px; }
+  .ai-panel { height:calc(100vh - 16px); max-height:calc(100vh - 16px); border-radius:15px; }
+  .ai-head { padding:13px; }
+  .ai-connection, .ai-privacy { margin-left:11px; margin-right:11px; }
+  .ai-task-picker { margin-left:11px; margin-right:11px; }
+  .ai-messages { padding:12px 11px; }
+  .ai-composer { padding:11px; }
+}
