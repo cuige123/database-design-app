@@ -3,6 +3,12 @@
   "private": true,
   "version": "1.0.0",
   "description": "Offline MySQL learning and database design app",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
   "dependencies": {
     "sql.js": "1.13.0"
   }

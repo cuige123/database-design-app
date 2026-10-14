@@ -3,33 +3,36 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#f4f7fb" />
+  <meta name="theme-color" content="#10131e" />
   <meta name="description" content="适用于移动端和网页端的 MySQL 学习工具" />
   <link rel="manifest" href="manifest.json" />
-  <link rel="stylesheet" href="assistant.css" />
+  <link rel="stylesheet" href="assistant.css?v=9" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='20' fill='%2316345f'/%3E%3Ctext x='32' y='43' fill='white' font-family='Arial' font-size='20' font-weight='700' text-anchor='middle'%3ESQL%3C/text%3E%3C/svg%3E" />
   <title>MySQL实验室 · MySQL 练习工具</title>
   <style>
     :root {
-      --bg: #f4f7fb;
-      --panel: #ffffff;
-      --panel-soft: #f8fafc;
-      --ink: #142338;
-      --muted: #708097;
-      --line: #e5ebf2;
-      --navy: #16345f;
-      --blue: #2d6cdf;
-      --blue-soft: #eaf1ff;
-      --green: #209b69;
-      --green-soft: #e6f8ef;
+      --bg: #10131e;
+      --panel: #171b28;
+      --panel-soft: #1d2231;
+      --ink: #edf1f8;
+      --muted: #a0a9b9;
+      --line: #303748;
+      --navy: #e4eaf5;
+      --blue: #82adff;
+      --blue-soft: #202d46;
+      --green: #63d4a0;
+      --green-soft: #18382f;
+      --error: #ffb199;
+      --error-soft: #392725;
       --orange: #f49b44;
-      --shadow: 0 12px 32px rgba(29, 54, 89, .08);
+      --shadow: 0 12px 32px rgba(0, 0, 0, .24);
       --radius: 18px;
+      color-scheme: dark;
     }
     * { box-sizing: border-box; }
     html { scrollbar-width: none; }
     html::-webkit-scrollbar { display: none; }
-    body { margin: 0; background: var(--bg); color: var(--ink); font-family: Manrope, system-ui, sans-serif; }
+    body { margin: 0; background: radial-gradient(ellipse at 12% 4%, rgba(56,77,123,.22), transparent 34rem), radial-gradient(ellipse at 92% 32%, rgba(36,71,91,.18), transparent 32rem), linear-gradient(145deg, #121622 0%, #0d1018 54%, #131824 100%); background-attachment: fixed; color: var(--ink); font-family: Manrope, system-ui, sans-serif; }
     button, textarea { font: inherit; }
     button { border: 0; cursor: pointer; }
     .shell { width: min(1160px, 100%); margin: 0 auto; padding: 26px 22px 100px; }
@@ -42,10 +45,11 @@
     .icon-btn { width: 38px; height: 38px; border-radius: 12px; background: var(--panel); color: var(--muted); border: 1px solid var(--line); display: grid; place-items: center; font-size: 16px; }
     .avatar { width: 38px; height: 38px; border-radius: 50%; background: #e7eefb; color: var(--navy); display:grid; place-items:center; font-size: 12px; font-weight: 800; }
     .connection { background: var(--panel); border: 1px solid var(--line); border-radius: 15px; box-shadow: var(--shadow); padding: 11px 14px; display:flex; justify-content:space-between; align-items:center; gap: 12px; margin-bottom: 16px; }
-    .connection-left { display:flex; align-items:center; gap: 10px; min-width: 0; }
+    .connection-left { display:flex; align-items:center; gap: 10px; min-width: 0; flex: 1 1 auto; }
+    .connection-left > div { min-width: 0; }
     .pulse { width: 9px; height: 9px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 4px var(--green-soft); flex: 0 0 auto; }
     .connection strong { display:block; font-size: 12px; }
-    .connection span { display:block; font-size: 11px; color: var(--muted); white-space: nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .connection span { display:block; font-size: 11px; color: var(--muted); line-height: 1.4; overflow-wrap:anywhere; }
     .connection .switch { color: var(--blue); background: var(--blue-soft); padding: 8px 11px; border-radius: 9px; font-size: 11px; font-weight: 800; flex:0 0 auto; }
     .layout { display: grid; grid-template-columns: 280px minmax(0,1fr); gap: 18px; }
     .sidebar { display:flex; flex-direction:column; gap: 14px; }
@@ -342,13 +346,124 @@
       .field-row .field-default, .field-row .field-comment { grid-column:auto; }
       .relation-row { grid-template-columns:1fr .55fr 1fr .6fr .8fr 25px; }
     }
+    .brand h1, .workspace-head h2, .side-title h2, .result-title h3 { color:var(--ink); }
+    .icon-btn, .lesson-select, .schema-toggle, .tool, .chip, .project-actions button,
+    .drawer-close, .exercise-close, .help-close, .design-close, .er-close,
+    .relation-head button, .project-item, .exercise-option { background-color:var(--panel-soft); color:var(--ink); }
+    .connection, .card, .exercise-panel, .help-panel, .er-panel, .design-panel, .schema-drawer { background-color:var(--panel); }
+    .avatar { background:#28344a; color:#c5d8ff; }
+    .db-row.active, .chip.active, .nav-item.active, .project-item.active,
+    .exercise-option:hover, .exercise-option[aria-current="true"] { background:var(--blue-soft); }
+    .db-row.active, .table-row:hover, .side-title button, .schema-block-head button { color:var(--blue); }
+    .challenge { border-color:#34445f; background:linear-gradient(135deg,#1c2638,#171b28); }
+    .challenge.done { border-color:#285743; background:linear-gradient(135deg,#172d27,#171b28); }
+    .progress-ring { background:conic-gradient(var(--blue) 25%, #30394b 0); }
+    .progress-ring::after { background:#1b2030; }
+    .exercise-nav button { border-color:#34445f; background:var(--panel-soft); color:var(--blue); }
+    .exercise-head, .help-head { background:rgba(23,27,40,.96); }
+    .exercise-option, .project-item { border-color:var(--line); }
+    .exercise-number { background:#26334a; }
+    .table-tab { background:var(--panel-soft); color:var(--muted); }
+    .table-tab.active { border-color:#3b5277; }
+    .editor-toolbar { border-color:var(--line); }
+    .result-card { background:var(--panel); }
+    th { background:#202635; color:#aab5c7; }
+    td { border-color:#2c3342; color:#d0d7e3; }
+    .mobile-nav { background:rgba(23,27,40,.96); border-color:var(--line); }
+    .nav-item { color:#a0a9b9; }
+    .nav-item.active strong { background:#2a354a; }
+    .er-side { background:#141925; }
+    .er-canvas-wrap { background:#111621; }
+    .er-canvas { background-image:radial-gradient(#30394a 1px, transparent 1px); }
+    .er-note { background:#302a1e; color:#e0ca91; }
+    .er-node { background:#1a2030; border-color:#3a4558; color:#e1e7f0; }
+    .er-node-head { background:#242e42; color:#bed2ff; }
+    .er-field { border-color:#30394a; color:#c0c9d7; }
+    .design-section, .design-block, .field-editor { background:var(--panel); border-color:var(--line); }
+    .field-row:first-child, .relation-head, .schema-block-head { background:#202635; color:#b5bfd0; }
+    .field-row, .relation-row, .schema-field { border-color:#2c3342; }
+    .field-row input, .field-row select, .relation-row select, .relation-row input[data-relation-custom],
+    .project-new input { background:#111621; border-color:#384155; color:var(--ink); }
+    .relation-head button { border-color:var(--line); color:var(--blue); }
+    .relation-editor-hint { background:#1a2030; }
+    .local-data-tools { background:#1a2030; }
+    .engine-panel { border-color:#34445f; background:#1a2232; }
+    .remove-field { background:#3b282c; color:#f0a196; }
+    .sql-preview pre { background:#0b0f17; }
+    .help-section { background:#1a2030; }
+    .help-section h3 { color:#bed2ff; }
+    .help-callout { border-color:#53472b; background:#302a1e; color:#e0ca91; }
+    .design-tool.danger { border-color:#65403b; background:#392725; color:#ffb199; }
+    .design-tool.primary, .er-action.primary, .project-new button, .ai-launch { color:#10131e; }
+    .database-tab.active { background:#2a354a; color:#a9c6ff; }
+    .schema-field { color:#c0c9d7; }
+    .schema-field em { color:#8e9aae; }
+    .error-cell { color:#ffb199!important; background:#352822; }
+    .difficulty-badge { display:inline-flex; margin-top:7px; padding:3px 7px; border:1px solid #3a5277; border-radius:99px; background:#202d46; color:#aac8ff; font-size:9px; font-weight:800; }
+    .learning-progress { margin:-5px 0 14px; padding:12px 14px; }
+    .learning-progress-head, .hint-row, .query-plan-head, .library-head { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .learning-progress-head strong, .hint-row strong { font-size:10px; }
+    .learning-progress-head span, .hint-row > div > span { color:var(--muted); font-size:9px; }
+    .learning-progress-track { height:5px; margin:8px 0; overflow:hidden; border-radius:99px; background:#303748; }
+    .learning-progress-track span { display:block; width:0; height:100%; border-radius:inherit; background:linear-gradient(90deg,#668ffc,#63d4a0); transition:width .2s ease; }
+    .learning-stages { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-bottom:9px; }
+    .learning-stage { min-width:0; padding:5px 7px; border:1px solid var(--line); border-radius:8px; color:var(--muted); font-size:8px; }
+    .learning-stage strong { float:right; color:var(--ink); font-size:8px; }
+    .hint-row { padding-top:8px; border-top:1px solid var(--line); }
+    .hint-row > div { min-width:0; display:grid; gap:3px; }
+    .hint-row > div > span { line-height:1.45; }
+    .hint-row button, #toggleWrongFilter, #saveDraftBtn { flex:0 0 auto; padding:7px 9px; border:1px solid #3a5277; border-radius:8px; background:#202d46; color:#b8ceff; font-size:9px; font-weight:800; }
+    .hint-row button:disabled { opacity:.5; cursor:not-allowed; }
+    .exercise-filters { display:grid; grid-template-columns:minmax(120px,1fr) minmax(120px,1fr) minmax(90px,.7fr) auto; gap:7px; padding:10px 12px 5px; }
+    .exercise-filters input, .exercise-filters select, .library-controls input { min-width:0; width:100%; padding:8px 9px; border:1px solid var(--line); border-radius:8px; outline:none; background:#111621; color:var(--ink); font-family:inherit; font-size:10px; }
+    .exercise-filters input:focus, .exercise-filters select:focus, .library-controls input:focus { border-color:#5873a5; }
+    .exercise-filters #toggleWrongFilter[aria-pressed="true"] { border-color:#8b5550; background:#392725; color:#ffc0ad; }
+    .exercise-progress-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; padding:6px 12px; }
+    .exercise-progress-card { padding:8px 9px; border:1px solid var(--line); border-radius:9px; background:#1a2030; color:var(--muted); font-size:9px; }
+    .exercise-progress-card strong { display:block; margin-top:3px; color:var(--ink); font-size:11px; }
+    .exercise-option { background:#171b28; color:var(--ink); }
+    .exercise-option-copy small { color:#a0a9b9; }
+    .exercise-level { flex:0 0 auto; padding:3px 6px; border-radius:99px; background:#202d46; color:#b8ceff; font-size:8px; }
+    .exercise-mistake { color:#ffb199; font-size:8px; }
+    .exercise-empty { padding:22px 12px; color:var(--muted); font-size:10px; text-align:center; }
+    .query-plan { margin-top:10px; padding:12px 14px; }
+    .query-plan-head strong, .library-head h2 { display:block; color:var(--ink); font-size:11px; }
+    .query-plan-head span, .library-head p { display:block; margin-top:3px; color:var(--muted); font-size:9px; line-height:1.45; }
+    .query-plan-head button, .library-head button { width:30px; height:30px; border:1px solid var(--line); border-radius:8px; background:var(--panel-soft); color:var(--muted); font-size:18px; }
+    .query-plan ol { display:grid; gap:5px; margin:10px 0; padding-left:24px; color:#cbd4e2; font:9px/1.6 'DM Mono',monospace; }
+    .index-advice { padding:8px 9px; border:1px solid #3a3441; border-radius:8px; background:#211e2b; color:#d8c8a0; font-size:9px; line-height:1.5; }
+    .library-modal { position:fixed; inset:0; z-index:12; display:flex; align-items:center; justify-content:center; padding:16px; background:rgba(3,6,15,.68); opacity:0; visibility:hidden; pointer-events:none; transition:opacity .2s ease, visibility .2s ease; }
+    .library-modal.open { opacity:1; visibility:visible; pointer-events:auto; }
+    .library-panel { display:flex; flex-direction:column; width:min(720px,100%); max-height:min(82vh,720px); overflow:hidden; border:1px solid #3a4558; border-radius:16px; background:#171b28; box-shadow:0 24px 70px rgba(0,0,0,.42); }
+    .library-head { padding:14px 16px; border-bottom:1px solid var(--line); }
+    .library-head h2, .library-head p { margin:0; }
+    .library-controls { display:grid; grid-template-columns:minmax(120px,1fr) auto auto; gap:7px; padding:10px 12px; border-bottom:1px solid var(--line); }
+    .library-tabs { display:flex; gap:3px; padding:3px; border:1px solid var(--line); border-radius:9px; background:#111621; }
+    .library-tabs button { padding:5px 8px; border-radius:6px; background:transparent; color:var(--muted); font-size:9px; }
+    .library-tabs button.active { background:#26334a; color:#c0d4ff; }
+    .sql-library-list { display:grid; gap:7px; min-height:80px; padding:11px 12px; overflow:auto; }
+    .sql-library-item { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; padding:9px 10px; border:1px solid var(--line); border-radius:9px; background:#1a2030; }
+    .sql-library-item button { color:var(--ink); background:transparent; text-align:left; }
+    .sql-library-item strong { display:block; font-size:10px; }
+    .sql-library-item small { display:block; margin-top:4px; color:var(--muted); font:8px/1.5 'DM Mono',monospace; white-space:pre-wrap; overflow-wrap:anywhere; }
+    .sql-library-actions { display:flex; align-items:flex-start; gap:4px; }
+    .sql-library-actions button { padding:5px 7px; border:1px solid var(--line); border-radius:7px; background:#202635; color:#bdc7d8; font-size:8px; white-space:nowrap; }
+    @media (max-width:740px) {
+      .exercise-filters { grid-template-columns:1fr 1fr; }
+      .exercise-progress-grid { padding-left:10px; padding-right:10px; }
+      .library-modal { padding:8px; }
+      .library-panel { max-height:calc(100vh - 16px); }
+      .library-controls { grid-template-columns:1fr auto; }
+      .library-controls > input { grid-column:1 / -1; }
+      .exercise-nav { flex-wrap:wrap; }
+    }
   </style>
 </head>
 <body>
   <div class="shell">
     <header class="topbar">
       <div class="brand"><img class="mark" src="brand-logo.jpg" alt="MySQL实验室标识"><div><h1>MySQL实验室</h1><p>移动端＋网页端MySQL</p></div></div>
-      <div class="top-actions"><button class="ai-launch" id="aiAssistantBtn" type="button">AI 助手</button><button class="icon-btn" id="helpBtn" aria-label="帮助">?</button></div>
+      <div class="top-actions"><button class="icon-btn" id="helpBtn" aria-label="帮助">?</button><button class="ai-launch" id="aiAssistantBtn" type="button" aria-controls="aiModal" aria-expanded="false" title="按住拖动可调整位置，点击打开 AI 助手">✦ AI 助手</button></div>
     </header>
 
     <section class="connection"><div class="connection-left"><i class="pulse"></i><div><strong>本地演示环境 · SQLite WASM</strong><span>student_workspace · 支持 SQLite 与部分 MySQL 常见写法，不连接远程数据库</span></div></div><button class="switch" id="switchBtn">切换环境</button></section>
@@ -361,12 +476,19 @@
 
       <main class="main">
         <div class="workspace-head"><div><h2>SQL 工作台</h2><p>输入语句，运行后查看结果</p></div><div class="head-actions"><button class="schema-toggle" id="projectBtnTop" type="button" aria-label="项目" title="项目">项目</button><button class="schema-toggle" id="erBtn" type="button" aria-label="ER 图" title="ER 图">ER 图</button><button class="schema-toggle" id="designBtn" type="button" aria-label="设计表" title="设计表">设计表</button><button class="schema-toggle" id="schemaBtn" type="button" aria-label="表结构" title="表结构">表结构</button><button class="lesson-select" id="lessonBtn" type="button" aria-label="选择练习题" title="选择练习题">第 02 题 · 查询排序⌄</button></div></div>
-        <section class="challenge" id="challenge"><div class="challenge-copy"><div class="challenge-kicker" id="challengeKicker">当前练习 · 02 / 12</div><h3 id="challengeTitle">找出成绩最高的 4 位同学</h3><p id="challengeText">查询 students 表，返回姓名和成绩，并按成绩从高到低排列。</p></div><div class="challenge-progress"><div class="progress-ring"><span id="progressText">02/12</span></div><div class="exercise-nav"><button id="previousExercise" type="button">← 上一题</button><button id="nextExercise" type="button">下一题 →</button></div></div></section>
+        <section class="challenge" id="challenge"><div class="challenge-copy"><div class="challenge-kicker" id="challengeKicker">当前练习 · 查询排序</div><h3 id="challengeTitle">找出成绩最高的 4 位同学</h3><p id="challengeText">查询 students 表，返回姓名和成绩，并按成绩从高到低排列。</p><span class="difficulty-badge" id="challengeDifficulty">基础</span></div><div class="challenge-progress"><div class="progress-ring"><span id="progressText">0/51</span></div><div class="exercise-nav"><button id="previousExercise" type="button">← 上一题</button><button id="nextExercise" type="button">下一题 →</button><button id="reviewWrongBtn" type="button">复习错题</button><button id="exercisePathBtn" type="button">学习路径</button></div></div></section>
+        <section class="learning-progress card" aria-label="学习路径进度">
+          <div class="learning-progress-head"><strong>学习路径</strong><span id="learningProgressLabel">已完成 0 / 51 题</span></div>
+          <div class="learning-progress-track"><span id="learningProgressBar"></span></div>
+          <div class="learning-stages" id="learningStages"></div>
+          <div class="hint-row"><div><strong>分级提示</strong><span id="hintText">卡住时可以逐级获取提示，不会直接显示完整答案。</span></div><button id="nextHintBtn" type="button">获取提示 1/3</button></div>
+        </section>
         <section class="card editor-card">
-          <div class="editor-toolbar"><span class="file-label"><i class="sql-dot"></i> SQL练习代码</span><div class="toolbar-actions"><button class="tool" id="formatBtn">格式化</button><button class="tool" id="initializeSqlBtn">初始化</button><button class="tool" id="completeSqlBtn">补全代码</button></div></div>
+          <div class="editor-toolbar"><span class="file-label"><i class="sql-dot"></i> SQL练习代码</span><div class="toolbar-actions"><button class="tool" id="formatBtn">格式化</button><button class="tool" id="saveFavoriteBtn">收藏 SQL</button><button class="tool" id="openSqlLibraryBtn">SQL 库</button><button class="tool" id="explainPlanBtn">执行计划</button><button class="tool" id="initializeSqlBtn">初始化</button><button class="tool" id="completeSqlBtn">补全代码</button></div></div>
           <div class="editor-wrap"><pre class="sql-highlight" id="sqlHighlight" aria-hidden="true"></pre><div class="sql-autocomplete" id="sqlAutocomplete" role="listbox" hidden></div><textarea id="sqlEditor" spellcheck="false" aria-label="SQL 编辑器" aria-autocomplete="list" aria-controls="sqlAutocomplete" placeholder="在这里编写 SQL；遇到困难可点击“补全代码”查看当前题目的完整参考答案"></textarea><div class="editor-footer"><span id="cursorPos">Ln 1, Col 1</span><button class="run-btn" id="runBtn" disabled><span>▶</span> 载入 SQLite…</button></div></div>
         </section>
         <div class="examples"><button class="chip active" data-query="SELECT name, score\nFROM students\nORDER BY score DESC;">查询并排序</button><button class="chip" data-query="SELECT major, COUNT(*) AS total\nFROM students\nGROUP BY major;">分组统计</button><button class="chip" data-query="SELECT s.name, c.title\nFROM students s\nJOIN enrollments e ON s.id = e.student_id\nJOIN courses c ON c.id = e.course_id;">多表连接</button></div>
+        <section class="query-plan card" id="queryPlanPanel" hidden><div class="query-plan-head"><div><strong>SQLite 执行计划</strong><span>展示本地 SQLite 的查询计划，不代表 MySQL 服务器计划</span></div><button id="closeQueryPlan" type="button" aria-label="关闭执行计划">×</button></div><ol id="queryPlanSteps"></ol><div class="index-advice" id="indexAdvice"></div></section>
 
         <section class="card result-card"><div class="result-head"><div class="result-title"><h3>运行结果</h3><span class="success" id="statusLabel">执行成功</span></div><span class="result-meta" id="resultMeta">4 行 · 12 ms</span></div><div class="table-scroll"><table id="resultTable"><thead><tr><th>#</th><th>name</th><th>score</th><th>major</th></tr></thead><tbody><tr><td>01</td><td>陈思远</td><td>96</td><td>计算机科学</td></tr><tr><td>02</td><td>林晓雨</td><td>92</td><td>软件工程</td></tr><tr><td>03</td><td>周子航</td><td>88</td><td>计算机科学</td></tr><tr><td>04</td><td>赵可欣</td><td>85</td><td>数据科学</td></tr></tbody></table></div><div class="result-foot"><span id="resultFoot">结果已保存到本次练习</span><span>MySQL 兼容模式</span></div></section>
       </main>
@@ -377,31 +499,54 @@
   <section class="ai-modal" id="aiModal" aria-hidden="true">
     <div class="ai-panel" role="dialog" aria-modal="true" aria-labelledby="aiTitle">
       <header class="ai-head">
-        <div><h2 id="aiTitle">数据库设计 AI 助手</h2><p>根据当前表结构提供建议、解释 SQL 或生成 SQL</p></div>
-        <button class="ai-close" id="aiClose" type="button" aria-label="关闭 AI 助手">×</button>
+        <div class="ai-head-main">
+          <div class="ai-avatar" aria-hidden="true">✦</div>
+          <div class="ai-head-copy"><h2 id="aiTitle">数据库 AI 学习助手</h2><p>感知当前练习 · SQL 与数据库设计辅导</p></div>
+        </div>
+        <div class="ai-head-tools"><button id="aiMinimize" type="button" aria-expanded="false" aria-controls="aiModal">收起</button><button class="ai-close" id="aiClose" type="button" aria-label="关闭 AI 助手">×</button></div>
       </header>
-      <div class="ai-connection" id="aiConnection" role="status"><span class="ai-status-dot"></span><span>尚未连接模型服务。需要部署后端接口后才能发送请求。</span></div>
-      <div class="ai-privacy"><strong>数据范围</strong><span id="aiContextSummary">设计建议和 SQL 生成只会发送表名、字段定义及关系；SQL 解释只发送编辑器中的 SQL 和你的问题。不发送练习数据或聊天历史。API Key 应保存在后端。</span></div>
+      <div class="ai-connection" id="aiConnection" role="status"><span class="ai-status-dot"></span><span>通过 Node.js 服务端安全调用 DeepSeek；请在服务端配置 API Key。</span></div>
+      <section class="ai-intro" aria-labelledby="aiIntroTitle">
+        <div class="ai-intro-kicker">AI 学习 · 当前页面感知</div>
+        <h3 id="aiIntroTitle">不懂就问，和你一起拆解 SQL</h3>
+        <p>我会围绕当前练习和表结构提供解释与提示；答案请结合课程要求核对。</p>
+        <div class="ai-current-context" id="aiCurrentContext">✦ 正在读取当前练习…</div>
+      </section>
+      <div class="ai-privacy"><span id="aiContextSummary">每次提问只发送当前任务所需信息；不发送练习数据行或对话历史，API Key 由后端保管。</span></div>
+      <section class="ai-quick-section" aria-labelledby="aiQuickTitle">
+        <h3 class="ai-section-title" id="aiQuickTitle">试试这些辅导功能 <span>点击后可修改问题再发送</span></h3>
+        <div class="ai-quick-grid">
+          <button class="ai-quick" type="button" data-ai-quick="explain_sql"><span class="ai-quick-icon">▤</span><strong>解释 SQL</strong><small>逐段理解查询</small></button>
+          <button class="ai-quick" type="button" data-ai-quick="diagnose_sql"><span class="ai-quick-icon">⌕</span><strong>诊断报错</strong><small id="aiErrorQuickHint">先运行失败语句</small></button>
+          <button class="ai-quick" type="button" data-ai-quick="generate_sql"><span class="ai-quick-icon">✎</span><strong>本题提示</strong><small>生成参考 SQL</small></button>
+          <button class="ai-quick" type="button" data-ai-quick="design_review"><span class="ai-quick-icon">◇</span><strong>检查表设计</strong><small>查看结构建议</small></button>
+        </div>
+      </section>
       <div class="ai-task-picker" role="group" aria-label="选择助手任务">
         <button type="button" class="ai-task active" data-ai-task="design_review" aria-pressed="true">设计建议</button>
         <button type="button" class="ai-task" data-ai-task="explain_sql" aria-pressed="false">解释 SQL</button>
         <button type="button" class="ai-task" data-ai-task="generate_sql" aria-pressed="false">生成 SQL</button>
+        <button type="button" class="ai-task" data-ai-task="diagnose_sql" aria-pressed="false">错误诊断</button>
       </div>
+      <h3 class="ai-section-title ai-conversation-title"><span>辅导对话</span><button id="aiClearChat" type="button">清空本页对话</button></h3>
       <div class="ai-messages" id="aiMessages" role="log" aria-live="polite" aria-relevant="additions">
-        <article class="ai-message assistant"><strong>助手</strong><p>可以检查表结构、解释当前 SQL，或按你的需求生成 SQL。生成内容请先检查，再自行决定是否执行。</p></article>
+        <article class="ai-message assistant ai-welcome"><strong>学习助手</strong><p>你好！我可以先给你思路提示，也可以逐步解释 SQL、诊断刚才的报错或检查当前表结构。选择上方快捷功能开始吧。</p></article>
       </div>
       <form class="ai-composer" id="aiForm">
         <label for="aiPrompt" id="aiPromptLabel">描述你希望检查的设计</label>
         <textarea id="aiPrompt" maxlength="4000" rows="3" placeholder="例如：检查主键、外键和关系设计，并指出可能的规范化问题"></textarea>
-        <div class="ai-form-foot"><span>单次问题最多 4,000 字</span><button class="ai-send" id="aiSend" type="submit">发送</button></div>
+        <div class="ai-form-foot"><span class="ai-composer-note"><span>✦</span><span>DeepSeek · 单次问题最多 4,000 字</span></span><button class="ai-send" id="aiSend" type="submit">发送 ↗</button></div>
       </form>
     </div>
   </section>
-  <section class="exercise-modal" id="exerciseModal" aria-hidden="true"><div class="exercise-panel" role="dialog" aria-modal="true" aria-labelledby="exercisePickerTitle"><div class="exercise-head"><div><h2 id="exercisePickerTitle">选择数据库练习题</h2><p>共 50 题；练习数据含 30 名学生、16 门课程和 123 条选课记录</p></div><button class="exercise-close" id="exerciseClose" type="button" aria-label="关闭题目列表">×</button></div><div class="exercise-list" id="exerciseList"></div></div></section>
+  <section class="exercise-modal" id="exerciseModal" aria-hidden="true"><div class="exercise-panel" role="dialog" aria-modal="true" aria-labelledby="exercisePickerTitle"><div class="exercise-head"><div><h2 id="exercisePickerTitle">学习路径 · 选择练习</h2><p id="exercisePickerSummary">按知识点、难度筛选；完成情况保存在当前浏览器。</p></div><button class="exercise-close" id="exerciseClose" type="button" aria-label="关闭题目列表">×</button></div><div class="exercise-filters"><input id="exerciseSearch" type="search" placeholder="搜索题目或知识点" aria-label="搜索练习题"><select id="exerciseTopicFilter" aria-label="按知识点筛选"><option value="">全部知识点</option></select><select id="exerciseDifficultyFilter" aria-label="按难度筛选"><option value="">全部难度</option><option>基础</option><option>进阶</option><option>挑战</option></select><button id="toggleWrongFilter" type="button" aria-pressed="false">只看错题</button></div><div class="exercise-progress-grid" id="exerciseProgressGrid"></div><div class="exercise-list" id="exerciseList"></div></div></section>
+  <section class="library-modal" id="sqlLibraryModal" aria-hidden="true"><div class="library-panel" role="dialog" aria-modal="true" aria-labelledby="sqlLibraryTitle"><div class="library-head"><div><h2 id="sqlLibraryTitle">SQL 收藏与版本</h2><p>草稿自动保存在此浏览器；收藏和历史版本不会上传。</p></div><button id="closeSqlLibrary" type="button" aria-label="关闭 SQL 库">×</button></div><div class="library-controls"><input id="sqlLibrarySearch" type="search" placeholder="搜索名称或 SQL 内容" aria-label="搜索 SQL 收藏与版本"><div class="library-tabs" role="group" aria-label="SQL 库筛选"><button type="button" class="active" data-library-tab="favorites">收藏</button><button type="button" data-library-tab="versions">历史版本</button></div><button id="saveDraftBtn" type="button">保存当前草稿</button></div><div class="sql-library-list" id="sqlLibraryList"></div></div></section>
   <section class="help-modal" id="helpModal" aria-hidden="true"><div class="help-panel" role="dialog" aria-modal="true" aria-labelledby="helpTitle" aria-describedby="helpIntro"><div class="help-head"><div><h2 id="helpTitle">功能帮助</h2><p id="helpIntro">MySQL实验室 · 移动端与网页端 MySQL 学习工具</p></div><button class="help-close" id="helpClose" type="button" aria-label="关闭帮助">×</button></div><div class="help-content"><div class="help-grid">
     <section class="help-section"><h3>SQL 工作台</h3><ul><li>编辑区可保持空白供你自行编写 SQL，点击“运行 SQL”查看结果和错误提示。</li><li>“初始化”清空编辑区；“补全代码”载入当前题目的完整参考 SQL，覆盖现有代码前会先确认。</li><li>编辑器会高亮 SQL 关键字、函数、字符串、数字和注释；输入时可补全关键字、表名和字段名，按 Ctrl+空格可查看建议。</li><li>输入括号或引号会自动配对；Tab 插入缩进。SQL 执行失败时会标出疑似错误行。</li><li>“格式化”整理常见 SQL 子句；下方示例按钮可快速载入排序、分组统计和多表连接示例。</li><li>左侧数据库表名可载入该表的查询模板；“最近运行”可点选历史语句或清空历史。</li></ul></section>
+    <section class="help-section"><h3>学习路径与 SQL 管理</h3><ul><li>练习选择器可按题目、知识点和难度筛选；答错的题目会进入本地错题复习，通过后自动移除。</li><li>“分级提示”逐步给出思路，不会直接展开完整答案；完成进度保存在当前浏览器。</li><li>编辑器可收藏 SQL、保存当前草稿，并自动保留最多 40 个本地历史版本；在 SQL 库中可搜索、载入或取消收藏。</li><li>“执行计划”只分析单条 SELECT/WITH 查询，显示本地 SQLite 计划与通用索引建议；不会运行修改语句或自动创建索引，也不代表 MySQL 服务端计划。</li></ul></section>
     <section class="help-section"><h3>查看数据库与表结构</h3><ul><li>左侧列出当前练习数据库及 students、courses、enrollments 示例表。</li><li>点击顶部“表结构”打开侧栏；切换表结构/ER 图视图，点字段可插入到 SQL 编辑区。</li><li>数据库侧栏可直接打开数据表设计器或 ER 图画布。</li><li>表结构刷新按钮目前只提示状态，不会连接外部数据库。</li></ul></section>
     <section class="help-section"><h3>表结构设计器</h3><ul><li>“新建数据表”会将空表加入当前项目、左侧列表和表结构面板，并同步到浏览器内的 SQLite 数据库，可立即用 SQL 查询。</li><li>可新建字段并编辑字段名、类型、长度、主键、NULL、默认值及备注。</li><li>可维护表关系/外键和关系类型；设计器会生成建表 SQL。</li><li>可复制 SQL、在本地 SQLite 引擎中试运行、导出数据字典，并运行基础范式检查。</li><li>“运行自检”可检查页面内置功能状态。</li></ul></section>
+    <section class="help-section"><h3>AI 学习助手</h3><ul><li>点击悬浮“AI 助手”打开辅导面板；可收起面板继续操作工作台，也可清空当前页面显示的对话。</li><li>快捷入口可预填 SQL 解释、错误诊断、本题提示和表结构检查问题；问题可编辑，点击快捷入口不会自动发送。</li><li>错误诊断只在最近运行的 SQL 失败且语句未改变时可用；AI 给出的 SQL 需要检查，不会自动执行。</li><li>每种任务只发送必要的 SQL 或表结构；通过“本题提示”生成 SQL 时，当前练习标题和要求会写入问题文本。不会发送练习数据行或对话历史，API Key 由服务端保管。</li></ul></section>
     <section class="help-section"><h3>ER 图设计器</h3><ul><li>拖动实体可调整位置；点画布空白处或“新建实体”可添加实体。</li><li>实体标题处可创建关系、添加字段或删除实体；删除前会确认，并同时移除关联关系和本地表。</li><li>点击关系线选中后可删除；关系标签可用于修改关系类型。</li><li>可在实体上添加/删除字段、自动布局，并收起或展开左侧说明。</li><li>关系支持 1:1、1:N、N:1、N:N 和自定义标注；多对多建表建议使用中间表。</li><li>可将 ER 图导出为 PNG 或 SVG。</li></ul></section>
     <section class="help-section"><h3>导入图片与识别</h3><p>在 ER 图设计器中选择“导入图片 / OCR”。普通浏览器当前只检测版面候选框，不识别图片中的文字或关系；生成的实体候选需要人工核对。Android 环境可调用本地 OCR，但识别结果也建议复核。</p></section>
     <section class="help-section"><h3>项目与本地数据</h3><ul><li>“项目”可创建并切换项目；每个项目的表结构和 ER 布局保存在本机浏览器。</li><li>练习数据库的数据变更、SQL 编辑内容、最近运行记录和练习进度都会保存在当前浏览器，关闭后再次打开仍可继续。</li><li>打开“项目”可选择“重置练习数据库”（保留项目、草稿和进度）或“重置全部本地数据”（清除本应用本机保存内容）。两项操作都会二次确认。</li><li>表设计器可导入/导出项目 JSON；项目窗口可导出当前项目。数据不会自动同步到其他设备，也没有连接服务器。</li></ul></section>
@@ -418,8 +563,8 @@
   <script src="sqlite-engine.js"></script>
   <script src="er-recognizer.js"></script>
   <script src="er-editor.js"></script>
-  <script src="self-test.js"></script>
-  <script src="ai-assistant.js"></script>
+  <script src="self-test.js?v=2"></script>
+  <script src="ai-assistant.js?v=10"></script>
   <script>
     const editor = document.querySelector('#sqlEditor');
     const toast = document.querySelector('#toast');
@@ -485,6 +630,7 @@
     function refreshSqlEditor() { renderSqlHighlight(); updateCursorPosition(); }
     function clearEditorError() {
       editorErrorLine = 0;
+      window.queryPadLastSqlError = null;
       editorWrap.classList.remove('has-error');
       refreshSqlEditor();
     }
@@ -587,7 +733,8 @@
       group: [['01','计算机科学','2','—'],['02','软件工程','1','—'],['03','数据科学','1','—']],
       join: [['01','陈思远','MySQL 基础','—'],['02','林晓雨','Web 开发实战','—'],['03','周子航','MySQL 基础','—']]
     };
-    const storage = { get(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch (_) { return fallback; } }, set(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch (_) {} } };
+    const storage = { get(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch (_) { return fallback; } }, set(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch (error) { console.error(`本地数据保存失败：${key}`, error); return false; } } };
+    let storageWarningAt = 0;
     const schemaKey = 'querypad-schema';
     const defaultSchema = { active: 'students', tables: [
       { name:'students', comment:'学生信息', fields:[{name:'id',type:'INT',length:'',pk:true,nullable:false,comment:'主键'},{name:'name',type:'VARCHAR',length:'50',pk:false,nullable:false,comment:'姓名'},{name:'score',type:'INT',length:'',pk:false,nullable:true,comment:'成绩'},{name:'major',type:'VARCHAR',length:'50',pk:false,nullable:true,comment:'专业'}] },
@@ -742,7 +889,15 @@
     function checkNormalForm() { const problems = []; schema.tables.forEach(table => { if (!table.fields.some(field => field.pk)) problems.push(`${table.name} 没有主键，建议增加能唯一标识记录的字段。`); if (table.fields.some(field => /,|;/.test(field.comment || ''))) problems.push(`${table.name} 可能包含重复组，请检查字段是否保持原子性（1NF）。`); }); showToast(problems.length ? `范式检查发现 ${problems.length} 个提醒` : '基础范式检查通过'); document.querySelector('#designSql').textContent = problems.length ? '范式检查提醒：\\n- ' + problems.join('\\n- ') : '范式检查通过：已发现主键，字段未发现明显重复组。'; }
     const savedSql = storage.get('querypad-sql', '');
     if (savedSql) editor.value = savedSql;
-    function saveSql() { storage.set('querypad-sql', editor.value); }
+    function persistLocal(key, value) {
+      const saved = storage.set(key, value);
+      if (!saved && Date.now() - storageWarningAt > 5000) {
+        storageWarningAt = Date.now();
+        showToast('本地保存失败，请检查浏览器存储空间');
+      }
+      return saved;
+    }
+    function saveSql() { return persistLocal('querypad-sql', editor.value); }
     function showToast(message) { toast.textContent = message; toast.classList.add('show'); clearTimeout(window.toastTimer); window.toastTimer = setTimeout(() => toast.classList.remove('show'), 1800); }
     renderTableCatalog();
     try { syncEngineTables(); } catch (error) { showToast(`本地表结构同步失败：${error.message}`); }
@@ -802,6 +957,114 @@
       { id:'non-null-scores', topic:'NULL 判断', title:'查询成绩已填写的学生', description:'使用 IS NOT NULL 筛选成绩不为空的学生，按学号从高到低只显示两条。', sql:'SELECT id, name, score\nFROM students\nWHERE score IS NOT NULL\nORDER BY id DESC\nLIMIT 2;', validate:(sql,result) => /where score is not null/.test(sql) && /order by id desc/.test(sql) && /limit 2\b/.test(sql) && result.columns.join(',') === 'id,name,score' && result.rowCount === 2 && result.values.every(row => row[2] !== null) }
     ];
     const completedExercises = new Set(storage.get('querypad-completed-exercises', []).filter(id => exercises.some(exercise => exercise.id === id)));
+    let wrongAnswers = storage.get('querypad-wrong-answers', {});
+    if (!wrongAnswers || typeof wrongAnswers !== 'object' || Array.isArray(wrongAnswers)) wrongAnswers = {};
+    wrongAnswers = Object.fromEntries(Object.entries(wrongAnswers).filter(([id, value]) =>
+      exercises.some(exercise => exercise.id === id) && value && typeof value === 'object'
+    ));
+    let hintLevels = storage.get('querypad-hint-levels', {});
+    if (!hintLevels || typeof hintLevels !== 'object' || Array.isArray(hintLevels)) hintLevels = {};
+    const savedFavorites = storage.get('querypad-sql-favorites', []);
+    const savedVersions = storage.get('querypad-sql-versions', []);
+    const sqlFavorites = Array.isArray(savedFavorites) ? savedFavorites.filter(item => item && typeof item.sql === 'string') : [];
+    const sqlVersions = Array.isArray(savedVersions) ? savedVersions.filter(item => item && typeof item.sql === 'string') : [];
+    let libraryTab = 'favorites';
+    let wrongOnly = false;
+    let versionTimer = 0;
+    exercises.forEach(exercise => {
+      const topic = exercise.topic;
+      exercise.difficulty = /综合|三表|子查询|窗口|CTE|事务|多表/i.test(topic)
+        ? '挑战'
+        : /连接|JOIN|分组|聚合|COUNT|GROUP|HAVING/i.test(topic) ? '进阶' : '基础';
+    });
+    const exerciseTopics = [...new Set(exercises.map(exercise => exercise.topic))].sort((left, right) => left.localeCompare(right, 'zh-CN'));
+    const topicFilter = document.querySelector('#exerciseTopicFilter');
+    exerciseTopics.forEach(topic => {
+      const option = document.createElement('option');
+      option.value = topic;
+      option.textContent = topic;
+      topicFilter.appendChild(option);
+    });
+    function updateLearningProgress() {
+      const done = completedExercises.size;
+      const percent = exercises.length ? Math.round(done / exercises.length * 100) : 0;
+      document.querySelector('#learningProgressLabel').textContent = `已完成 ${done} / ${exercises.length} 题 · ${percent}%`;
+      document.querySelector('#learningProgressBar').style.width = `${percent}%`;
+      document.querySelector('#progressText').textContent = `${done}/${exercises.length}`;
+      document.querySelector('.progress-ring').style.background = `conic-gradient(var(--blue) ${percent}%, #30394b 0)`;
+      const stageItems = ['基础', '进阶', '挑战'].map(difficulty => {
+        const tier = exercises.filter(exercise => exercise.difficulty === difficulty);
+        const finished = tier.filter(exercise => completedExercises.has(exercise.id)).length;
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'learning-stage';
+        item.innerHTML = `${difficulty} <strong>${finished}/${tier.length}</strong>`;
+        item.addEventListener('click', () => {
+          document.querySelector('#exerciseDifficultyFilter').value = difficulty;
+          wrongOnly = false;
+          document.querySelector('#toggleWrongFilter').setAttribute('aria-pressed', 'false');
+          renderExerciseList();
+          openExercisePicker();
+        });
+        return item;
+      });
+      document.querySelector('#learningStages').replaceChildren(...stageItems);
+      document.querySelector('#exerciseProgressGrid').replaceChildren(...['基础', '进阶', '挑战'].map(difficulty => {
+        const tier = exercises.filter(exercise => exercise.difficulty === difficulty);
+        const finished = tier.filter(exercise => completedExercises.has(exercise.id)).length;
+        const card = document.createElement('div');
+        card.className = 'exercise-progress-card';
+        card.textContent = `${difficulty} · ${finished}/${tier.length} 已完成`;
+        return card;
+      }));
+    }
+    function recordWrongAnswer(exercise, query, error) {
+      const previous = wrongAnswers[exercise.id] || { attempts: 0 };
+      wrongAnswers[exercise.id] = {
+        attempts: previous.attempts + 1,
+        lastQuery: String(query || ''),
+        lastError: String(error || ''),
+        updatedAt: Date.now()
+      };
+      const saved = persistLocal('querypad-wrong-answers', wrongAnswers);
+      renderExerciseList();
+      return saved;
+    }
+    window.queryPadGetLearningState = function () {
+      return {
+        total: exercises.length,
+        completed: completedExercises.size,
+        wrong: Object.keys(wrongAnswers).length,
+        difficultyCounts: ['基础', '进阶', '挑战'].map(difficulty => ({
+          difficulty,
+          total: exercises.filter(exercise => exercise.difficulty === difficulty).length,
+          completed: exercises.filter(exercise => exercise.difficulty === difficulty && completedExercises.has(exercise.id)).length
+        }))
+      };
+    };
+    function hintFor(exercise, level) {
+      if (level === 1) return `第 1 步：先找出题目要求的结果字段，以及需要读取的主表。知识点：${exercise.topic}。`;
+      if (level === 2) {
+        if (/连接|JOIN/i.test(exercise.topic)) return '第 2 步：先确认两张表之间对应的主键和外键，再逐步增加 JOIN；暂时不要一次连接所有表。';
+        if (/分组|聚合|COUNT|GROUP/i.test(exercise.topic)) return '第 2 步：确定每一组由什么字段区分；分组统计通常需要 GROUP BY，并在 SELECT 中使用聚合函数。';
+        if (/排序|LIMIT/i.test(exercise.topic)) return '第 2 步：先检查 ORDER BY 的字段和升降序；题目限制条数时，再用 LIMIT 控制结果数量。';
+        if (/筛选|WHERE|日期|LIKE|NULL/i.test(exercise.topic)) return '第 2 步：将筛选条件放在 WHERE；注意比较符、字符串引号，以及 NULL 需要用 IS NULL / IS NOT NULL。';
+        return '第 2 步：按“需要的字段 → 数据来源 → 筛选或计算”的顺序组织查询，再运行检查列名和行数。';
+      }
+      return '第 3 步：先写 SELECT <目标字段>，再写 FROM <相关表>；按题目需要逐步添加 WHERE、JOIN、GROUP BY、ORDER BY 或 LIMIT。每次只增加一个子句并运行验证。';
+    }
+    function showNextHint() {
+      const exercise = exercises[activeExerciseIndex];
+      const shown = Math.min(3, Number(hintLevels[exercise.id]) || 0);
+      if (shown >= 3) return;
+      const level = shown + 1;
+      hintLevels[exercise.id] = level;
+      persistLocal('querypad-hint-levels', hintLevels);
+      document.querySelector('#hintText').textContent = hintFor(exercise, level);
+      const button = document.querySelector('#nextHintBtn');
+      button.textContent = level === 3 ? '提示已全部查看' : `获取提示 ${level + 1}/3`;
+      button.disabled = level === 3;
+    }
     let activeExerciseIndex = Math.max(0, exercises.findIndex(exercise => exercise.id === 'student-ranking'));
     const legacyRankingSql = 'SELECT name, score FROM students ORDER BY score DESC;';
     if (exercises[activeExerciseIndex]?.id === 'student-ranking' && editor.value.replace(/\s+/g, ' ').trim().toLowerCase() === legacyRankingSql.toLowerCase()) {
@@ -812,19 +1075,85 @@
     const exerciseList = document.querySelector('#exerciseList');
     const exercisePickerButton = document.querySelector('#lessonBtn');
     function renderExerciseList() {
-      exerciseList.innerHTML = exercises.map((exercise,index) => `<button class="exercise-option" type="button" data-exercise-index="${index}" aria-current="${index === activeExerciseIndex}"><span class="exercise-number">${String(index + 1).padStart(2,'0')}</span><span class="exercise-option-copy"><strong>${exercise.title}</strong><small>${exercise.topic} · ${exercise.description}</small></span>${completedExercises.has(exercise.id) ? '<span class="exercise-complete">已完成 ✓</span>' : ''}</button>`).join('');
-      exerciseList.querySelectorAll('[data-exercise-index]').forEach(button => button.addEventListener('click', () => selectExercise(Number(button.dataset.exerciseIndex))));
+      const query = document.querySelector('#exerciseSearch').value.trim().toLocaleLowerCase();
+      const difficulty = document.querySelector('#exerciseDifficultyFilter').value;
+      const topic = topicFilter.value;
+      const filtered = exercises.map((exercise, index) => ({ exercise, index })).filter(({ exercise }) => {
+        const mistake = wrongAnswers[exercise.id];
+        return (!wrongOnly || Boolean(mistake))
+          && (!difficulty || exercise.difficulty === difficulty)
+          && (!topic || exercise.topic === topic)
+          && (!query || `${exercise.title} ${exercise.topic} ${exercise.description}`.toLocaleLowerCase().includes(query));
+      });
+      document.querySelector('#exercisePickerSummary').textContent = wrongOnly
+        ? `错题复习 · ${filtered.length} 道待复习题；通过后会自动从错题中移除。`
+        : `显示 ${filtered.length} / ${exercises.length} 题 · 按知识点和难度逐步学习。`;
+      const fragment = document.createDocumentFragment();
+      if (!filtered.length) {
+        const empty = document.createElement('div');
+        empty.className = 'exercise-empty';
+        empty.textContent = wrongOnly ? '太好了，当前没有待复习错题。' : '没有符合条件的练习，试试调整筛选。';
+        fragment.appendChild(empty);
+      }
+      filtered.forEach(({ exercise, index }) => {
+        const item = document.createElement('button');
+        item.className = 'exercise-option';
+        item.type = 'button';
+        item.dataset.exerciseIndex = String(index);
+        item.setAttribute('aria-current', String(index === activeExerciseIndex));
+        const number = document.createElement('span');
+        number.className = 'exercise-number';
+        number.textContent = String(index + 1).padStart(2, '0');
+        const copy = document.createElement('span');
+        copy.className = 'exercise-option-copy';
+        const title = document.createElement('strong');
+        title.textContent = exercise.title;
+        const description = document.createElement('small');
+        description.textContent = `${exercise.topic} · ${exercise.description}`;
+        copy.append(title, description);
+        item.append(number, copy);
+        const level = document.createElement('span');
+        level.className = 'exercise-level';
+        level.textContent = exercise.difficulty;
+        item.appendChild(level);
+        if (completedExercises.has(exercise.id)) {
+          const complete = document.createElement('span');
+          complete.className = 'exercise-complete';
+          complete.textContent = '已完成 ✓';
+          item.appendChild(complete);
+        } else if (wrongAnswers[exercise.id]) {
+          const mistake = document.createElement('span');
+          mistake.className = 'exercise-mistake';
+          mistake.textContent = `错题 · ${wrongAnswers[exercise.id].attempts} 次`;
+          item.appendChild(mistake);
+        }
+        item.addEventListener('click', () => {
+          const previousAttempt = wrongAnswers[exercise.id]?.lastQuery;
+          selectExercise(index);
+          if (wrongOnly && previousAttempt) setQuery(previousAttempt, null);
+        });
+        fragment.appendChild(item);
+      });
+      exerciseList.replaceChildren(fragment);
+      updateLearningProgress();
     }
     function selectExercise(index, loadQuery = false) {
       activeExerciseIndex = (index + exercises.length) % exercises.length;
       const exercise = exercises[activeExerciseIndex];
-      document.querySelector('#challengeKicker').textContent = `当前练习 · ${String(activeExerciseIndex + 1).padStart(2,'0')} / ${String(exercises.length).padStart(2,'0')} · ${exercise.topic}`;
+      document.querySelector('#challengeKicker').textContent = `第 ${String(activeExerciseIndex + 1).padStart(2,'0')} / ${exercises.length} 题 · ${exercise.topic}`;
       document.querySelector('#challengeTitle').textContent = exercise.title;
       document.querySelector('#challengeText').textContent = exercise.description;
-      document.querySelector('#progressText').textContent = `${String(activeExerciseIndex + 1).padStart(2,'0')}/${String(exercises.length).padStart(2,'0')}`;
-      document.querySelector('.progress-ring').style.background = `conic-gradient(var(--blue) ${Math.round((activeExerciseIndex + 1) / exercises.length * 100)}%, #e8eef8 0)`;
+      document.querySelector('#challengeDifficulty').textContent = exercise.difficulty;
+      const difficultyColors = { 基础:['#202d46','#aac8ff'], 进阶:['#27352c','#a6dfb4'], 挑战:['#3a2d40','#e3b9ef'] };
+      const badgeColors = difficultyColors[exercise.difficulty];
+      document.querySelector('#challengeDifficulty').style.background = badgeColors[0];
+      document.querySelector('#challengeDifficulty').style.color = badgeColors[1];
       exercisePickerButton.textContent = `第 ${String(activeExerciseIndex + 1).padStart(2,'0')} 题 · ${exercise.topic}⌄`;
       document.querySelector('#challenge').classList.toggle('done', completedExercises.has(exercise.id));
+      const hintLevel = Math.min(3, Number(hintLevels[exercise.id]) || 0);
+      document.querySelector('#hintText').textContent = hintLevel ? hintFor(exercise, hintLevel) : '卡住时可以逐级获取提示，不会直接显示完整答案。';
+      document.querySelector('#nextHintBtn').textContent = hintLevel >= 3 ? '提示已全部查看' : `获取提示 ${hintLevel + 1}/3`;
+      document.querySelector('#nextHintBtn').disabled = hintLevel >= 3;
       if (loadQuery === true) setQuery(exercise.sql, null);
       else if (loadQuery === false) setQuery('', null);
       renderExerciseList();
@@ -862,18 +1191,119 @@
       return '未通过：查询结果与题目要求不一致，请检查返回字段及筛选、分组、排序和连接条件。';
     }
     exercisePickerButton.addEventListener('click', openExercisePicker);
+    document.querySelector('#exercisePathBtn').addEventListener('click', openExercisePicker);
+    document.querySelector('#reviewWrongBtn').addEventListener('click', () => {
+      wrongOnly = true;
+      document.querySelector('#toggleWrongFilter').setAttribute('aria-pressed', 'true');
+      document.querySelector('#exerciseDifficultyFilter').value = '';
+      topicFilter.value = '';
+      document.querySelector('#exerciseSearch').value = '';
+      openExercisePicker();
+    });
+    document.querySelector('#nextHintBtn').addEventListener('click', showNextHint);
+    ['#exerciseSearch', '#exerciseTopicFilter', '#exerciseDifficultyFilter'].forEach(selector => {
+      document.querySelector(selector).addEventListener('input', renderExerciseList);
+      document.querySelector(selector).addEventListener('change', renderExerciseList);
+    });
+    document.querySelector('#toggleWrongFilter').addEventListener('click', event => {
+      wrongOnly = !wrongOnly;
+      event.currentTarget.setAttribute('aria-pressed', String(wrongOnly));
+      renderExerciseList();
+    });
     document.querySelector('#exerciseClose').addEventListener('click', () => { exerciseModal.classList.remove('open'); exerciseModal.setAttribute('aria-hidden','true'); });
     exerciseModal.addEventListener('click', event => { if (event.target === exerciseModal) { exerciseModal.classList.remove('open'); exerciseModal.setAttribute('aria-hidden','true'); } });
     document.querySelector('#previousExercise').addEventListener('click', () => selectExercise(activeExerciseIndex - 1));
     document.querySelector('#nextExercise').addEventListener('click', () => selectExercise(activeExerciseIndex + 1));
     document.addEventListener('keydown', event => { if (event.key === 'Escape' && exerciseModal.classList.contains('open')) { exerciseModal.classList.remove('open'); exerciseModal.setAttribute('aria-hidden','true'); } });
     selectExercise(activeExerciseIndex, null);
-    function renderResult(kind, duration = 12) { const data = rows[kind]; const heads = kind === 'select' ? ['#','name','score','major'] : kind === 'group' ? ['#','major','total','备注'] : ['#','name','title','备注']; table.querySelector('thead tr').innerHTML = heads.map(h => `<th>${h}</th>`).join(''); table.querySelector('tbody').innerHTML = data.map(row => `<tr>${row.map((cell, i) => `<td class="${cell === '—' ? 'null' : ''}">${cell}</td>`).join('')}</tr>`).join(''); status.textContent = '执行成功'; status.style.color = 'var(--green)'; status.style.background = 'var(--green-soft)'; meta.textContent = `${data.length} 行 · ${duration} ms`; foot.textContent = '结果已保存到本次练习'; }
-    function showError(message) { setEditorError(editor.value, message); status.textContent = '需要修改'; status.style.color='#b95b22'; status.style.background='#fff0df'; meta.textContent='未返回结果'; foot.textContent = `${message}（约第 ${editorErrorLine} 行）`; table.querySelector('tbody').innerHTML = '<tr><td colspan="4" class="error-cell">请检查 SQL 关键字、表名和排序条件后重试。</td></tr>'; }
+    window.queryPadGetAiExerciseContext = function () {
+      const exercise = exercises[activeExerciseIndex];
+      return {
+        index: activeExerciseIndex + 1,
+        total: exercises.length,
+        title: exercise.title,
+        topic: exercise.topic,
+        description: exercise.description
+      };
+    };
+    function renderResult(kind, duration = 12) { window.queryPadLastSqlError = null; const data = rows[kind]; const heads = kind === 'select' ? ['#','name','score','major'] : kind === 'group' ? ['#','major','total','备注'] : ['#','name','title','备注']; table.querySelector('thead tr').innerHTML = heads.map(h => `<th>${h}</th>`).join(''); table.querySelector('tbody').innerHTML = data.map(row => `<tr>${row.map((cell, i) => `<td class="${cell === '—' ? 'null' : ''}">${cell}</td>`).join('')}</tr>`).join(''); status.textContent = '执行成功'; status.style.color = 'var(--green)'; status.style.background = 'var(--green-soft)'; meta.textContent = `${data.length} 行 · ${duration} ms`; foot.textContent = '结果已保存到本次练习'; }
+    function showError(message) { window.queryPadLastSqlError = { sql: editor.value.trim(), message: String(message) }; setEditorError(editor.value, message); status.textContent = '需要修改'; status.style.color='var(--error)'; status.style.background='var(--error-soft)'; meta.textContent='未返回结果'; foot.textContent = `${message}（约第 ${editorErrorLine} 行）`; table.querySelector('tbody').innerHTML = '<tr><td colspan="4" class="error-cell">请检查 SQL 关键字、表名和排序条件后重试。</td></tr>'; }
     function gradeQuery(query, kind) { const lower = query.toLowerCase(); if (kind === 'select' && lower.includes('from students') && lower.includes('order by') && lower.includes('score')) return true; if (kind === 'group' && lower.includes('group by') && lower.includes('count')) return true; if (kind === 'join' && lower.includes('join') && lower.includes('enrollments')) return true; return false; }
-    function runQuery() { const button = document.querySelector('#runBtn'); const query = editor.value.trim(); if (!query) { status.textContent = '请输入 SQL'; status.style.color='#b95b22'; status.style.background='#fff0df'; meta.textContent='等待输入'; foot.textContent='编辑器为空'; showToast('先输入一条 SQL 语句'); return; } button.classList.add('running'); button.innerHTML = '<span>◌</span> 执行中'; setTimeout(() => { const lower = query.toLowerCase(); let kind = lower.includes('join') ? 'join' : lower.includes('group by') || lower.includes('count') ? 'group' : 'select'; const validTable = lower.includes('from students') || lower.includes('from courses') || lower.includes('from enrollments'); if (!validTable) { showError('找不到这张表：请从左侧或表结构中选择可用表名。'); button.classList.remove('running'); button.innerHTML = '<span>▶</span> 运行 SQL'; showToast('SQL 执行失败'); return; } renderResult(kind, Math.floor(Math.random()*10)+8); const passed = gradeQuery(query, kind); const challenge = document.querySelector('#challenge'); if (passed) { challenge.classList.add('done'); document.querySelector('#challengeTitle').textContent = '练习完成，结果符合要求'; document.querySelector('#challengeText').textContent = '做得很好！可以继续挑战下一道题。'; document.querySelector('#progressText').textContent = '2/4'; foot.textContent = '自动判题：通过'; showToast('执行成功，练习通过'); } else { foot.textContent = 'SQL 已执行 · 题目条件尚未满足'; showToast('语句已执行，但还没有满足题目要求'); } button.classList.remove('running'); button.innerHTML = '<span>▶</span> 运行 SQL'; addHistory(query, rows[kind].length); }, 520); }
+    function runQuery() { const button = document.querySelector('#runBtn'); const query = editor.value.trim(); if (!query) { status.textContent = '请输入 SQL'; status.style.color='var(--error)'; status.style.background='var(--error-soft)'; meta.textContent='等待输入'; foot.textContent='编辑器为空'; showToast('先输入一条 SQL 语句'); return; } button.classList.add('running'); button.innerHTML = '<span>◌</span> 执行中'; setTimeout(() => { const lower = query.toLowerCase(); let kind = lower.includes('join') ? 'join' : lower.includes('group by') || lower.includes('count') ? 'group' : 'select'; const validTable = lower.includes('from students') || lower.includes('from courses') || lower.includes('from enrollments'); if (!validTable) { showError('找不到这张表：请从左侧或表结构中选择可用表名。'); button.classList.remove('running'); button.innerHTML = '<span>▶</span> 运行 SQL'; showToast('SQL 执行失败'); return; } renderResult(kind, Math.floor(Math.random()*10)+8); const passed = gradeQuery(query, kind); const challenge = document.querySelector('#challenge'); if (passed) { challenge.classList.add('done'); document.querySelector('#challengeTitle').textContent = '练习完成，结果符合要求'; document.querySelector('#challengeText').textContent = '做得很好！可以继续挑战下一道题。'; document.querySelector('#progressText').textContent = '2/4'; foot.textContent = '自动判题：通过'; showToast('执行成功，练习通过'); } else { foot.textContent = 'SQL 已执行 · 题目条件尚未满足'; showToast('语句已执行，但还没有满足题目要求'); } button.classList.remove('running'); button.innerHTML = '<span>▶</span> 运行 SQL'; addHistory(query, rows[kind].length); }, 520); }
     function addHistory(query, count) { const holder = document.querySelector('#history'); const item = document.createElement('div'); item.className = 'history-item'; item.dataset.query = query; const code = document.createElement('code'); const normalized = query.replace(/\\s+/g,' '); code.textContent = `${normalized.slice(0,34)}${query.length > 34 ? '...' : ''}`; const detail = document.createElement('span'); detail.textContent = count === '历史' ? '历史记录' : `刚刚 · ${count} 行`; item.append(code, detail); item.addEventListener('click', () => setQuery(item.dataset.query)); holder.prepend(item); while (holder.children.length > 4) holder.lastElementChild.remove(); storage.set('querypad-history', Array.from(holder.children).map(entry => entry.dataset.query)); }
-    function renderOfflineResult(result) { const headers = result.columns || []; const headerRow = table.querySelector('thead tr'); const header = document.createDocumentFragment(); ['#', ...headers].forEach(label => { const cell = document.createElement('th'); cell.textContent = String(label); header.appendChild(cell); }); headerRow.replaceChildren(header); const body = table.querySelector('tbody'); const rows = result.values || []; const content = document.createDocumentFragment(); if (!rows.length) { const row = document.createElement('tr'); const cell = document.createElement('td'); cell.colSpan = Math.max(1, headers.length + 1); cell.className = 'null'; cell.textContent = '没有返回数据'; row.appendChild(cell); content.appendChild(row); } else { rows.forEach((values, index) => { const row = document.createElement('tr'); const number = document.createElement('td'); number.textContent = String(index + 1).padStart(2, '0'); row.appendChild(number); values.forEach(value => { const cell = document.createElement('td'); cell.classList.toggle('null', value === null); cell.textContent = value === null ? 'NULL' : String(value); row.appendChild(cell); }); content.appendChild(row); }); } body.replaceChildren(content); status.textContent = 'SQLite 执行成功'; status.style.color = 'var(--green)'; status.style.background = 'var(--green-soft)'; meta.textContent = `${result.rowCount || 0} 行 · 本地`; foot.textContent = '结果由浏览器内 SQLite WASM 引擎执行'; }
+    function recordSqlVersion(sql) {
+      const value = String(sql || '').trim();
+      if (!value) return false;
+      if (sqlVersions[0]?.sql === value) return true;
+      const droppedVersion = sqlVersions.length >= 40 ? sqlVersions[39] : null;
+      sqlVersions.unshift({ id:`version-${Date.now()}`, sql:value, createdAt:Date.now() });
+      sqlVersions.splice(40);
+      if (!persistLocal('querypad-sql-versions', sqlVersions)) {
+        sqlVersions.shift();
+        if (droppedVersion) sqlVersions.push(droppedVersion);
+        return false;
+      }
+      return true;
+    }
+    function renderSqlLibrary() {
+      const list = document.querySelector('#sqlLibraryList');
+      const query = document.querySelector('#sqlLibrarySearch').value.trim().toLocaleLowerCase();
+      const source = libraryTab === 'favorites' ? sqlFavorites : sqlVersions;
+      const matches = source.filter(item => `${item.name || ''} ${item.sql}`.toLocaleLowerCase().includes(query));
+      if (!matches.length) {
+        const empty = document.createElement('div');
+        empty.className = 'exercise-empty';
+        empty.textContent = libraryTab === 'favorites' ? '还没有收藏的 SQL。可点击编辑器上的“收藏 SQL”添加。' : '编辑 SQL 后会自动保存最近 40 个版本。';
+        list.replaceChildren(empty);
+        return;
+      }
+      list.replaceChildren(...matches.map(item => {
+        const card = document.createElement('article');
+        card.className = 'sql-library-item';
+        const load = document.createElement('button');
+        load.type = 'button';
+        const title = document.createElement('strong');
+        title.textContent = item.name || `版本 · ${new Date(item.createdAt || Date.now()).toLocaleString('zh-CN')}`;
+        const snippet = document.createElement('small');
+        snippet.textContent = item.sql;
+        load.append(title, snippet);
+        load.addEventListener('click', () => {
+          if (editor.value.trim() && !recordSqlVersion(editor.value)) return;
+          setQuery(item.sql, null);
+          document.querySelector('#sqlLibraryModal').classList.remove('open');
+          document.querySelector('#sqlLibraryModal').setAttribute('aria-hidden', 'true');
+          showToast('已载入 SQL；当前草稿仍保存在本地');
+        });
+        const actions = document.createElement('div');
+        actions.className = 'sql-library-actions';
+        if (libraryTab === 'favorites') {
+          const remove = document.createElement('button');
+          remove.type = 'button';
+          remove.textContent = '取消收藏';
+          remove.addEventListener('click', () => {
+            const index = sqlFavorites.findIndex(favorite => favorite.id === item.id);
+            if (index >= 0) sqlFavorites.splice(index, 1);
+            if (!persistLocal('querypad-sql-favorites', sqlFavorites) && index >= 0) {
+              sqlFavorites.splice(index, 0, item);
+              renderSqlLibrary();
+              return;
+            }
+            renderSqlLibrary();
+          });
+          actions.appendChild(remove);
+        }
+        card.append(load, actions);
+        return card;
+      }));
+    }
+    function openSqlLibrary() {
+      renderSqlLibrary();
+      const modal = document.querySelector('#sqlLibraryModal');
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden', 'false');
+      document.querySelector('#sqlLibrarySearch').focus();
+    }
+    function renderOfflineResult(result) { window.queryPadLastSqlError = null; const headers = result.columns || []; const headerRow = table.querySelector('thead tr'); const header = document.createDocumentFragment(); ['#', ...headers].forEach(label => { const cell = document.createElement('th'); cell.textContent = String(label); header.appendChild(cell); }); headerRow.replaceChildren(header); const body = table.querySelector('tbody'); const rows = result.values || []; const content = document.createDocumentFragment(); if (!rows.length) { const row = document.createElement('tr'); const cell = document.createElement('td'); cell.colSpan = Math.max(1, headers.length + 1); cell.className = 'null'; cell.textContent = '没有返回数据'; row.appendChild(cell); content.appendChild(row); } else { rows.forEach((values, index) => { const row = document.createElement('tr'); const number = document.createElement('td'); number.textContent = String(index + 1).padStart(2, '0'); row.appendChild(number); values.forEach(value => { const cell = document.createElement('td'); cell.classList.toggle('null', value === null); cell.textContent = value === null ? 'NULL' : String(value); row.appendChild(cell); }); content.appendChild(row); } ); } body.replaceChildren(content); status.textContent = 'SQLite 执行成功'; status.style.color = 'var(--green)'; status.style.background = 'var(--green-soft)'; meta.textContent = `${result.rowCount || 0} 行 · 本地`; foot.textContent = '结果由浏览器内 SQLite WASM 引擎执行'; }
     const simulatedRunQuery = runQuery;
     runQuery = function () {
       const query = editor.value.trim();
@@ -894,30 +1324,120 @@
           const challenge = document.querySelector('#challenge');
           if (passed) {
             completedExercises.add(exercise.id);
-            storage.set('querypad-completed-exercises', Array.from(completedExercises));
+            let progressSaved = persistLocal('querypad-completed-exercises', Array.from(completedExercises));
+            if (wrongAnswers[exercise.id]) {
+              delete wrongAnswers[exercise.id];
+              progressSaved = persistLocal('querypad-wrong-answers', wrongAnswers) && progressSaved;
+            }
             challenge.classList.add('done');
             status.textContent = '练习通过';
             foot.textContent = '自动判题：通过';
             renderExerciseList();
-            showToast('回答正确，练习通过');
+            updateLearningProgress();
+            showToast(progressSaved ? '回答正确，练习通过' : '答案正确，但进度保存失败；请检查浏览器存储空间');
           } else {
             challenge.classList.toggle('done', completedExercises.has(exercise.id));
             status.textContent = '未通过';
-            status.style.color = '#b95b22';
-            status.style.background = '#fff0df';
+            status.style.color = 'var(--error)';
+            status.style.background = 'var(--error-soft)';
             const hint = exerciseFailureHint(exercise, normalizedQuery, result, expected);
             foot.textContent = hint;
-            showToast(hint);
+            const saved = recordWrongAnswer(exercise, query, hint);
+            showToast(saved ? hint : '答案暂未通过，且错题保存失败；请检查浏览器存储空间');
           }
         } catch (error) {
           showError(error.message);
-          showToast('离线引擎无法执行这条 SQL');
+          const saved = recordWrongAnswer(exercises[activeExerciseIndex], query, error.message);
+          showToast(saved ? '离线引擎无法执行这条 SQL' : '执行失败，且错题保存失败；请检查浏览器存储空间');
         } finally {
           button.classList.remove('running');
           button.innerHTML = '<span>▶</span> 运行 SQL';
         }
       }, 120);
     };
+    function analyzeQueryPlan() {
+      const query = editor.value.trim();
+      if (!window.queryPadEngine?.ready) {
+        showToast('SQLite 引擎尚未准备好，请稍后重试');
+        return;
+      }
+      const statement = query.replace(/'(?:''|[^'])*'|"(?:\"\"|[^"])*"|`(?:``|[^`])*`|--[^\n]*|\/\*[\s\S]*?\*\//g, ' ').trim();
+      if (!/^(?:select|with)\b/i.test(statement) || /;\s*\S/.test(statement) || /\b(?:insert|update|delete|replace)\b/i.test(statement)) {
+        showToast('执行计划仅支持一条 SELECT 或 WITH 查询');
+        return;
+      }
+      try {
+        const plan = window.queryPadEngine.execute(`EXPLAIN QUERY PLAN ${query}`);
+        const details = plan.values.map(row => String(row[row.length - 1] || ''));
+        const steps = document.querySelector('#queryPlanSteps');
+        steps.replaceChildren(...details.map(detail => {
+          const item = document.createElement('li');
+          item.textContent = detail;
+          return item;
+        }));
+        const usesIndex = details.some(detail => /USING (?:COVERING )?INDEX/i.test(detail));
+        const fullScans = details.filter(detail => /\bSCAN\b/i.test(detail));
+        const tempSorts = details.filter(detail => /USE TEMP B-TREE FOR (?:ORDER BY|GROUP BY)/i.test(detail));
+        const advice = [];
+        if (usesIndex) advice.push('计划已使用索引。');
+        if (fullScans.length) advice.push(`检测到全表扫描（${fullScans.join('；')}）。小型练习表通常无需优化；较大表可检查 WHERE / JOIN 使用的列是否需要索引。`);
+        if (tempSorts.length) advice.push('排序或分组使用临时 B-tree；数据量较大时，可评估排序/分组字段上的索引。');
+        if (!advice.length) advice.push('计划未显示明显的全表扫描或临时排序；请结合实际数据量判断性能。');
+        document.querySelector('#indexAdvice').textContent = `${advice.join(' ')}此建议基于 SQLite 执行计划，不会自动创建索引。`;
+        document.querySelector('#queryPlanPanel').hidden = false;
+        document.querySelector('#queryPlanPanel').scrollIntoView({ behavior:'smooth', block:'nearest' });
+      } catch (error) {
+        showToast(`无法生成执行计划：${error.message}`);
+      }
+    }
+    document.querySelector('#explainPlanBtn').addEventListener('click', analyzeQueryPlan);
+    document.querySelector('#closeQueryPlan').addEventListener('click', () => { document.querySelector('#queryPlanPanel').hidden = true; });
+    document.querySelector('#saveFavoriteBtn').addEventListener('click', () => {
+      const sql = editor.value.trim();
+      if (!sql) { showToast('先输入 SQL，再添加收藏'); return; }
+      const name = window.prompt('给这条 SQL 起个名称：', `SQL 收藏 ${sqlFavorites.length + 1}`);
+      if (name === null) return;
+      if (!name.trim()) { showToast('收藏名称不能为空'); return; }
+      if (sqlFavorites.some(favorite => favorite.sql.trim() === sql)) { showToast('这条 SQL 已在收藏中'); return; }
+      sqlFavorites.unshift({ id:`favorite-${Date.now()}`, name:name.trim().slice(0,80), sql, createdAt:Date.now() });
+      if (!persistLocal('querypad-sql-favorites', sqlFavorites)) {
+        sqlFavorites.shift();
+        return;
+      }
+      showToast('SQL 已收藏到本地');
+    });
+    document.querySelector('#openSqlLibraryBtn').addEventListener('click', openSqlLibrary);
+    document.querySelector('#closeSqlLibrary').addEventListener('click', () => {
+      document.querySelector('#sqlLibraryModal').classList.remove('open');
+      document.querySelector('#sqlLibraryModal').setAttribute('aria-hidden', 'true');
+    });
+    document.querySelector('#sqlLibraryModal').addEventListener('click', event => {
+      if (event.target === event.currentTarget) {
+        event.currentTarget.classList.remove('open');
+        event.currentTarget.setAttribute('aria-hidden', 'true');
+      }
+    });
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape') {
+        const modal = document.querySelector('#sqlLibraryModal');
+        modal.classList.remove('open');
+        modal.setAttribute('aria-hidden', 'true');
+      }
+    });
+    document.querySelector('#sqlLibrarySearch').addEventListener('input', renderSqlLibrary);
+    document.querySelectorAll('[data-library-tab]').forEach(button => button.addEventListener('click', () => {
+      libraryTab = button.dataset.libraryTab;
+      document.querySelectorAll('[data-library-tab]').forEach(tab => tab.classList.toggle('active', tab === button));
+      renderSqlLibrary();
+    }));
+    document.querySelector('#saveDraftBtn').addEventListener('click', () => {
+      if (!editor.value.trim()) { showToast('当前编辑器为空，没有可保存的草稿'); return; }
+      if (!recordSqlVersion(editor.value)) return;
+      libraryTab = 'versions';
+      document.querySelectorAll('[data-library-tab]').forEach(tab => tab.classList.toggle('active', tab.dataset.libraryTab === libraryTab));
+      renderSqlLibrary();
+      showToast('当前 SQL 草稿已保存到本地版本');
+    });
     document.querySelectorAll('.chip').forEach(chip => chip.addEventListener('click', () => setQuery(chip.dataset.query, chip)));
     document.querySelectorAll('.history-item').forEach(item => item.addEventListener('click', () => setQuery(item.dataset.query)));
     document.querySelector('.table-list').addEventListener('click', event => { const item = event.target.closest('.table-row'); if (!item) return; editor.value = `SELECT *\nFROM ${item.dataset.insert}\nLIMIT 20;`; clearEditorError(); saveSql(); showToast(`已插入表名：${item.dataset.insert}`); editor.focus(); });
@@ -953,7 +1473,7 @@
     if (historyNav) historyNav.addEventListener('click', () => { document.querySelector('.history-item')?.scrollIntoView({behavior:'smooth'}); showToast('已定位到最近运行'); });
     const settingsNav = document.querySelector('#settingsNav');
     if (settingsNav) settingsNav.addEventListener('click', () => showToast('练习设置：MySQL 8.0 兼容模式'));
-    editor.addEventListener('input', () => { editorErrorLine = 0; editorWrap.classList.remove('has-error'); renderSqlHighlight(); updateCursorPosition(); saveSql(); renderAutocomplete(); });
+    editor.addEventListener('input', () => { editorErrorLine = 0; window.queryPadLastSqlError = null; editorWrap.classList.remove('has-error'); renderSqlHighlight(); updateCursorPosition(); saveSql(); renderAutocomplete(); clearTimeout(versionTimer); versionTimer = window.setTimeout(() => recordSqlVersion(editor.value), 700); });
     editor.addEventListener('scroll', () => { sqlHighlight.scrollTop = editor.scrollTop; sqlHighlight.scrollLeft = editor.scrollLeft; });
     editor.addEventListener('click', updateCursorPosition);
     editor.addEventListener('keyup', updateCursorPosition);
@@ -1090,13 +1610,24 @@
     window.queryPadEngineReady.then(() => {
       try {
         syncEngineTables();
-        if (/^(?:select|with|pragma|explain)\b/i.test(editor.value.trim())) renderOfflineResult(window.queryPadEngine.execute(editor.value));
-        document.querySelector('#runBtn').disabled = false;
-        document.querySelector('#runBtn').innerHTML = '<span>▶</span> 运行 SQL';
-        if (window.queryPadEngine.restoreError) showToast(window.queryPadEngine.restoreError);
       } catch (error) {
-        showToast(`SQLite 引擎同步失败：${error.message}`);
+        console.error('SQLite 表结构同步失败', error);
+        document.querySelector('#engineMessage').textContent = `SQLite 表结构同步失败：${error.message}`;
+        document.querySelector('#statusLabel').textContent = '表结构同步失败';
+        document.querySelector('#runBtn').disabled = true;
+        document.querySelector('#runBtn').innerHTML = '<span>!</span> SQLite 同步失败';
+        showToast(`SQLite 表结构同步失败：${error.message}`);
+        return;
       }
+
+      const runButton = document.querySelector('#runBtn');
+      runButton.disabled = false;
+      runButton.innerHTML = '<span>▶</span> 运行 SQL';
+      if (/^(?:select|with|pragma|explain)\b/i.test(editor.value.trim())) {
+        try { renderOfflineResult(window.queryPadEngine.execute(editor.value)); }
+        catch (error) { showError(error.message); }
+      }
+      if (window.queryPadEngine.restoreError) showToast(window.queryPadEngine.restoreError);
     }).catch(error => {
       console.error('SQLite 引擎初始化失败', error);
       document.querySelector('#engineMessage').textContent = `SQLite 引擎加载失败：${error.message}`;

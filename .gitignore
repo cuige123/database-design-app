@@ -19,3 +19,6 @@ Thumbs.db
 *.tmp
 exports/
 downloads/
+.env
+.env.*
+!.env.example

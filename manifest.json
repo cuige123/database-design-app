@@ -4,8 +4,8 @@
   "description": "适用于移动端和网页端的 MySQL 学习工具",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#f4f7fb",
-  "theme_color": "#16345f",
+  "background_color": "#10131e",
+  "theme_color": "#10131e",
   "orientation": "portrait",
   "icons": [
     {
