@@ -14,15 +14,23 @@ const rateLimits = new Map();
 let globalRateLimit = { count: 0, expiresAt: 0 };
 const blockedPaths = new Set([
   '.git',
+  '.github',
   'android',
+  'deploy',
   'node_modules',
+  'tests',
   '.env',
   'package.json',
   'package-lock.json',
+  'playwright.config.js',
   'server.js',
   'readme.md',
   '.gitignore'
 ]);
+const allowedOrigins = String(process.env.ALLOWED_ORIGINS || '')
+  .split(',')
+  .map(value => value.trim().replace(/\/$/, ''))
+  .filter(Boolean);
 const contentTypes = {
   '.css': 'text/css; charset=utf-8',
   '.html': 'text/html; charset=utf-8',
@@ -44,6 +52,21 @@ function sendJson(response, status, body, extraHeaders = {}) {
     ...extraHeaders
   });
   response.end(JSON.stringify(body));
+}
+
+// 仅当配置了 ALLOWED_ORIGINS 且请求来源匹配时，才回显跨域头。
+// 这样本机同源使用不受影响，同时允许把 Node 后端作为独立域名的 AI 代理。
+function corsHeadersFor(request) {
+  const origin = request.headers.origin;
+  if (!origin || !allowedOrigins.length) return null;
+  if (!allowedOrigins.includes(origin.replace(/\/$/, ''))) return null;
+  return {
+    'Access-Control-Allow-Origin': origin,
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Accept',
+    'Access-Control-Max-Age': '86400',
+    Vary: 'Origin'
+  };
 }
 
 async function readJsonBody(request) {
@@ -225,24 +248,25 @@ function consumeRateLimit(request, now = Date.now()) {
 }
 
 async function handleAiRequest(request, response) {
+  const cors = corsHeadersFor(request);
   const rateLimit = consumeRateLimit(request);
   if (!rateLimit.allowed) {
-    return sendJson(response, 429, { error: 'AI 调用达到频率限制，请稍后再试。' }, { 'Retry-After': String(rateLimit.retryAfter) });
+    return sendJson(response, 429, { error: 'AI 调用达到频率限制，请稍后再试。' }, { ...cors, 'Retry-After': String(rateLimit.retryAfter) });
   }
 
   let payload;
   try {
     payload = validatePayload(await readJsonBody(request));
   } catch (error) {
-    return sendJson(response, error.status || 400, { error: error.message });
+    return sendJson(response, error.status || 400, { error: error.message }, cors || {});
   }
   if (Buffer.byteLength(JSON.stringify(payload), 'utf8') > MAX_BODY_BYTES) {
-    return sendJson(response, 413, { error: '请求内容过大，请精简后重试。' });
+    return sendJson(response, 413, { error: '请求内容过大，请精简后重试。' }, cors || {});
   }
 
   const apiKey = process.env.DEEPSEEK_API_KEY;
   if (!apiKey) {
-    return sendJson(response, 503, { error: '服务端尚未配置 DeepSeek API Key。请在服务器环境变量中设置 DEEPSEEK_API_KEY。' });
+    return sendJson(response, 503, { error: '服务端尚未配置 DeepSeek API Key。请在服务器环境变量中设置 DEEPSEEK_API_KEY。' }, cors || {});
   }
 
   const controller = new AbortController();
@@ -273,20 +297,20 @@ async function handleAiRequest(request, response) {
         : upstream.status === 429
           ? 'DeepSeek 服务暂时繁忙或额度不足，请稍后重试并检查账户额度。'
           : 'DeepSeek 模型服务暂时不可用，请稍后重试。';
-      return sendJson(response, status, { error: message });
+      return sendJson(response, status, { error: message }, cors || {});
     }
 
     const result = await upstream.json();
     const answer = result?.choices?.[0]?.message?.content;
     if (typeof answer !== 'string' || !answer.trim()) {
-      return sendJson(response, 502, { error: 'DeepSeek 返回内容为空或格式无效。' });
+      return sendJson(response, 502, { error: 'DeepSeek 返回内容为空或格式无效。' }, cors || {});
     }
-    return sendJson(response, 200, { answer: answer.trim() });
+    return sendJson(response, 200, { answer: answer.trim() }, cors || {});
   } catch (error) {
     const message = error.name === 'AbortError'
       ? 'DeepSeek 请求超时，请稍后重试。'
       : '无法连接 DeepSeek 模型服务，请检查服务器网络后重试。';
-    return sendJson(response, 502, { error: message });
+    return sendJson(response, 502, { error: message }, cors || {});
   } finally {
     clearTimeout(timeout);
   }
@@ -353,8 +377,14 @@ const server = http.createServer((request, response) => {
   }
 
   if (url.pathname === '/api/ai/chat') {
+    const cors = corsHeadersFor(request);
+    if (request.method === 'OPTIONS') {
+      if (!cors) return sendJson(response, 403, { error: '当前来源不在允许列表中。' });
+      response.writeHead(204, cors);
+      return response.end();
+    }
     if (request.method !== 'POST') {
-      return sendJson(response, 405, { error: '仅支持 POST 请求' }, { Allow: 'POST' });
+      return sendJson(response, 405, { error: '仅支持 POST 请求' }, { ...(cors || {}), Allow: 'POST, OPTIONS' });
     }
     return handleAiRequest(request, response);
   }

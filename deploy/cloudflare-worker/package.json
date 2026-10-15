@@ -1,0 +1,6 @@
+{
+  "name": "querypad-ai-worker",
+  "private": true,
+  "type": "module",
+  "description": "MySQL 实验室 AI 代理 Worker（独立部署单元）"
+}

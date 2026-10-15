@@ -298,6 +298,12 @@
     .schema-block-head button { color:var(--blue); background:none; font-size:10px; }
     .schema-field { display:flex; justify-content:space-between; gap:8px; padding:9px 12px; border-top:1px solid #edf1f6; font:10px 'DM Mono',monospace; color:#50627a; }
     .schema-field em { color:#a0afc0; font-style:normal; }
+    .preview-actions { display:flex; gap:5px; }
+    .preview-actions button { padding:5px 8px; border:1px solid var(--line); border-radius:7px; background:var(--panel-soft); color:var(--blue); font-size:9px; white-space:nowrap; }
+    .data-preview-block .schema-block-head { flex-wrap:wrap; gap:6px; }
+    .data-preview-body { padding:10px 12px; overflow-x:auto; }
+    .data-preview-body pre { margin:0; font:10px/1.55 'DM Mono',monospace; color:#50627a; white-space:pre; }
+    .data-preview-foot { padding:8px 12px; border-top:1px solid var(--line); color:var(--muted); font-size:9px; }
     .error-cell { color:#b95b22!important; background:#fff8f1; font-family:Manrope,sans-serif!important; white-space:normal!important; }
     @media (max-width: 740px) {
       .shell { padding: 17px 14px calc(102px + env(safe-area-inset-bottom)); }
@@ -313,19 +319,44 @@
       .lesson-select { overflow:hidden; text-overflow:ellipsis; text-align:left; }
       .lesson-select:active { transform:scale(.99); }
       .lesson-select:focus-visible { outline:2px solid var(--blue); outline-offset:2px; }
-      .challenge { padding:12px 13px; }
-      .challenge p { max-width:220px; }
-      .challenge-progress { gap:5px; }
-      .exercise-nav { width:100%; justify-content:flex-end; }
+      .challenge { position:relative; padding:12px; flex-direction:column; align-items:stretch; gap:9px; }
+      .challenge-copy { width:100%; position:relative; }
+      .challenge-kicker { font-size:9px; margin-bottom:3px; padding-right:56px; }
+      .challenge h3 { font-size:12px; }
+      .challenge p { max-width:none; margin-top:4px; font-size:9px; line-height:1.45; }
+      .challenge .difficulty-badge { position:absolute; top:0; right:0; margin-top:0; padding:3px 8px; font-size:9px; }
+      .challenge-progress { width:100%; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:6px; }
+      .challenge-progress .progress-ring { width:32px; height:32px; }
+      .challenge-progress .progress-ring span { font-size:9px; }
+      .exercise-nav { width:auto; flex:1 1 auto; justify-content:flex-end; flex-wrap:wrap; gap:5px; }
+      .exercise-nav button { min-height:34px; padding:7px 9px; font-size:9px; }
       .exercise-modal { padding:8px; }
       .exercise-panel { max-height:calc(100vh - 16px); border-radius:15px; }
       .connection { margin-bottom: 13px; }
       .editor-card { border-radius:15px; }
+      .editor-toolbar { flex-direction:column; align-items:stretch; gap:8px; padding:10px 12px; }
+      .file-label { justify-content:space-between; }
+      .toolbar-actions { flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:2px; scrollbar-width:none; }
+      .toolbar-actions::-webkit-scrollbar { display:none; }
+      .toolbar-actions .tool { flex:0 0 auto; white-space:nowrap; }
       .sql-highlight, #sqlEditor { min-height:200px; font-size:12px; padding:15px 14px 53px; }
       #sqlEditor { min-height:200px; }
       .editor-wrap { min-height:200px; }
       .tool { padding:6px 7px; }
+      .editor-footer { gap:10px; }
+      .run-btn { padding:11px 14px; }
       .result-card { border-radius:15px; margin-top:14px; }
+      .table-scroll { overflow:visible; border-top:0; }
+      #resultTable { display:block; min-width:0; }
+      #resultTable thead { display:none; }
+      #resultTable tbody { display:block; }
+      #resultTable tbody tr { display:block; padding:9px 12px; margin-bottom:8px; border:1px solid var(--line); border-radius:12px; background:var(--panel-soft); }
+      #resultTable tbody tr:last-child { margin-bottom:0; }
+      #resultTable td { display:flex; justify-content:space-between; gap:12px; padding:6px 0; border:0; border-top:1px dashed var(--line); white-space:normal; text-align:right; }
+      #resultTable td:first-child { border-top:0; }
+      #resultTable td::before { content:attr(data-label); flex:0 0 auto; color:var(--muted); font-weight:800; font-family:Manrope,sans-serif; text-align:left; }
+      #resultTable td.error-cell, #resultTable td[colspan] { display:block; text-align:left; }
+      #resultTable td.error-cell::before, #resultTable td[colspan]::before { display:none; }
       .mobile-nav { z-index:2; left:8px; right:8px; bottom:calc(10px + env(safe-area-inset-bottom)); transform:none; width:auto; height:68px; padding:5px; gap:3px; }
       .nav-run { width:43px; height:43px; border-radius:50%; background:var(--navy); color:#fff; display:grid; place-items:center; font-size:17px; margin-top:-22px; border:5px solid var(--bg); }
       .er-modal { padding:8px; }
@@ -398,6 +429,7 @@
     .database-tab.active { background:#2a354a; color:#a9c6ff; }
     .schema-field { color:#c0c9d7; }
     .schema-field em { color:#8e9aae; }
+    .data-preview-body pre { color:#c0c9d7; }
     .error-cell { color:#ffb199!important; background:#352822; }
     .difficulty-badge { display:inline-flex; margin-top:7px; padding:3px 7px; border:1px solid #3a5277; border-radius:99px; background:#202d46; color:#aac8ff; font-size:9px; font-weight:800; }
     .learning-progress { margin:-5px 0 14px; padding:12px 14px; }
@@ -557,14 +589,15 @@
   <section class="design-modal" id="designModal" aria-hidden="true"><div class="design-panel"><div class="design-head"><div><h2>表结构设计器</h2><p>编辑字段后，建表 SQL、数据字典和范式检查会同步更新</p></div><button class="design-close" id="designClose" aria-label="关闭">×</button></div><div class="design-toolbar"><button class="design-tool primary" id="addTableBtn">＋ 新建数据表</button><button class="design-tool" id="addFieldBtn">＋ 添加字段</button><button class="design-tool" id="normalFormBtn">范式检查</button><button class="design-tool" id="dictBtn">导出数据字典</button><button class="design-tool" id="projectBtn">导出项目</button><button class="design-tool" id="importProjectBtn">导入项目</button><input class="er-file" id="projectFile" type="file" accept="application/json,.json" /></div><div class="table-picker" id="designTablePicker"></div><div class="field-editor" id="fieldEditor"></div><div class="relation-editor"><div class="relation-head"><strong>表关系 / 外键</strong><button id="addRelationBtn">＋ 添加关系</button></div><div id="relationList"></div></div><div class="engine-panel"><div class="engine-panel-head"><strong>本地 SQLite 引擎</strong><label class="engine-switch"><input id="engineEnabled" type="checkbox" checked> 启用离线执行</label></div><p id="engineMessage">SQLite WASM 正在加载…</p></div><div class="sql-preview"><label>自动生成的建表 SQL</label><pre id="designSql"></pre></div><div class="design-foot"><span class="engine-status"><i></i>SQLite WASM · 浏览器本地</span><div class="project-actions"><button id="copyDesignSql">复制 SQL</button><button id="runDesignSql">执行建表</button></div></div></div></section>
   <section class="design-modal" id="projectModal" aria-hidden="true"><div class="design-panel"><div class="design-head"><div><h2>本地项目</h2><p>每个项目独立保存表结构、ER 图和练习草稿</p></div><button class="design-close" id="projectClose" aria-label="关闭">×</button></div><div class="project-list" id="projectList"></div><div class="project-new"><input id="projectNameInput" placeholder="输入新项目名称" maxlength="32"><button id="createProjectBtn">新建项目</button></div><section class="local-data-tools"><h3>本地数据管理</h3><p>练习数据库会自动保存在当前浏览器。可以只恢复练习样例，或清除本应用保存的全部本地内容。</p><div class="local-data-actions"><button class="design-tool" id="resetPracticeData" type="button">重置练习数据库</button><button class="design-tool danger" id="resetAllLocalData" type="button">重置全部本地数据</button></div></section><div class="design-foot"><span class="engine-status"><i></i>数据只保存在本机</span><div class="project-actions"><button id="exportCurrentProject">导出当前项目</button></div></div></div></section>
   <div class="drawer-backdrop" id="drawerBackdrop"></div>
-  <aside class="schema-drawer" id="schemaDrawer"><div class="drawer-head"><h2>数据库</h2><button class="drawer-close" id="drawerClose" aria-label="关闭">×</button></div><div class="database-tabs"><button class="database-tab active" id="databaseTablesTab">表结构</button><button class="database-tab" id="databaseErTab">ER 图</button></div><div id="databaseTablesView"><p class="drawer-sub">点击字段即可插入到当前 SQL 中</p><div class="schema-block"><div class="schema-block-head"><span>▦ students</span><button data-drawer-insert="students">插入表名</button></div><div class="schema-field" data-field="id"><span>id</span><em>INT · 主键</em></div><div class="schema-field" data-field="name"><span>name</span><em>VARCHAR(50)</em></div><div class="schema-field" data-field="score"><span>score</span><em>INT</em></div><div class="schema-field" data-field="major"><span>major</span><em>VARCHAR(50)</em></div></div><div class="schema-block"><div class="schema-block-head"><span>▦ courses</span><button data-drawer-insert="courses">插入表名</button></div><div class="schema-field" data-field="id"><span>id</span><em>INT · 主键</em></div><div class="schema-field" data-field="title"><span>title</span><em>VARCHAR(80)</em></div><div class="schema-field" data-field="credits"><span>credits</span><em>INT</em></div></div><div class="schema-block"><div class="schema-block-head"><span>▦ enrollments</span><button data-drawer-insert="enrollments">插入表名</button></div><div class="schema-field" data-field="student_id"><span>student_id</span><em>INT · 外键</em></div><div class="schema-field" data-field="course_id"><span>course_id</span><em>INT · 外键</em></div><div class="schema-field" data-field="enrolled_at"><span>enrolled_at</span><em>DATE</em></div></div><button class="design-tool primary" id="openDatabaseDesigner">编辑数据表</button></div><div id="databaseErView" hidden><p class="drawer-sub">拖动实体设计表关系</p><button class="design-tool primary" id="openDatabaseEr">打开 ER 图画布</button></div></aside>
+  <aside class="schema-drawer" id="schemaDrawer"><div class="drawer-head"><h2>数据库</h2><button class="drawer-close" id="drawerClose" aria-label="关闭">×</button></div><div class="database-tabs"><button class="database-tab active" id="databaseTablesTab">表结构</button><button class="database-tab" id="databaseErTab">ER 图</button><button class="database-tab" id="databaseDataTab">数据预览</button></div><div id="databaseTablesView"><p class="drawer-sub">点击字段即可插入到当前 SQL 中</p><div class="schema-block"><div class="schema-block-head"><span>▦ students</span><button data-drawer-insert="students">插入表名</button></div><div class="schema-field" data-field="id"><span>id</span><em>INT · 主键</em></div><div class="schema-field" data-field="name"><span>name</span><em>VARCHAR(50)</em></div><div class="schema-field" data-field="score"><span>score</span><em>INT</em></div><div class="schema-field" data-field="major"><span>major</span><em>VARCHAR(50)</em></div></div><div class="schema-block"><div class="schema-block-head"><span>▦ courses</span><button data-drawer-insert="courses">插入表名</button></div><div class="schema-field" data-field="id"><span>id</span><em>INT · 主键</em></div><div class="schema-field" data-field="title"><span>title</span><em>VARCHAR(80)</em></div><div class="schema-field" data-field="credits"><span>credits</span><em>INT</em></div></div><div class="schema-block"><div class="schema-block-head"><span>▦ enrollments</span><button data-drawer-insert="enrollments">插入表名</button></div><div class="schema-field" data-field="student_id"><span>student_id</span><em>INT · 外键</em></div><div class="schema-field" data-field="course_id"><span>course_id</span><em>INT · 外键</em></div><div class="schema-field" data-field="enrolled_at"><span>enrolled_at</span><em>DATE</em></div></div><button class="design-tool primary" id="openDatabaseDesigner">编辑数据表</button></div><div id="databaseErView" hidden><p class="drawer-sub">拖动实体设计表关系</p><button class="design-tool primary" id="openDatabaseEr">打开 ER 图画布</button></div><div id="databaseDataView" hidden><p class="drawer-sub">查看每张表的数据，可复制为 INSERT 或 CSV</p></div></aside>
   <script src="vendor/sql.js/sql-wasm.js"></script>
   <script src="offline-engine.js"></script>
   <script src="sqlite-engine.js"></script>
   <script src="er-recognizer.js"></script>
   <script src="er-editor.js"></script>
   <script src="self-test.js?v=2"></script>
-  <script src="ai-assistant.js?v=10"></script>
+  <script src="ai-config.js"></script>
+  <script src="ai-assistant.js?v=11"></script>
   <script>
     const editor = document.querySelector('#sqlEditor');
     const toast = document.querySelector('#toast');
@@ -777,9 +810,12 @@
     }
     let activeProjectId = storage.get(activeProjectKey, projects[0].id);
     if (!projects.some(project => project.id === activeProjectId)) activeProjectId = projects[0].id;
+    window.queryPadProjectId = activeProjectId;
+    function escapeHtml(value) { return String(value).replace(/[&<>"']/g, character => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[character]); }
     function activeProject() { return projects.find(project => project.id === activeProjectId) || projects[0]; }
     function saveProjects() { const current = activeProject(); if (current) { current.schema = schema; current.updatedAt = Date.now(); } storage.set(projectKey, projects); storage.set(activeProjectKey, activeProjectId); }
-    function renderProjectList() { const list = document.querySelector('#projectList'); if (!list) return; list.innerHTML = projects.map(project => `<button class="project-item ${project.id === activeProjectId ? 'active' : ''}" data-project-id="${project.id}"><span><strong>${project.name}</strong><span>最近保存 · ${new Date(project.updatedAt).toLocaleDateString('zh-CN')}</span></span><b class="project-check">${project.id === activeProjectId ? '✓' : '›'}</b></button>`).join(''); list.querySelectorAll('[data-project-id]').forEach(item => item.addEventListener('click', () => { const project = projects.find(entry => entry.id === item.dataset.projectId); if (!project) return; saveProjects(); activeProjectId = project.id; schema = project.schema; activeDesignTable = schema.active || schema.tables[0].name; storage.set(schemaKey, schema); storage.set(activeProjectKey, activeProjectId); renderTableCatalog(); let syncError = ''; try { syncEngineTables(); } catch (error) { syncError = error.message; } renderProjectList(); showToast(syncError ? `项目已切换，但本地表结构同步失败：${syncError}` : `已切换到项目：${project.name}`); })); }
+    let projectSwitchPromise = Promise.resolve();
+    function renderProjectList() { const list = document.querySelector('#projectList'); if (!list) return; list.innerHTML = projects.map(project => `<button class="project-item ${project.id === activeProjectId ? 'active' : ''}" data-project-id="${escapeHtml(project.id)}"><span><strong>${escapeHtml(project.name)}</strong><span>最近保存 · ${new Date(project.updatedAt).toLocaleDateString('zh-CN')}</span></span><b class="project-check">${project.id === activeProjectId ? '✓' : '›'}</b></button>`).join(''); list.querySelectorAll('[data-project-id]').forEach(item => item.addEventListener('click', () => { projectSwitchPromise = projectSwitchPromise.then(async () => { const project = projects.find(entry => entry.id === item.dataset.projectId); if (!project || project.id === activeProjectId) return; const previous = { id: activeProjectId, schema }; saveProjects(); try { await window.queryPadEngineReady; if (window.queryPadEngine.switchProject) await window.queryPadEngine.switchProject(project.id); activeProjectId = project.id; window.queryPadProjectId = activeProjectId; schema = project.schema; activeDesignTable = schema.active || schema.tables[0].name; storage.set(schemaKey, schema); storage.set(activeProjectKey, activeProjectId); syncEngineTables(); renderTableCatalog(); renderDesign(); renderProjectList(); showToast(`已切换到项目：${project.name}`); } catch (error) { activeProjectId = previous.id; window.queryPadProjectId = previous.id; schema = previous.schema; activeDesignTable = schema.active || schema.tables[0].name; renderProjectList(); showToast(`项目切换失败：${error.message}`); } }); })); }
     function openProjects() { renderProjectList(); document.querySelector('#projectModal').classList.add('open'); document.querySelector('#projectModal').setAttribute('aria-hidden','false'); }
     function closeProjects() { document.querySelector('#projectModal').classList.remove('open'); document.querySelector('#projectModal').setAttribute('aria-hidden','true'); }
     function currentDesignTable() { return schema.tables.find(item => item.name === activeDesignTable) || schema.tables[0]; }
@@ -1303,12 +1339,14 @@
       modal.setAttribute('aria-hidden', 'false');
       document.querySelector('#sqlLibrarySearch').focus();
     }
-    function renderOfflineResult(result) { window.queryPadLastSqlError = null; const headers = result.columns || []; const headerRow = table.querySelector('thead tr'); const header = document.createDocumentFragment(); ['#', ...headers].forEach(label => { const cell = document.createElement('th'); cell.textContent = String(label); header.appendChild(cell); }); headerRow.replaceChildren(header); const body = table.querySelector('tbody'); const rows = result.values || []; const content = document.createDocumentFragment(); if (!rows.length) { const row = document.createElement('tr'); const cell = document.createElement('td'); cell.colSpan = Math.max(1, headers.length + 1); cell.className = 'null'; cell.textContent = '没有返回数据'; row.appendChild(cell); content.appendChild(row); } else { rows.forEach((values, index) => { const row = document.createElement('tr'); const number = document.createElement('td'); number.textContent = String(index + 1).padStart(2, '0'); row.appendChild(number); values.forEach(value => { const cell = document.createElement('td'); cell.classList.toggle('null', value === null); cell.textContent = value === null ? 'NULL' : String(value); row.appendChild(cell); }); content.appendChild(row); } ); } body.replaceChildren(content); status.textContent = 'SQLite 执行成功'; status.style.color = 'var(--green)'; status.style.background = 'var(--green-soft)'; meta.textContent = `${result.rowCount || 0} 行 · 本地`; foot.textContent = '结果由浏览器内 SQLite WASM 引擎执行'; }
-    const simulatedRunQuery = runQuery;
+    const MAX_RESULT_ROWS = 200;
+    function renderOfflineResult(result) { window.queryPadLastSqlError = null; const headers = result.columns || []; const headerRow = table.querySelector('thead tr'); const header = document.createDocumentFragment(); ['#', ...headers].forEach(label => { const cell = document.createElement('th'); cell.textContent = String(label); header.appendChild(cell); }); headerRow.replaceChildren(header); const body = table.querySelector('tbody'); const rows = result.values || []; const shown = rows.slice(0, MAX_RESULT_ROWS); const content = document.createDocumentFragment(); if (!rows.length) { const row = document.createElement('tr'); const cell = document.createElement('td'); cell.colSpan = Math.max(1, headers.length + 1); cell.className = 'null'; cell.textContent = '没有返回数据'; row.appendChild(cell); content.appendChild(row); } else { shown.forEach((values, index) => { const row = document.createElement('tr'); const number = document.createElement('td'); number.dataset.label = '行号'; number.textContent = String(index + 1).padStart(2, '0'); row.appendChild(number); values.forEach((value, columnIndex) => { const cell = document.createElement('td'); cell.dataset.label = String(headers[columnIndex] || ''); cell.classList.toggle('null', value === null); cell.textContent = value === null ? 'NULL' : String(value); row.appendChild(cell); }); content.appendChild(row); } ); }     body.replaceChildren(content); status.textContent = 'SQLite 执行成功'; status.style.color = 'var(--green)'; status.style.background = 'var(--green-soft)'; meta.textContent = rows.length > shown.length ? `${rows.length} 行 · 本地 · 仅显示前 ${shown.length} 行` : `${result.rowCount || 0} 行 · 本地`; foot.textContent = '结果由浏览器内 SQLite WASM 引擎执行'; }
+    window.queryPadRenderResult = renderOfflineResult;
+    window.queryPadMaxResultRows = MAX_RESULT_ROWS;
     runQuery = function () {
       const query = editor.value.trim();
       const button = document.querySelector('#runBtn');
-      if (!query) { simulatedRunQuery(); return; }
+      if (!query) { showToast('先输入一条 SQL 语句'); return; }
       button.classList.add('running');
       button.innerHTML = '<span>◌</span> 执行中';
       setTimeout(() => {
@@ -1465,6 +1503,90 @@
     helpCloseButton.addEventListener('click', closeHelp);
     helpModal.addEventListener('click', event => { if (event.target === helpModal) closeHelp(); });
     document.addEventListener('keydown', event => { if (event.key === 'Escape') closeHelp(); });
+    function displayWidth(text) { return [...String(text)].reduce((sum, char) => sum + (char.charCodeAt(0) > 255 ? 2 : 1), 0); }
+    function padPreviewCell(text, width) { return String(text) + ' '.repeat(Math.max(0, width - displayWidth(text))); }
+    function formatPreviewRows(result) {
+      const headers = result.columns || [];
+      const all = [['#', ...headers], ...(result.values || []).map((values, index) => [String(index + 1), ...values.map(value => value === null ? 'NULL' : String(value))])];
+      const widths = all[0].map((_, column) => Math.max(...all.map(row => displayWidth(row[column] || ''))));
+      return all.map(row => row.map((cell, column) => padPreviewCell(cell || '', widths[column])).join('  ').trimEnd()).join('\n');
+    }
+    function buildInsertSql(tableName, result) {
+      const columns = result.columns || [];
+      const values = (result.values || []).map(row => `(${row.map(value => value === null ? 'NULL' : typeof value === 'number' ? String(value) : `'${String(value).replace(/'/g, "''")}'`).join(', ')})`).join(',\n');
+      return `INSERT INTO \`${tableName}\` (\`${columns.join('`, `')}\`)\nVALUES ${values};`;
+    }
+    function buildPreviewCsv(result) {
+      const columns = result.columns || [];
+      const escape = value => /[",\n]/.test(String(value ?? '')) ? `"${String(value ?? '').replace(/"/g, '""')}"` : String(value ?? '');
+      return [columns.join(','), ...(result.values || []).map(row => row.map(escape).join(','))].join('\n');
+    }
+    window.queryPadBuildInsertSql = buildInsertSql;
+    window.queryPadBuildPreviewCsv = buildPreviewCsv;
+    function renderDataPreview() {
+      const view = document.querySelector('#databaseDataView');
+      view.querySelectorAll('.data-preview-block').forEach(block => block.remove());
+      const engine = window.queryPadEngine;
+      if (!engine || !engine.ready) {
+        const pending = document.createElement('p');
+        pending.className = 'drawer-sub';
+        pending.textContent = 'SQLite 引擎尚未准备好，请稍后重试';
+        view.appendChild(pending);
+        return;
+      }
+      const clipboardCopy = text => {
+        const fail = () => showToast('复制失败，请检查浏览器剪贴板权限');
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(() => showToast('已复制到剪贴板')).catch(fail);
+        } else fail();
+      };
+      schema.tables.forEach(table => {
+        let result;
+        try { result = engine.execute(`SELECT * FROM \`${table.name}\` LIMIT 20;`); }
+        catch (error) { result = { columns: table.fields.map(field => field.name), values: [], rowCount: 0, previewError: error.message }; }
+        let total = null;
+        try { const count = engine.execute(`SELECT COUNT(*) FROM \`${table.name}\`;`); total = count.values && count.values.length ? count.values[0][0] : null; } catch (_) {}
+        const block = document.createElement('div');
+        block.className = 'schema-block data-preview-block';
+        const head = document.createElement('div');
+        head.className = 'schema-block-head';
+        const label = document.createElement('span');
+        label.textContent = `▦ ${table.name}`;
+        const actions = document.createElement('div');
+        actions.className = 'preview-actions';
+        const insertButton = document.createElement('button');
+        insertButton.type = 'button';
+        insertButton.textContent = '复制 INSERT';
+        insertButton.addEventListener('click', () => clipboardCopy(buildInsertSql(table.name, result)));
+        const csvButton = document.createElement('button');
+        csvButton.type = 'button';
+        csvButton.textContent = '复制 CSV';
+        csvButton.addEventListener('click', () => clipboardCopy(buildPreviewCsv(result)));
+        const loadButton = document.createElement('button');
+        loadButton.type = 'button';
+        loadButton.textContent = '载入查询';
+        loadButton.addEventListener('click', () => {
+          editor.value = `SELECT * FROM \`${table.name}\` LIMIT 20;`;
+          clearEditorError();
+          saveSql();
+          closeDrawer();
+          showToast(`已载入 ${table.name} 查询`);
+          editor.focus();
+        });
+        actions.append(insertButton, csvButton, loadButton);
+        head.append(label, actions);
+        const body = document.createElement('div');
+        body.className = 'data-preview-body';
+        const pre = document.createElement('pre');
+        pre.textContent = result.previewError ? `预览失败：${result.previewError}` : formatPreviewRows(result);
+        body.appendChild(pre);
+        const foot = document.createElement('div');
+        foot.className = 'data-preview-foot';
+        foot.textContent = total === null ? `${result.rowCount || 0} 行` : `共 ${total} 行 · 显示前 ${Math.min(result.rowCount || 0, 20)} 行`;
+        block.append(head, body, foot);
+        view.appendChild(block);
+      });
+    }
     function openDrawer() { document.body.classList.add('drawer-open'); }
     function closeDrawer() { document.body.classList.remove('drawer-open'); }
     document.querySelector('#schemaBtn').addEventListener('click', openDrawer); document.querySelector('#drawerClose').addEventListener('click', closeDrawer); document.querySelector('#drawerBackdrop').addEventListener('click', closeDrawer);
@@ -1544,9 +1666,9 @@
     document.querySelector('#addRelationBtn').addEventListener('click', () => { const first = schema.tables.find(table => table.name === 'enrollments') || schema.tables[0]; const target = schema.tables.find(table => table.name !== first.name) || schema.tables[0]; schema.relations = schema.relations || []; schema.relations.push({ fromTable:first.name, fromColumn:first.fields[0]?.name || 'id', toTable:target.name, toColumn:target.fields[0]?.name || 'id', cardinality:'N:1' }); persistSchema(); renderDesign(); showToast('已添加表关系'); });
     document.querySelector('#normalFormBtn').addEventListener('click', checkNormalForm);
     document.querySelector('#dictBtn').addEventListener('click', () => { downloadText('querypad-data-dictionary.md', dataDictionary(), 'text/markdown'); showToast('数据字典已导出'); });
-    document.querySelector('#projectBtn').addEventListener('click', () => { downloadText('querypad-project.json', JSON.stringify({ project:'QueryPad 本地项目', version:1, schema, exportedAt:new Date().toISOString() }, null, 2)); showToast('项目已导出'); });
+    document.querySelector('#projectBtn').addEventListener('click', () => { const current = activeProject(); const snapshot = window.queryPadEngine?.snapshot ? Array.from(window.queryPadEngine.snapshot()) : null; downloadText('querypad-project.json', JSON.stringify({ project:'QueryPad 本地项目', version:2, projectData:{ id:current.id, name:current.name, updatedAt:current.updatedAt }, schema, sqliteSnapshot:snapshot, exportedAt:new Date().toISOString() }, null, 2)); showToast('项目及 SQLite 数据已导出'); });
     document.querySelector('#importProjectBtn').addEventListener('click', () => document.querySelector('#projectFile').click());
-    document.querySelector('#projectFile').addEventListener('change', event => { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => { try { const data = JSON.parse(reader.result); if (!data.schema || !Array.isArray(data.schema.tables)) throw new Error('invalid'); schema = data.schema; activeDesignTable = schema.active || schema.tables[0].name; persistSchema(); renderDesign(); showToast('项目已导入'); } catch (_) { showToast('项目文件格式不正确'); } }; reader.readAsText(file); });
+    document.querySelector('#projectFile').addEventListener('change', event => { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = async () => { try { const data = JSON.parse(reader.result); if (!data.schema || !Array.isArray(data.schema.tables) || !data.schema.tables.length) throw new Error('invalid'); saveProjects(); const importedId = `project-${Date.now().toString(36)}`; const imported = { id: importedId, name: data.projectData?.name || `导入项目 ${new Date().toLocaleDateString('zh-CN')}`, updatedAt: Date.now(), schema: data.schema }; projects.push(imported); activeProjectId = importedId; window.queryPadProjectId = importedId; schema = imported.schema; activeDesignTable = schema.active || schema.tables[0].name; storage.set(projectKey, projects); storage.set(activeProjectKey, activeProjectId); await window.queryPadEngineReady; if (window.queryPadEngine.switchProject) await window.queryPadEngine.switchProject(importedId); if (Array.isArray(data.sqliteSnapshot) && data.sqliteSnapshot.length) window.queryPadEngine.restoreSnapshot(Uint8Array.from(data.sqliteSnapshot)); else window.queryPadEngine.reset(); syncEngineTables(); persistSchema(); renderDesign(); renderProjectList(); showToast('项目及 SQLite 数据已导入'); } catch (_) { showToast('项目文件格式不正确'); } finally { event.target.value = ''; } }; reader.readAsText(file); });
     document.querySelector('#projectBtnTop').addEventListener('click', openProjects); document.querySelector('#projectClose').addEventListener('click', closeProjects); document.querySelector('#projectModal').addEventListener('click', event => { if (event.target.id === 'projectModal') closeProjects(); });
     document.querySelector('#resetPracticeData').addEventListener('click', () => {
       if (!window.confirm('将练习数据库中的数据和通过 SQL 创建的临时表恢复到初始状态。项目、表结构、SQL 草稿、历史和练习进度会保留。继续吗？')) return;
@@ -1589,11 +1711,17 @@
       if (!item) return;
       document.querySelectorAll('.mobile-nav .nav-item').forEach(button => button.classList.toggle('active', button === item));
     });
-    document.querySelector('#databaseTablesTab').addEventListener('click', () => { document.querySelector('#databaseTablesTab').classList.add('active'); document.querySelector('#databaseErTab').classList.remove('active'); document.querySelector('#databaseTablesView').hidden = false; document.querySelector('#databaseErView').hidden = true; });
-    document.querySelector('#databaseErTab').addEventListener('click', () => { document.querySelector('#databaseErTab').classList.add('active'); document.querySelector('#databaseTablesTab').classList.remove('active'); document.querySelector('#databaseTablesView').hidden = true; document.querySelector('#databaseErView').hidden = false; });
+    function activateDatabaseTab(tabId) {
+      [['databaseTablesTab', 'databaseTablesView'], ['databaseErTab', 'databaseErView'], ['databaseDataTab', 'databaseDataView']].forEach(pair => {
+        document.querySelector('#' + pair[0]).classList.toggle('active', pair[0] === tabId);
+        document.querySelector('#' + pair[1]).hidden = pair[0] !== tabId;
+      });
+      if (tabId === 'databaseDataTab') renderDataPreview();
+    }
+    ['databaseTablesTab', 'databaseErTab', 'databaseDataTab'].forEach(id => { document.querySelector('#' + id).addEventListener('click', () => activateDatabaseTab(id)); });
     document.querySelector('#openDatabaseDesigner').addEventListener('click', () => { document.body.classList.remove('drawer-open'); openDesign(); });
     document.querySelector('#openDatabaseEr').addEventListener('click', () => { document.body.classList.remove('drawer-open'); openEr(); });
-    document.querySelector('#createProjectBtn').addEventListener('click', () => { const input = document.querySelector('#projectNameInput'); const name = input.value.trim(); if (!name) { showToast('请输入项目名称'); return; } saveProjects(); const next = { id:`project-${Date.now()}`, name, updatedAt:Date.now(), schema:JSON.parse(JSON.stringify(defaultSchema)) }; projects.unshift(next); activeProjectId = next.id; schema = next.schema; activeDesignTable = schema.tables[0].name; storage.set(schemaKey, schema); saveProjects(); input.value=''; renderProjectList(); showToast(`已创建项目：${name}`); });
+    document.querySelector('#createProjectBtn').addEventListener('click', async () => { const input = document.querySelector('#projectNameInput'); const name = input.value.trim(); if (!name) { showToast('请输入项目名称'); return; } saveProjects(); const previous = { id:activeProjectId, schema }; const next = { id:`project-${Date.now()}`, name, updatedAt:Date.now(), schema:JSON.parse(JSON.stringify(defaultSchema)) }; projects.unshift(next); try { await window.queryPadEngineReady; if (window.queryPadEngine.switchProject) await window.queryPadEngine.switchProject(next.id); activeProjectId = next.id; window.queryPadProjectId = next.id; schema = next.schema; activeDesignTable = schema.tables[0].name; storage.set(schemaKey, schema); storage.set(activeProjectKey, activeProjectId); saveProjects(); input.value=''; renderProjectList(); syncEngineTables(); renderTableCatalog(); renderDesign(); showToast(`已创建项目：${name}`); } catch (error) { projects = projects.filter(project => project.id !== next.id); activeProjectId = previous.id; window.queryPadProjectId = previous.id; schema = previous.schema; renderProjectList(); showToast(`创建项目失败：${error.message}`); } });
     document.querySelector('#exportCurrentProject').addEventListener('click', () => { const project = activeProject(); if (project) downloadText(`${project.name}.json`, JSON.stringify(project, null, 2)); showToast('当前项目已导出'); });
     document.querySelector('#copyDesignSql').addEventListener('click', async () => { try { await navigator.clipboard.writeText(document.querySelector('#designSql').textContent); showToast('建表 SQL 已复制'); } catch (_) { showToast('请长按 SQL 内容复制'); } });
     if (!document.querySelector('#selfTestBtn')) { const testButton = document.createElement('button'); testButton.id = 'selfTestBtn'; testButton.className = 'design-tool'; testButton.textContent = '运行自检'; document.querySelector('#designModal .design-toolbar').appendChild(testButton); }
@@ -1628,6 +1756,7 @@
         catch (error) { showError(error.message); }
       }
       if (window.queryPadEngine.restoreError) showToast(window.queryPadEngine.restoreError);
+      else if (window.queryPadEngine.seedUpgraded) showToast('练习样例数据已扩充：120 名学生 · 40 门课程 · 360 条选课记录');
     }).catch(error => {
       console.error('SQLite 引擎初始化失败', error);
       document.querySelector('#engineMessage').textContent = `SQLite 引擎加载失败：${error.message}`;

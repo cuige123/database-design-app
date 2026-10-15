@@ -1,4 +1,121 @@
 (function () {
+  const SEED_VERSION = 2;
+  const seedVersionKey = 'querypad-seed-version';
+
+  function readSeedVersion() {
+    try {
+      return Number((window.localStorage && window.localStorage.getItem(seedVersionKey)) || 0) || 0;
+    } catch (error) {
+      return 0;
+    }
+  }
+
+  function writeSeedVersion() {
+    try {
+      if (window.localStorage) window.localStorage.setItem(seedVersionKey, String(SEED_VERSION));
+    } catch (error) {
+      // 浏览器存储不可用时忽略：下次仍会重新生成样例数据
+    }
+  }
+
+  function buildSeedTables() {
+    const students = [
+      ['陈思远', 96, '计算机科学'],
+      ['林晓雨', 92, '软件工程'],
+      ['周子航', 88, '计算机科学'],
+      ['赵可欣', 85, '数据科学']
+    ];
+    const legacyNames = ['吴一凡','郑雨桐','孙浩然','马嘉宁','朱子墨','胡安琪','郭明轩','何若溪','高逸飞','罗欣怡','梁宇航','宋佳音','谢承泽','唐婉清','许知远','韩思齐','冯嘉树','邓语嫣','曹景行','彭星月','曾梓涵','萧亦辰','田梦瑶','董书言','袁子恒','潘雨薇'];
+    const legacyMajors = ['计算机科学', '软件工程', '数据科学'];
+    legacyNames.forEach((name, index) => {
+      students.push([name, 60 + ((index * 17 + 9) % 41), legacyMajors[index % legacyMajors.length]]);
+    });
+    const surnames = ['王','李','张','刘','陈','杨','黄','赵','吴','周','徐','孙','马','朱','胡','郭','何','高','林','罗','郑','梁','谢','宋','唐','许','韩','冯','邓','曹'];
+    const givenNames = ['若彤', '景程', '嘉禾'];
+    const allMajors = ['计算机科学', '软件工程', '数据科学', '人工智能', '网络工程', '信息安全'];
+    for (let index = 0; index < 90; index += 1) {
+      students.push([
+        surnames[index % surnames.length] + givenNames[Math.floor(index / surnames.length)],
+        55 + ((index * 29 + 7) % 46),
+        allMajors[index % allMajors.length]
+      ]);
+    }
+    for (let index = students.length - 6; index < students.length; index += 1) {
+      students[index][1] = null;
+    }
+
+    const courses = [
+      ['MySQL 基础', 3],
+      ['Web 开发实战', 2],
+      ['数据结构', 4],
+      ['Python 数据分析', 3],
+      ['数据库系统', 4],
+      ['算法设计', 5],
+      ['操作系统', 4],
+      ['网络安全', 2],
+      ['数据可视化', 3],
+      ['Java 程序设计', 4],
+      ['Web 前端进阶', 2],
+      ['云计算导论', 3],
+      ['MySQL 高级应用', 5],
+      ['软件测试基础', 2],
+      ['人工智能导论', 4],
+      ['Web 安全实践', 3],
+      ['离散数学', 3],
+      ['计算机网络', 4],
+      ['编译原理', 4],
+      ['数字逻辑', 3],
+      ['软件工程导论', 3],
+      ['Linux 系统管理', 2],
+      ['Docker 与容器', 2],
+      ['微服务架构', 3],
+      ['大数据基础', 4],
+      ['机器学习入门', 4],
+      ['深度学习实践', 5],
+      ['自然语言处理', 4],
+      ['计算机图形学', 3],
+      ['嵌入式系统', 4],
+      ['移动应用开发', 3],
+      ['区块链原理', 3],
+      ['分布式系统', 5],
+      ['数据库性能调优', 4],
+      ['SQL 注入与防护', 2],
+      ['项目实训', 2],
+      ['数学建模', 3],
+      ['毕业论文写作', null],
+      ['职业素养', null],
+      ['通识选修', null]
+    ];
+
+    const enrollments = [
+      [1, 1, '2026-09-01'],
+      [2, 2, '2026-09-02'],
+      [3, 1, '2026-09-03']
+    ];
+    const enrollmentStart = Date.UTC(2026, 8, 1);
+    const enrollmentDays = 122;
+    for (let index = 0; index < 357; index += 1) {
+      const dayOffset = (index * 11) % enrollmentDays;
+      const enrolledAt = new Date(enrollmentStart + dayOffset * 86400000).toISOString().slice(0, 10);
+      enrollments.push([(index % students.length) + 1, ((index * 7) % courses.length) + 1, enrolledAt]);
+    }
+
+    return {
+      students: {
+        columns: ['id', 'name', 'score', 'major'],
+        rows: students.map(([name, score, major], index) => ({ id: index + 1, name, score, major }))
+      },
+      courses: {
+        columns: ['id', 'title', 'credits'],
+        rows: courses.map(([title, credits], index) => ({ id: index + 1, title, credits }))
+      },
+      enrollments: {
+        columns: ['id', 'student_id', 'course_id', 'enrolled_at'],
+        rows: enrollments.map(([studentId, courseId, enrolledAt], index) => ({ id: index + 1, student_id: studentId, course_id: courseId, enrolled_at: enrolledAt }))
+      }
+    };
+  }
+
   class OfflineEngine {
     constructor() {
       this.tables = {};
@@ -10,6 +127,11 @@
 
     restore() {
       try {
+        if (readSeedVersion() < SEED_VERSION) {
+          // 样例数据已升级：丢弃旧版本的初始样例，避免下次加载又读回旧数据
+          if (window.localStorage) window.localStorage.removeItem('querypad-database');
+          return;
+        }
         const saved = window.localStorage && window.localStorage.getItem('querypad-database');
         if (!saved) return;
         const tables = JSON.parse(saved);
@@ -39,72 +161,12 @@
     reset() {
       this.tables = {};
       this.seed();
+      writeSeedVersion();
       this.persist();
     }
 
     seed() {
-      this.tables.students = {
-        columns: ['id', 'name', 'score', 'major'],
-        rows: [
-          { id: 1, name: '陈思远', score: 96, major: '计算机科学' },
-          { id: 2, name: '林晓雨', score: 92, major: '软件工程' },
-          { id: 3, name: '周子航', score: 88, major: '计算机科学' },
-          { id: 4, name: '赵可欣', score: 85, major: '数据科学' }
-        ]
-      };
-      const additionalStudentNames = ['吴一凡','郑雨桐','孙浩然','马嘉宁','朱子墨','胡安琪','郭明轩','何若溪','高逸飞','罗欣怡','梁宇航','宋佳音','谢承泽','唐婉清','许知远','韩思齐','冯嘉树','邓语嫣','曹景行','彭星月','曾梓涵','萧亦辰','田梦瑶','董书言','袁子恒','潘雨薇'];
-      const majors = ['计算机科学', '软件工程', '数据科学'];
-      additionalStudentNames.forEach((name, index) => {
-        this.tables.students.rows.push({
-          id: index + 5,
-          name,
-          score: 60 + ((index * 17 + 9) % 41),
-          major: majors[index % majors.length]
-        });
-      });
-      this.tables.courses = {
-        columns: ['id', 'title', 'credits'],
-        rows: [
-          { id: 1, title: 'MySQL 基础', credits: 3 },
-          { id: 2, title: 'Web 开发实战', credits: 2 },
-          { id: 3, title: '数据结构', credits: 4 }
-        ]
-      };
-      const additionalCourses = [
-        ['Python 数据分析', 3],
-        ['数据库系统', 4],
-        ['算法设计', 5],
-        ['操作系统', 4],
-        ['网络安全', 2],
-        ['数据可视化', 3],
-        ['Java 程序设计', 4],
-        ['Web 前端进阶', 2],
-        ['云计算导论', 3],
-        ['MySQL 高级应用', 5],
-        ['软件测试基础', 2],
-        ['人工智能导论', 4],
-        ['Web 安全实践', 3]
-      ];
-      additionalCourses.forEach(([title, credits], index) => {
-        this.tables.courses.rows.push({ id: index + 4, title, credits });
-      });
-      this.tables.enrollments = {
-        columns: ['id', 'student_id', 'course_id', 'enrolled_at'],
-        rows: [
-          { id: 1, student_id: 1, course_id: 1, enrolled_at: '2026-09-01' },
-          { id: 2, student_id: 2, course_id: 2, enrolled_at: '2026-09-02' },
-          { id: 3, student_id: 3, course_id: 1, enrolled_at: '2026-09-03' }
-        ]
-      };
-      for (let index = 0; index < 120; index += 1) {
-        const day = String(index % 30 + 1).padStart(2, '0');
-        this.tables.enrollments.rows.push({
-          id: index + 4,
-          student_id: index % this.tables.students.rows.length + 1,
-          course_id: index % this.tables.courses.rows.length + 1,
-          enrolled_at: `2026-09-${day}`
-        });
-      }
+      this.tables = buildSeedTables();
       this.ready = true;
     }
 
@@ -499,6 +561,10 @@
   }
 
   window.OfflineEngine = OfflineEngine;
+  window.queryPadSeedVersion = SEED_VERSION;
+  window.queryPadSeedVersionKey = seedVersionKey;
+  window.queryPadReadSeedVersion = readSeedVersion;
+  window.queryPadWriteSeedVersion = writeSeedVersion;
   window.queryPadLegacyEngine = new OfflineEngine();
   window.queryPadEngine = window.queryPadLegacyEngine;
 })();

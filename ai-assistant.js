@@ -1,5 +1,5 @@
 (function () {
-  const endpoint = '/api/ai/chat';
+  const endpoint = (typeof window.queryPadAiEndpoint === 'string' && window.queryPadAiEndpoint.trim()) || '/api/ai/chat';
   const taskNames = {
     design_review: '设计建议',
     explain_sql: '解释 SQL',

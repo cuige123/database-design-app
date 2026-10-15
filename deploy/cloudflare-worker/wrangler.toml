@@ -1,0 +1,14 @@
+name = "querypad-ai"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+# ALLOWED_ORIGINS：允许调用该代理的网页来源，逗号分隔。
+# 请改成你的实际地址，避免他人直接盗用你的 DeepSeek 额度。
+# 本地开发时可临时加上 http://localhost:4173
+[vars]
+ALLOWED_ORIGINS = "https://cuige123.github.io,http://localhost:4173"
+
+# DEEPSEEK_MODEL = "deepseek-flash"
+
+# 密钥不要写在文件里，请用命令行设置：
+#   wrangler secret put DEEPSEEK_API_KEY

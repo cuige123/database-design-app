@@ -14,7 +14,10 @@
 - **SQL 收藏、草稿与版本**：当前草稿自动保存在浏览器，可收藏常用语句并搜索/载入；编辑后的最近 40 个 SQL 版本保存在本地，支持恢复。
 - **SQLite 执行计划**：查看单条只读查询的 SQLite `EXPLAIN QUERY PLAN` 和通用索引建议，不会自动建索引；执行计划不代表 MySQL 服务器执行情况。
 - **按需查看参考代码**：切换练习题时默认提供空白 SQL 编辑区；可自行编写并执行，也可用“补全代码”载入当前题目的完整参考 SQL，用“初始化”重新清空编辑区。
-- **可操作的示例数据库**：提供学生、课程和选课等练习数据，包括 30 名学生、16 门课程及 123 条选课记录，便于观察查询结果和练习不同条件。
+- **可操作的示例数据库**：提供学生、课程和选课等练习数据，包括 120 名学生（覆盖 6 个专业，含少量未录入成绩的记录）、40 门课程及 360 条选课记录，便于观察查询结果和练习不同条件。样例数据集有版本号，升级后旧版本样例数据会自动替换为新样例。
+- **数据预览**：数据库抽屉的“数据预览”页可查看每张表的数据（默认前 20 行），并可复制为 INSERT 语句或 CSV，或直接载入查询。
+- **结果集展示上限**：查询结果最多渲染前 200 行，表格会提示“仅显示前 N 行”；判题仍使用完整结果。
+- **移动端结果卡片**：窄屏下查询结果自动从表格切换为逐行卡片，避免横向滚动。
 - **可视化 ER 图设计**：支持新建、删除实体，编辑字段、拖动布局、创建和调整关系，并删除关系；删除实体前会确认，并清理其关联关系和本地表。可表达一对一、一对多、多对一、多对多或自定义关系类型。
 - **表结构与 SQL 辅助**：可编辑表和字段信息，生成建表 SQL 与数据字典，并执行基础范式检查。
 - **DeepSeek AI 助手**：提供可拖动悬浮入口、当前练习提示、快捷提问、SQL 解释、错误诊断、表结构检查以及可收起的辅导面板。快捷问题可编辑后再发送；前端按任务最小化请求，不发送练习数据行或对话历史，API Key 只保存在服务端环境变量中。
@@ -26,9 +29,13 @@
 
 ## 快速开始
 
+### 一键启动（Windows）
+
+双击项目根目录的 `启动MySQL实验室.bat` 即可：脚本会检测 Node.js、在 4173 端口启动服务器，并自动打开浏览器。保持该窗口开启即为运行中，关闭窗口即停止服务器。若服务器已在运行，再次双击只会打开浏览器，不会重复启动。
+
 ### 通过本地服务器运行
 
-SQLite WASM 需要从 HTTP(S) 加载 WebAssembly 文件。直接以 `file://` 打开页面不能启动 SQL 引擎；请使用本地静态服务器，或运行 Android App。
+SQLite WASM 需要从 HTTP(S) 加载 WebAssembly 文件。直接以 `file://` 打开页面不能启动 SQL 引擎；请使用本地静态服务器，或运行 Android App。此外，浏览器在 `file://` 下会禁用 `localStorage` 和 `IndexedDB`，练习数据与项目将无法保存，因此不建议绕过本地服务器。
 
 ### 使用本地静态服务器
 
@@ -41,6 +48,49 @@ npm start
 
 然后访问 <http://localhost:4173/index.html>。部署到托管平台时，在平台服务端环境变量中设置 `DEEPSEEK_API_KEY`，并使用平台提供的 `PORT`；可选用 `DEEPSEEK_MODEL` 覆盖默认模型 `deepseek-flash`。不要把真实密钥写入源代码、网页或提交到 Git。
 
+## 部署到 GitHub Pages
+
+前端是纯静态页面，可以直接部署到 GitHub Pages；AI 助手需要另配一个代理后端，因为 API Key 不能放进网页。
+
+### 第一步：部署前端
+
+仓库已包含工作流 `.github/workflows/deploy-pages.yml`，它会挑选网页资源（不含 `server.js`、`tests/`、`android/`、`deploy/`）并发布：
+
+1. 推送到 `master` 分支。
+2. 打开仓库 **Settings → Pages**，把 **Source** 设为 **GitHub Actions**。
+3. 等待 Actions 完成，站点地址为 `https://<用户名>.github.io/database-design-app/`。
+
+页面内所有资源都使用相对路径，因此项目站点这种子路径部署可以直接工作，Service Worker 也能在子目录下正常注册和离线缓存。注意：`index.html` 和 `ai-config.js` 采用网络优先策略，部署后刷新即可看到新版本；其余资源由缓存版本号控制。
+
+### 第二步：部署 AI 代理（可选，但 AI 助手需要）
+
+GitHub Pages 不能运行服务端代码，因此用 Cloudflare Worker 承载 AI 代理，免费额度足够个人使用：
+
+```powershell
+cd deploy/cloudflare-worker
+npx wrangler login
+npx wrangler deploy
+npx wrangler secret put DEEPSEEK_API_KEY
+```
+
+`wrangler.toml` 里的 `ALLOWED_ORIGINS` 必须改成你的实际来源（默认已包含 `https://cuige123.github.io` 和本机 `http://localhost:4173`），否则代理会返回 403；这是防止他人直接盗用额度的第一道限制。如需更换模型，取消注释 `DEEPSEEK_MODEL`。
+
+### 第三步：让网页指向代理
+
+编辑 `ai-config.js`，把地址改成刚部署的 Worker：
+
+```js
+window.queryPadAiEndpoint = 'https://querypad-ai.<你的子域>.workers.dev/api/ai/chat';
+```
+
+提交后工作流会自动重新发布。若只部署前端、不部署代理，AI 助手会显示无法连接的提示，其余功能不受影响。
+
+### 其他可选后端
+
+`server.js` 同样可以部署到任意 Node 托管平台。此时设置环境变量 `ALLOWED_ORIGINS`（逗号分隔，留空表示不启用跨域）即可让它在独立域名上为 GitHub Pages 提供 AI 接口，再在 `ai-config.js` 里填写该地址。
+
+安全提醒：任何情况下都不要把 DeepSeek API Key 写进前端代码、`ai-config.js` 或提交到 Git；应用级频率限制不能替代账户预算保护，请在 DeepSeek 控制台设置额度或消费告警。
+
 该 Node.js 服务同时提供网页静态文件和 `POST /api/ai/chat`，代理请求到 DeepSeek。服务端会校验并限制请求大小和任务数据、设置每 IP 每 15 分钟最多 20 次及每服务实例每小时最多 30 次的调用限制、限制模型回答长度并设置上游超时，不记录密钥或用户请求内容。部署在纯静态托管上时，需要另行部署此 Node.js 服务或编写对应的服务端函数，并把网页/API 配置到同源；仅上传前端文件无法调用模型。若面向公众开放，还应接入用户鉴权，并在模型服务商侧设置额度/消费告警；应用级频率限制不能代替账户预算保护。
 
 ## 主要文件
@@ -48,6 +98,8 @@ npm start
 | 文件 | 用途 |
 | --- | --- |
 | `index.html` | 网页界面、题库和主要交互逻辑 |
+| `启动MySQL实验室.bat` | Windows 一键启动脚本：启动本地服务器并打开浏览器 |
+| `ai-config.js` | AI 接口地址配置（部署到其他域名时在此填写代理地址） |
 | `offline-engine.js` | 旧版练习数据种子和本地数据迁移兼容 |
 | `sqlite-engine.js` | SQLite WASM 数据库、MySQL 语法兼容和本地持久化 |
 | `vendor/sql.js/` | sql.js WASM/JavaScript 运行时和 MIT 许可证 |
@@ -57,6 +109,8 @@ npm start
 | `ai-assistant.js`、`assistant.css` | AI 助手界面、任务请求和上下文最小化 |
 | `manifest.json`、`sw.js` | PWA 元数据与离线缓存配置 |
 | `package.json`、`package-lock.json` | sql.js 运行时依赖及锁定版本 |
+| `deploy/cloudflare-worker/` | AI 代理 Worker（GitHub Pages 部署时的后端） |
+| `.github/workflows/deploy-pages.yml` | GitHub Pages 自动发布工作流 |
 | `android/` | Android WebView 外壳项目 |
 
 ## 使用说明与限制

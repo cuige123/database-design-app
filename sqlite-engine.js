@@ -1,5 +1,49 @@
 (function () {
   const storageKey = 'querypad-sqlite-database';
+  const databaseName = 'querypad-sqlite';
+  const databaseVersion = 1;
+  const databaseStore = 'snapshots';
+  const defaultProjectId = 'default';
+
+  function currentSeedVersion() {
+    return Number(window.queryPadSeedVersion || 1) || 1;
+  }
+
+  function readSeedVersion() {
+    return typeof window.queryPadReadSeedVersion === 'function' ? window.queryPadReadSeedVersion() : 0;
+  }
+
+  function writeSeedVersion() {
+    if (typeof window.queryPadWriteSeedVersion === 'function') window.queryPadWriteSeedVersion();
+  }
+
+  function bytesToBase64(bytes) {
+    return toBase64(bytes);
+  }
+
+  function base64ToBytes(value) {
+    const binary = atob(String(value || ''));
+    return Uint8Array.from(binary, character => character.charCodeAt(0));
+  }
+
+  function openSnapshotStore() {
+    return new Promise((resolve, reject) => {
+      if (!window.indexedDB) { reject(new Error('IndexedDB 不可用')); return; }
+      const request = window.indexedDB.open(databaseName, databaseVersion);
+      request.onupgradeneeded = () => {
+        if (!request.result.objectStoreNames.contains(databaseStore)) request.result.createObjectStore(databaseStore);
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error || new Error('IndexedDB 打开失败'));
+    });
+  }
+
+  function idbRequest(request) {
+    return new Promise((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error || new Error('IndexedDB 操作失败'));
+    });
+  }
 
   function quoteIdentifier(identifier) {
     return `"${String(identifier).replace(/"/g, '""')}"`;
@@ -74,10 +118,14 @@
       this.ready = false;
       this.restoreError = '';
       this.transactionDepth = 0;
+      this.projectId = defaultProjectId;
+      this.snapshotStore = null;
     }
 
-    initialize() {
-      const saved = window.localStorage && window.localStorage.getItem(storageKey);
+    initialize(projectId) {
+      this.projectId = String(projectId || defaultProjectId);
+      const seedOutdated = this.projectId === defaultProjectId && readSeedVersion() < currentSeedVersion();
+      const saved = window.localStorage && window.localStorage.getItem(`${storageKey}:${this.projectId}`) || (this.projectId === defaultProjectId && window.localStorage && window.localStorage.getItem(storageKey));
       if (saved) {
         try {
           const binary = atob(saved);
@@ -90,13 +138,103 @@
         }
       }
 
+      // 样例升级只替换未被改动过的初始样例；用户改动过的练习库保持原样
+      this.seedUpgraded = false;
+      if (seedOutdated && this.db) {
+        if (this.isUntouchedLegacySample()) {
+          this.db.close();
+          this.db = null;
+        } else if (this.isCurrentSample()) {
+          // 数据已是当前样例（例如浏览器存储被部分清理），只需补写版本号
+          writeSeedVersion();
+        }
+      }
+
       if (!this.db) {
         this.db = new this.SQL.Database();
         const legacy = window.queryPadLegacyEngine;
-        this.importTables(legacy && legacy.tables ? legacy.tables : {});
+        const useNewSeed = seedOutdated || !legacy || !legacy.tables;
+        this.seedUpgraded = seedOutdated && Boolean(saved);
+        this.importTables(useNewSeed ? this.seedTables() : legacy.tables);
       }
       this.configure();
       this.ready = true;
+      if (this.seedUpgraded) writeSeedVersion();
+      this.persist();
+      return this;
+    }
+
+    sampleCountsMatch(expected) {
+      try {
+        const names = this.query("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%';").values.map(row => String(row[0]).toLowerCase()).sort();
+        if (names.join(',') !== Object.keys(expected).sort().join(',')) return false;
+        return Object.entries(expected).every(([name, count]) => {
+          const result = this.query(`SELECT COUNT(*) FROM ${quoteIdentifier(name)};`);
+          return result.values.length === 1 && result.values[0][0] === count;
+        });
+      } catch (error) {
+        return false;
+      }
+    }
+
+    isUntouchedLegacySample() {
+      return this.sampleCountsMatch({ students: 30, courses: 16, enrollments: 123 });
+    }
+
+    isCurrentSample() {
+      const tables = this.seedTables();
+      const expected = Object.fromEntries(Object.entries(tables).map(([name, table]) => [name, table.rows.length]));
+      return this.sampleCountsMatch(expected);
+    }
+
+    async initializePersistence(projectId) {
+      this.projectId = String(projectId || this.projectId || defaultProjectId);
+      try {
+        this.snapshotStore = await openSnapshotStore();
+        const record = await idbRequest(this.snapshotStore.transaction(databaseStore, 'readonly').objectStore(databaseStore).get(this.projectId));
+        if (record && record.data && !this.seedUpgraded) {
+          this.restoreSnapshot(base64ToBytes(record.data), false);
+        } else if (record && record.data) {
+          this.persist();
+        } else {
+          const legacy = this.seedUpgraded ? null : window.localStorage && window.localStorage.getItem(`${storageKey}:${this.projectId}`) || (this.projectId === defaultProjectId && window.localStorage && window.localStorage.getItem(storageKey));
+          if (legacy) this.restoreSnapshot(base64ToBytes(legacy), false);
+          this.persist();
+        }
+      } catch (error) {
+        this.snapshotStore = null;
+        this.restoreError = `IndexedDB 快照不可用，将使用浏览器本地存储：${error.message}`;
+        this.persist();
+      }
+      return this;
+    }
+
+    async switchProject(projectId) {
+      if (!this.ready) throw new Error('SQLite 引擎尚未就绪');
+      projectId = String(projectId || defaultProjectId);
+      if (projectId === this.projectId) return this;
+      this.persist();
+      this.projectId = String(projectId || defaultProjectId);
+      let restored = false;
+      if (this.snapshotStore) {
+        const record = await idbRequest(this.snapshotStore.transaction(databaseStore, 'readonly').objectStore(databaseStore).get(this.projectId));
+        if (record && record.data) {
+          this.restoreSnapshot(base64ToBytes(record.data), false);
+          restored = true;
+        }
+      }
+      if (!restored) {
+        const saved = window.localStorage && window.localStorage.getItem(`${storageKey}:${this.projectId}`) || (this.projectId === defaultProjectId && window.localStorage && window.localStorage.getItem(storageKey));
+        if (saved) { this.restoreSnapshot(base64ToBytes(saved), false); restored = true; }
+      }
+      if (!restored) {
+        if (this.db) this.db.close();
+        this.db = new this.SQL.Database();
+        this.configure();
+        this.transactionDepth = 0;
+        const legacy = window.queryPadLegacyEngine;
+        this.importTables(legacy && legacy.tables ? legacy.tables : this.seedTables());
+      }
       this.persist();
       return this;
     }
@@ -304,7 +442,14 @@
     persist() {
       if (!window.localStorage || !this.db) return;
       try {
-        window.localStorage.setItem(storageKey, toBase64(this.db.export()));
+        const data = bytesToBase64(this.db.export());
+        window.localStorage.setItem(`${storageKey}:${this.projectId}`, data);
+        if (this.projectId === defaultProjectId) window.localStorage.setItem(storageKey, data);
+        if (this.snapshotStore) {
+          const transaction = this.snapshotStore.transaction(databaseStore, 'readwrite');
+          transaction.objectStore(databaseStore).put({ projectId: this.projectId, data, updatedAt: Date.now() }, this.projectId);
+          transaction.onerror = error => console.warn('SQLite IndexedDB 快照保存失败', error);
+        }
       } catch (error) {
         throw new Error(`SQLite 数据库无法保存到浏览器本地存储：${error.message}`);
       }
@@ -314,13 +459,21 @@
       return this.db.export();
     }
 
-    restoreSnapshot(bytes) {
+    restoreSnapshot(bytes, persist = true) {
       if (!(bytes instanceof Uint8Array)) throw new Error('数据库快照无效');
+      let nextDb;
+      try {
+        nextDb = new this.SQL.Database(bytes);
+        nextDb.exec('SELECT name FROM sqlite_master LIMIT 1');
+      } catch (error) {
+        if (nextDb) nextDb.close();
+        throw new Error(`数据库快照无效或已损坏：${error.message}`);
+      }
       if (this.db) this.db.close();
-      this.db = new this.SQL.Database(bytes);
+      this.db = nextDb;
       this.configure();
       this.transactionDepth = 0;
-      this.persist();
+      if (persist) this.persist();
     }
 
     reset() {
@@ -329,6 +482,7 @@
       this.configure();
       this.transactionDepth = 0;
       this.importTables(this.seedTables());
+      writeSeedVersion();
       this.persist();
     }
   }
@@ -337,8 +491,9 @@
     locateFile: file => `vendor/sql.js/${file}`
   }).then(SQL => {
     const engine = new SQLiteEngine(SQL);
-    engine.initialize();
+    const projectId = window.queryPadProjectId || defaultProjectId;
+    engine.initialize(projectId);
     window.queryPadEngine = engine;
-    return engine;
+    return engine.initializePersistence(projectId);
   });
 })();

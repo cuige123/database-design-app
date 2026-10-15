@@ -7,9 +7,17 @@
     "node": ">=20"
   },
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "check": "node --check server.js && node --check self-test.js && node --check sqlite-engine.js",
+    "test:engine": "node tests/sqlite-engine.test.js && node tests/seed-migration.test.js",
+    "test:worker": "node tests/worker.test.js",
+    "test:browser": "playwright test",
+    "test": "npm run check && npm run test:engine && npm run test:worker"
   },
   "dependencies": {
     "sql.js": "1.13.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1"
   }
 }
