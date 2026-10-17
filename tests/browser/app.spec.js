@@ -153,6 +153,29 @@ test('AI assistant uses the main interface background and text theme', async ({ 
   expect(errors).toEqual([]);
 });
 
+test('AI assistant renders text-event-stream answers as they arrive', async ({ page }) => {
+  const chunks = [
+    { choices:[{ delta:{ content:'第一段回答，' } }] },
+    { choices:[{ delta:{ content:'这是连续输出。' } }] },
+    { choices:[{ delta:{}, finish_reason:'stop' }] }
+  ];
+  const body = `${chunks.map(chunk => `data: ${JSON.stringify(chunk)}\n\n`).join('')}data: [DONE]\n\n`;
+  await page.route('**/api/ai/chat', route => route.fulfill({
+    status:200,
+    contentType:'text/event-stream',
+    body
+  }));
+  const errors = await openApp(page);
+  await page.locator('#aiAssistantBtn').click();
+  await page.locator('#aiPrompt').fill('请分段回答');
+  await page.locator('#aiSend').click();
+  const response = page.locator('#aiMessages .ai-message.assistant').last();
+  await expect(response).toContainText('第一段回答，这是连续输出。');
+  await expect(response.locator('.ai-message-actions')).toBeVisible();
+  await expect(page.locator('#aiConnection')).toContainText('回答完成');
+  expect(errors).toEqual([]);
+});
+
 test('AI assistant scrolls its feature menu and suggestions and collapses them to expand the conversation', async ({ page }) => {
   const errors = await openApp(page);
   await page.setViewportSize({ width:390, height:844 });

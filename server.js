@@ -410,7 +410,7 @@ async function handleAiRequest(request, response) {
         model: MODEL,
         messages: buildMessages(payload),
         max_tokens: payload.task === 'personalized_exercise' ? 2200 : payload.task === 'custom_chat' ? 1600 : 1200,
-        stream: false
+        stream: true
       }),
       signal: controller.signal
     });
@@ -428,12 +428,45 @@ async function handleAiRequest(request, response) {
       return sendJson(response, status, { error: message }, cors || {});
     }
 
-    const result = await upstream.json();
-    const answer = result?.choices?.[0]?.message?.content;
-    if (typeof answer !== 'string' || !answer.trim()) {
-      return sendJson(response, 502, { error: 'DeepSeek 返回内容为空或格式无效。' }, cors || {});
+    if (!upstream.body || typeof upstream.body.getReader !== 'function') {
+      return sendJson(response, 502, { error: 'DeepSeek 未返回可读取的流式内容。' }, cors || {});
     }
-    return sendJson(response, 200, { answer: answer.trim() }, cors || {});
+
+    response.writeHead(200, {
+      'Cache-Control': 'no-cache, no-transform',
+      'Content-Type': 'text/event-stream; charset=utf-8',
+      'X-Accel-Buffering': 'no',
+      Connection: 'keep-alive',
+      ...(cors || {})
+    });
+    if (typeof response.flushHeaders === 'function') response.flushHeaders();
+
+    const reader = upstream.body.getReader();
+    const onClose = () => {
+      if (!response.writableEnded) controller.abort();
+      reader.cancel().catch(() => {});
+    };
+    response.on('close', onClose);
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        if (value && !response.writableEnded) response.write(Buffer.from(value));
+      }
+      if (!response.writableEnded) response.end();
+    } catch (error) {
+      if (!response.writableEnded && !response.destroyed) {
+        const message = error.name === 'AbortError'
+          ? 'DeepSeek 请求超时，请稍后重试。'
+          : 'DeepSeek 流式响应中断，请稍后重试。';
+        response.write(`data: ${JSON.stringify({ error: { message } })}\n\n`);
+        response.end();
+      }
+    } finally {
+      response.off('close', onClose);
+      reader.releaseLock();
+    }
+    return undefined;
   } catch (error) {
     const message = error.name === 'AbortError'
       ? 'DeepSeek 请求超时，请稍后重试。'

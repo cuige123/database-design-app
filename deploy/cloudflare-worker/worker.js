@@ -322,7 +322,7 @@ async function handleAiRequest(request, env, origin) {
         model: env.DEEPSEEK_MODEL || 'deepseek-flash',
         messages: buildMessages(payload),
         max_tokens: payload.task === 'personalized_exercise' ? 2200 : payload.task === 'custom_chat' ? 1600 : 1200,
-        stream: false
+        stream: true
       }),
       signal: controller.signal
     });
@@ -336,12 +336,18 @@ async function handleAiRequest(request, env, origin) {
       return sendJson(status, { error: message }, headers);
     }
 
-    const result = await upstream.json();
-    const answer = result?.choices?.[0]?.message?.content;
-    if (typeof answer !== 'string' || !answer.trim()) {
-      return sendJson(502, { error: 'DeepSeek 返回内容为空或格式无效。' }, headers);
+    if (!upstream.body) {
+      return sendJson(502, { error: 'DeepSeek 未返回可读取的流式内容。' }, headers);
     }
-    return sendJson(200, { answer: answer.trim() }, headers);
+    return new Response(upstream.body, {
+      status: 200,
+      headers: {
+        ...headers,
+        'Cache-Control': 'no-cache, no-transform',
+        'Content-Type': 'text/event-stream; charset=utf-8',
+        'X-Accel-Buffering': 'no'
+      }
+    });
   } catch (error) {
     const message = error.name === 'AbortError'
       ? 'DeepSeek 请求超时，请稍后重试。'

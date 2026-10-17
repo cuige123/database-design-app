@@ -89,6 +89,10 @@
 .ai-message p { margin:0; white-space:pre-wrap; }
 .ai-message-content strong { display:inline; margin:0; color:var(--ai-accent); font-size:inherit; }
 .ai-message-content > p { margin:0 0 8px; white-space:normal; }
+.ai-message-content.ai-streaming { min-height:1.4em; white-space:pre-wrap; }
+.ai-message-content.ai-streaming::after { content:'▋'; display:inline-block; margin-left:2px; color:var(--ai-accent); animation:ai-stream-caret 1s steps(2,end) infinite; }
+.ai-message.error .ai-streaming::after { display:none; }
+@keyframes ai-stream-caret { to { visibility:hidden; } }
 .ai-message-content > p:last-child { margin-bottom:0; }
 .ai-message-content h3,.ai-message-content h4 { margin:11px 0 5px; color:var(--ai-accent); line-height:1.45; }
 .ai-message-content h3 { font-size:11px; }

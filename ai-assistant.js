@@ -677,6 +677,83 @@
     }
     messages.appendChild(article);
     messages.scrollTop = messages.scrollHeight;
+    return article;
+  }
+
+  function createStreamingMessage() {
+    const article = document.createElement('article');
+    article.className = 'ai-message assistant';
+    const heading = document.createElement('strong');
+    heading.textContent = '助手';
+    const content = document.createElement('div');
+    content.className = 'ai-message-content ai-streaming';
+    content.textContent = '正在生成…';
+    article.append(heading, content);
+    messages.appendChild(article);
+    messages.scrollTop = messages.scrollHeight;
+    return { article, content };
+  }
+
+  async function readEventStream(response, onDelta) {
+    if (!response.body || typeof response.body.getReader !== 'function') {
+      throw new Error('浏览器无法读取模型的流式响应');
+    }
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let dataLines = [];
+    let answer = '';
+    let finished = false;
+
+    function dispatchEvent() {
+      if (!dataLines.length) return;
+      const data = dataLines.join('\n');
+      dataLines = [];
+      if (data === '[DONE]') {
+        finished = true;
+        return;
+      }
+      let event;
+      try { event = JSON.parse(data); }
+      catch (_) { throw new Error('模型流式响应格式无效'); }
+      if (event.error) throw new Error(event.error.message || '模型生成失败');
+      const delta = event.choices?.[0]?.delta?.content;
+      if (typeof delta === 'string' && delta) {
+        answer += delta;
+        onDelta(delta, answer);
+      }
+      if (event.choices?.[0]?.finish_reason) finished = true;
+    }
+
+    function processLine(line) {
+      const normalized = line.endsWith('\r') ? line.slice(0, -1) : line;
+      if (!normalized) {
+        dispatchEvent();
+      } else if (normalized.startsWith('data:')) {
+        dataLines.push(normalized.slice(5).replace(/^ /, ''));
+      }
+    }
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
+        let newline = buffer.indexOf('\n');
+        while (newline >= 0) {
+          processLine(buffer.slice(0, newline));
+          buffer = buffer.slice(newline + 1);
+          newline = buffer.indexOf('\n');
+        }
+        if (done) break;
+      }
+      if (buffer) processLine(buffer);
+      dispatchEvent();
+      if (!answer.trim()) throw new Error(finished ? '模型返回了空回答' : '模型流式响应中没有回答内容');
+      if (!finished) throw new Error('模型回答未完整生成，请重试');
+      return answer.trim();
+    } finally {
+      reader.releaseLock();
+    }
   }
 
   function openAssistant() {
@@ -832,35 +909,53 @@
     const controller = new AbortController();
     activeRequestController = controller;
     const timeout = window.setTimeout(() => controller.abort(), 60000);
+    let streamingMessage = null;
     try {
       const response = await fetch(endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Accept': 'text/event-stream, application/json' },
         credentials: 'same-origin',
         body: JSON.stringify(payload),
         signal: controller.signal
       });
-      const bodyText = await response.text();
-      let body;
-      try { body = bodyText ? JSON.parse(bodyText) : {}; }
-      catch (_) { throw new Error(`AI 接口返回了无法识别的内容（HTTP ${response.status}）`); }
       if (!response.ok) {
+        const bodyText = await response.text();
+        let body;
+        try { body = bodyText ? JSON.parse(bodyText) : {}; }
+        catch (_) { body = {}; }
         const detail = typeof body.error === 'string' ? body.error.slice(0, 300) : `HTTP ${response.status}`;
         throw new Error(`模型服务请求失败：${detail}`);
       }
-      if (!body || typeof body.answer !== 'string' || !body.answer.trim()) {
-        throw new Error('AI 接口响应缺少有效的 answer 文本');
+
+      let answer;
+      if (response.headers.get('content-type')?.includes('text/event-stream')) {
+        streamingMessage = createStreamingMessage();
+        answer = await readEventStream(response, (_delta, accumulated) => {
+          if (requestGeneration !== conversationGeneration) return;
+          streamingMessage.content.textContent = accumulated;
+          messages.scrollTop = messages.scrollHeight;
+        });
+      } else {
+        const bodyText = await response.text();
+        let body;
+        try { body = bodyText ? JSON.parse(bodyText) : {}; }
+        catch (_) { throw new Error(`AI 接口返回了无法识别的内容（HTTP ${response.status}）`); }
+        if (!body || typeof body.answer !== 'string' || !body.answer.trim()) {
+          throw new Error('AI 接口响应缺少有效的 answer 文本');
+        }
+        answer = body.answer;
       }
       if (requestGeneration === conversationGeneration) {
         let hintProgressSaved = true;
         if (payload.task === 'hint' && typeof window.queryPadAdvanceAiHint === 'function') {
-          hintProgressSaved = window.queryPadAdvanceAiHint(payload.level, payload.exercise?.id, body.answer) !== false;
+          hintProgressSaved = window.queryPadAdvanceAiHint(payload.level, payload.exercise?.id, answer) !== false;
           updateContextSummary();
         }
-        appendMessage('assistant', body.answer, true, payload.task, payload.sql,
+        appendMessage('assistant', answer, true, payload.task, payload.sql,
           payload.task === 'hint' && hintProgressSaved ? { id:payload.exercise?.id, level:payload.level } : null);
+        streamingMessage?.article.remove();
         setConnection(hintProgressSaved
-          ? '模型服务已响应。请核对 AI 建议和生成内容。'
+          ? '回答完成。请核对 AI 建议和生成内容。'
           : '提示已生成，但本地进度未能保存；当前页面关闭后可能无法恢复。', hintProgressSaved ? 'ready' : 'error');
       }
     } catch (error) {
@@ -870,7 +965,13 @@
         : error instanceof TypeError
           ? `无法连接 ${endpoint}。请通过 HTTP(S) 运行应用，并先部署后端代理接口。`
           : error.message;
-      appendMessage('assistant', `请求未完成：${message}`);
+      if (streamingMessage && streamingMessage.article.isConnected) {
+        streamingMessage.content.replaceChildren();
+        streamingMessage.content.textContent = `请求未完成：${message}`;
+        streamingMessage.article.classList.add('error');
+      } else {
+        appendMessage('assistant', `请求未完成：${message}`);
+      }
       setConnection(message, 'error');
     } finally {
       window.clearTimeout(timeout);
