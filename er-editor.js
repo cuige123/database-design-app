@@ -65,6 +65,7 @@
     });
   }
   function safeName(value, fallback) { var name = String(value || '').trim().replace(/[^\w\u4e00-\u9fa5-]/g, '_'); return name || fallback; }
+  function findNode(name) { return Array.from(canvas.querySelectorAll('.er-node')).find(function (node) { return node.dataset.node === String(name); }) || null; }
   function nodePosition(table, index) { return schema.erLayout[table.name] || { x: 24 + (index % 3) * 245, y: 50 + Math.floor(index / 3) * 180 }; }
   function pointFor(node) { return { x: (parseFloat(node.style.left) || 0) + node.offsetWidth / 2, y: (parseFloat(node.style.top) || 0) + node.offsetHeight / 2 }; }
   function canvasPoint(event) { var rect = canvas.getBoundingClientRect(); var wrap = canvas.parentElement; return { x: event.clientX - rect.left + wrap.scrollLeft, y: event.clientY - rect.top + wrap.scrollTop }; }
@@ -197,7 +198,7 @@
     if (schema.tables.length <= 1) { toast('至少保留一个实体'); return; }
     if (!window.confirm('确定删除实体“' + name + '”及其关联关系吗？此操作不可撤销。')) return;
     try {
-      window.queryPadEngine.execute('DROP TABLE IF EXISTS `' + name + '`;');
+      window.queryPadEngine.execute('DROP TABLE IF EXISTS `' + String(name).replace(/`/g, '``') + '`;');
     } catch (error) {
       toast('删除实体失败：' + error.message);
       return;
@@ -205,6 +206,7 @@
     schema.tables = schema.tables.filter(function (item) { return item.name !== name; });
     schema.relations = schema.relations.filter(function (relation) { return relation.fromTable !== name && relation.toTable !== name; });
     delete schema.erLayout[name];
+    if (schema.erConceptLayout) delete schema.erConceptLayout[name];
     if (activeDesignTable === name) activeDesignTable = schema.tables[0].name;
     selectedRelation = -1;
     save();
@@ -274,8 +276,8 @@
     connectingPath = document.createElementNS('http://www.w3.org/2000/svg', 'path'); connectingPath.classList.add('er-line'); connectingPath.setAttribute('stroke-dasharray', '5 4'); connectingPath.setAttribute('d', `M ${startX} ${startY} L ${startX} ${startY}`); svg.appendChild(connectingPath);
     node.setPointerCapture?.(event.pointerId);
   }
-  function moveConnection(event) { if (!connectStart || !connectingPath) return; var node = canvas.querySelector(`[data-node="${connectStart}"]`); var startX = (parseFloat(node.style.left) || 0) + node.offsetWidth; var startY = pointFor(node).y; var point = canvasPoint(event); connectingPath.setAttribute('d', `M ${startX} ${startY} C ${(startX + point.x) / 2} ${startY}, ${(startX + point.x) / 2} ${point.y}, ${point.x} ${point.y}`); }
-  function finishConnection(event) { if (!connectStart) return; var target = document.elementFromPoint(event.clientX, event.clientY)?.closest?.('.er-node'); var from = connectStart; var node = canvas.querySelector(`[data-node="${from}"]`); node?.classList.remove('er-connect-source'); removeTempPath(); connectStart = null; if (target && target.dataset.node) addRelation(from, target.dataset.node); }
+  function moveConnection(event) { if (!connectStart || !connectingPath) return; var node = findNode(connectStart); if (!node) return; var startX = (parseFloat(node.style.left) || 0) + node.offsetWidth; var startY = pointFor(node).y; var point = canvasPoint(event); connectingPath.setAttribute('d', `M ${startX} ${startY} C ${(startX + point.x) / 2} ${startY}, ${(startX + point.x) / 2} ${point.y}, ${point.x} ${point.y}`); }
+  function finishConnection(event) { if (!connectStart) return; var target = document.elementFromPoint(event.clientX, event.clientY)?.closest?.('.er-node'); var from = connectStart; var node = findNode(from); node?.classList.remove('er-connect-source'); removeTempPath(); connectStart = null; if (target && target.dataset.node) addRelation(from, target.dataset.node); }
 
   function bindNode(node) {
     var dragging = false; var offset = { x: 0, y: 0 };
@@ -302,7 +304,7 @@
     if (selectedRelation >= schema.relations.length) selectedRelation = -1;
     svg.querySelectorAll('[data-relation-index]').forEach(function (element) { element.remove(); });
     schema.relations.forEach(function (relation, index) {
-      var from = canvas.querySelector(`[data-node="${relation.fromTable}"]`); var to = canvas.querySelector(`[data-node="${relation.toTable}"]`); if (!from || !to) return;
+      var from = findNode(relation.fromTable); var to = findNode(relation.toTable); if (!from || !to) return;
       var a = pointFor(from); var b = pointFor(to); var x1 = a.x < b.x ? (parseFloat(from.style.left) || 0) + from.offsetWidth : parseFloat(from.style.left) || 0; var x2 = a.x < b.x ? parseFloat(to.style.left) || 0 : (parseFloat(to.style.left) || 0) + to.offsetWidth; var y1 = a.y; var y2 = b.y;
       var path = document.createElementNS('http://www.w3.org/2000/svg', 'path'); path.classList.add('er-line'); path.dataset.relationIndex = index; path.classList.toggle('er-relation-selected', index === selectedRelation); path.setAttribute('d', `M ${x1} ${y1} C ${(x1 + x2) / 2} ${y1}, ${(x1 + x2) / 2} ${y2}, ${x2} ${y2}`); path.addEventListener('click', function (event) { event.stopPropagation(); selectRelation(index); }); svg.appendChild(path);
       var label = document.createElementNS('http://www.w3.org/2000/svg', 'text'); label.classList.add('er-line-label', 'er-relation-label'); label.dataset.relationIndex = index; label.setAttribute('x', (x1 + x2) / 2); label.setAttribute('y', (y1 + y2) / 2 - 8); label.textContent = relation.cardinality || '1:N'; label.addEventListener('click', function (event) { event.stopPropagation(); selectRelation(index); editRelation(index); }); svg.appendChild(label);
@@ -316,11 +318,25 @@
     schema.tables.forEach(function (table, index) {
       var position = nodePosition(table, index); schema.erLayout[table.name] = position;
       var node = document.createElement('article'); node.className = 'er-node'; node.dataset.node = table.name; node.style.left = position.x + 'px'; node.style.top = position.y + 'px';
-      var header = document.createElement('div'); header.className = 'er-node-head'; header.innerHTML = `<span>实体</span><span style="color:#315a9b;font:inherit">${table.name}</span><button data-connect-from="${table.name}" class="er-connect-handle" title="拖动创建关系">↗</button><button data-add-field="${table.name}" title="添加属性">＋</button><button data-delete-entity="${table.name}" class="er-delete-entity" title="删除实体" aria-label="删除实体 ${table.name}">×</button>`; node.appendChild(header);
-      table.fields.forEach(function (field, fieldIndex) { var row = document.createElement('div'); row.className = 'er-field'; row.innerHTML = `<b class="${field.pk ? 'er-key' : field.foreignKey ? 'er-fk' : ''}">${field.pk ? '◆' : field.foreignKey ? '↗' : '·'}</b> ${field.name} <em>${field.type || 'TEXT'}${field.length ? '(' + field.length + ')' : ''}</em><button data-remove-field="${fieldIndex}" title="删除属性">×</button>`; node.appendChild(row); });
+      var header = document.createElement('div'); header.className = 'er-node-head';
+      var kind = document.createElement('span'); kind.textContent = '实体';
+      var title = document.createElement('span'); title.style.cssText = 'color:#315a9b;font:inherit'; title.textContent = String(table.name);
+      var connectButton = document.createElement('button'); connectButton.dataset.connectFrom = table.name; connectButton.className = 'er-connect-handle'; connectButton.title = '拖动创建关系'; connectButton.textContent = '↗';
+      var addButton = document.createElement('button'); addButton.dataset.addField = table.name; addButton.title = '添加属性'; addButton.textContent = '＋';
+      var deleteButton = document.createElement('button'); deleteButton.dataset.deleteEntity = table.name; deleteButton.className = 'er-delete-entity'; deleteButton.title = '删除实体'; deleteButton.setAttribute('aria-label', `删除实体 ${table.name}`); deleteButton.textContent = '×';
+      header.append(kind, title, connectButton, addButton, deleteButton); node.appendChild(header);
+      table.fields.forEach(function (field, fieldIndex) {
+        var row = document.createElement('div'); row.className = 'er-field';
+        var marker = document.createElement('b'); marker.className = field.pk ? 'er-key' : field.foreignKey ? 'er-fk' : ''; marker.textContent = field.pk ? '◆' : field.foreignKey ? '↗' : '·';
+        var name = document.createTextNode(` ${String(field.name)} `);
+        var type = document.createElement('em'); type.textContent = `${String(field.type || 'TEXT')}${field.length ? `(${String(field.length)})` : ''}`;
+        var removeButton = document.createElement('button'); removeButton.dataset.removeField = String(fieldIndex); removeButton.title = '删除属性'; removeButton.textContent = '×';
+        row.append(marker, name, type, removeButton); node.appendChild(row);
+      });
       canvas.appendChild(node); bindNode(node);
     });
     drawRelations(); save();
+    if (window.queryPadConceptErActive && typeof window.renderQueryPadConceptEr === 'function') window.renderQueryPadConceptEr();
   }
 
   function autoLayout() { ensureModel(); schema.tables.forEach(function (table, index) { schema.erLayout[table.name] = { x: 24 + (index % 3) * 245, y: 50 + Math.floor(index / 3) * 180 }; }); save(); render(); toast('已自动排列所有实体'); }

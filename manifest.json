@@ -1,7 +1,7 @@
 {
-  "name": "MySQL实验室 · MySQL 练习工具",
-  "short_name": "MySQL实验室",
-  "description": "适用于移动端和网页端的 MySQL 学习工具",
+  "name": "MySQL 智能学习实验室 · SQL 练习与智能学习助手",
+  "short_name": "MySQL智学",
+  "description": "适用于移动端和网页端的 MySQL 智能学习实验室，提供 SQL 练习、数据库设计和智能学习助手。",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#10131e",

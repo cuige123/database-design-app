@@ -4,13 +4,23 @@
     design_review: '设计建议',
     explain_sql: '解释 SQL',
     generate_sql: '生成 SQL',
-    diagnose_sql: 'SQL 错误诊断'
+    diagnose_sql: 'SQL 错误诊断',
+    hint: '分级提示',
+    repair_sql: 'SQL 自动修正',
+    wrong_analysis: '错题分析',
+    personalized_exercise: '个性化出题·举一反三',
+    custom_chat: '自定义对话'
   };
   const placeholders = {
     design_review: '例如：检查主键、外键和关系设计，并指出可能的规范化问题',
     explain_sql: '例如：说明这条查询如何关联表，以及每个子句的作用',
     generate_sql: '例如：生成查询每个学生已选课程数量的 SQL，并解释查询逻辑',
-    diagnose_sql: '例如：说明报错原因，并给出修改建议'
+    diagnose_sql: '例如：说明报错原因，并给出修改建议',
+    hint: 'AI 会根据当前题目和提示级别给出下一步思路',
+    repair_sql: '说明你希望重点修正什么；也可以留空使用默认问题',
+    wrong_analysis: '例如：优先分析反复答错的知识点，并给我复习建议',
+    personalized_exercise: '例如：根据我的薄弱点生成一道进阶练习',
+    custom_chat: '例如：用简单例子解释主键和外键的区别'
   };
   const modal = document.querySelector('#aiModal');
   const dialog = modal.querySelector('[role="dialog"]');
@@ -26,6 +36,8 @@
   const currentContext = document.querySelector('#aiCurrentContext');
   const connection = document.querySelector('#aiConnection');
   const clearChatButton = document.querySelector('#aiClearChat');
+  const featureToggle = document.querySelector('#aiFeatureToggle');
+  const featureSection = document.querySelector('#aiHelperContent');
   const launcherPositionKey = 'querypad-ai-launcher-position';
   const mobileLauncherPositionKey = `${launcherPositionKey}-mobile`;
   let currentTask = 'design_review';
@@ -158,8 +170,8 @@
           name: String(field.name || ''),
           type: String(field.type || ''),
           length: String(field.length || ''),
-          primaryKey: Boolean(field.primaryKey),
-          nullable: Boolean(field.nullable)
+          primaryKey: Boolean(field.primaryKey || field.pk),
+          nullable: field.nullable === undefined ? !(field.primaryKey || field.pk) : Boolean(field.nullable)
         }))
       })),
       relations: schema.relations.map(relation => ({
@@ -172,21 +184,44 @@
     };
   }
 
-  function buildPayload(task, prompt, sql, schema, sqlError) {
+  function buildPayload(task, prompt, sql, schema, sqlError, exercise, learning) {
     if (!Object.prototype.hasOwnProperty.call(taskNames, task)) throw new Error('请选择有效的助手任务');
     const question = String(prompt || (task === 'diagnose_sql'
       ? '请分析 SQL 执行错误，说明原因并给出修改建议；如果合适，请提供修正后的 SQL。'
+      : task === 'repair_sql'
+        ? '请根据当前题目和 SQLite 的执行结果修正这条 SQL，并说明修改点。'
+        : task === 'wrong_analysis'
+          ? '分析我目前的错题，指出优先复习的知识点和练习建议。'
+          : task === 'personalized_exercise'
+            ? '请根据我的薄弱知识点生成一道循序渐进、可在当前数据库中练习的新题。'
       : '')).trim();
     if (!question) throw new Error('请先输入你的问题');
     if (question.length > 4000) throw new Error('问题不能超过 4,000 字');
 
     const payload = { task, prompt: question };
-    if (task === 'explain_sql' || task === 'diagnose_sql') {
+    if (task === 'hint') {
+      if (!exercise) throw new Error('无法读取当前练习，请重新选择题目后再试');
+      const level = typeof window.queryPadGetAiHintLevel === 'function' ? window.queryPadGetAiHintLevel(exercise.id) : 1;
+      if (level > 3) throw new Error('这道题的 AI 分级提示已全部查看；选择其他题目可重新开始提示。');
+      const statement = String(sql || '').trim();
+      if (statement.length > 8000) throw new Error('当前 SQL 超过 8,000 字，请缩短后再试');
+      payload.level = level;
+      payload.exercise = { ...exercise, lastFeedback: '', lastQuery: '' };
+      payload.sql = statement;
+    } else if (task === 'explain_sql' || task === 'diagnose_sql' || task === 'repair_sql') {
       const statement = String(sql || '').trim();
       if (!statement) throw new Error('SQL 编辑器目前为空，请先输入要解释的 SQL');
       if (statement.length > 8000) throw new Error('当前 SQL 超过 8,000 字，请缩短后再试');
       payload.sql = statement;
-      if (task === 'diagnose_sql') {
+      if (task === 'repair_sql') {
+        payload.schema = buildSchemaPayload(schema);
+        const matchingMistake = exercise && Array.isArray(learning?.mistakes)
+          ? learning.mistakes.find(item => item.id === exercise.id && String(item.lastQuery || '').trim() === statement)
+          : null;
+        payload.exercise = exercise ? { ...exercise, lastFeedback:'', lastQuery:'' } : null;
+        const error = sqlError && String(sqlError.sql || '').trim() === statement ? String(sqlError.message || '') : '';
+        payload.error = (error || matchingMistake?.lastError || '').slice(0, 1000);
+      } else if (task === 'diagnose_sql') {
         const message = String(sqlError && sqlError.message || '').trim();
         if (!message) throw new Error('请先运行一条执行失败的 SQL，再进行错误诊断');
         if (String(sqlError.sql || '').trim() !== statement) throw new Error('当前 SQL 与最近的失败语句不同，请重新运行后再诊断');
@@ -194,10 +229,53 @@
         payload.error = message;
         payload.schema = buildSchemaPayload(schema);
       }
+    } else if (task === 'wrong_analysis') {
+      if (!learning) throw new Error('无法读取本地错题记录，请刷新页面后重试');
+      payload.learning = {
+        ...learning,
+        topicCounts: (learning.topicCounts || []).slice(0, 20),
+        mistakes: (learning.mistakes || []).slice(0, 10).map(item => ({
+          ...item,
+          lastQuery: String(item.lastQuery || '').slice(0, 1200),
+          lastError: String(item.lastError || '').slice(0, 500)
+        }))
+      };
+      payload.exercise = exercise ? { ...exercise, lastFeedback:'', lastQuery:'' } : null;
+    } else if (task === 'personalized_exercise') {
+      if (!learning) throw new Error('无法读取本地学习记录，请刷新页面后重试');
+      payload.learning = {
+        ...learning,
+        topicCounts: (learning.topicCounts || []).slice(0, 20),
+        mistakes: (learning.mistakes || []).slice(0, 20).map(({ id, title, topic, difficulty, attempts, errorCategory }) => ({
+          id: String(id || '').slice(0, 120),
+          title: String(title || '').slice(0, 200),
+          topic: String(topic || '').slice(0, 120),
+          difficulty: String(difficulty || '').slice(0, 32),
+          attempts: Number(attempts) || 0,
+          errorCategory: String(errorCategory || '').slice(0, 120)
+        }))
+      };
+      payload.schema = buildSchemaPayload(schema);
+      payload.exercise = exercise ? { ...exercise, lastFeedback:'', lastQuery:'' } : null;
+    } else if (task === 'custom_chat') {
+      const statement = String(sql || '').trim();
+      if (statement.length > 8000) throw new Error('当前 SQL 超过 8,000 字，请缩短后再试');
+      payload.sql = statement;
+      payload.schema = buildSchemaPayload(schema);
+      payload.exercise = exercise ? {
+        index: Number(exercise.index),
+        total: Number(exercise.total),
+        title: String(exercise.title || '').slice(0, 200),
+        topic: String(exercise.topic || '').slice(0, 120),
+        description: String(exercise.description || '').slice(0, 1000),
+        difficulty: String(exercise.difficulty || '').slice(0, 32)
+      } : null;
     } else {
       payload.schema = buildSchemaPayload(schema);
     }
-    if (JSON.stringify(payload).length > 64000) throw new Error('当前请求内容过大，请精简表结构或问题后再试');
+    const serializedPayload = JSON.stringify(payload);
+    const payloadBytes = new TextEncoder().encode(serializedPayload).length;
+    if (payloadBytes > 60 * 1024) throw new Error('当前请求内容过大，请精简表结构或问题后再试');
     return payload;
   }
 
@@ -230,6 +308,12 @@
     if (diagnosticButton) diagnosticButton.disabled = !error || error.sql !== sql;
     const diagnosticHint = document.querySelector('#aiErrorQuickHint');
     if (diagnosticHint) diagnosticHint.textContent = error && error.sql === sql ? '分析最近一次错误' : '先运行失败语句';
+    const hintButton = document.querySelector('[data-ai-quick="hint"]');
+    if (hintButton && exercise && typeof window.queryPadGetAiHintLevel === 'function') hintButton.disabled = window.queryPadGetAiHintLevel(exercise.id) > 3;
+    const repairButton = document.querySelector('[data-ai-quick="repair_sql"]');
+    if (repairButton) repairButton.disabled = !sql;
+    const repairHint = document.querySelector('#aiRepairQuickHint');
+    if (repairHint) repairHint.textContent = error && error.sql === sql ? '修正最近一次错误' : sql ? '检查题目要求' : '先输入 SQL';
 
     if (currentTask === 'diagnose_sql') {
       contextSummary.textContent = error
@@ -243,8 +327,30 @@
         : 'SQL 编辑器为空。解释 SQL 时只会发送 SQL 文本和你的问题，不发送练习数据行或对话历史。';
       return;
     }
+    if (currentTask === 'hint') {
+      contextSummary.textContent = 'AI 分级提示会根据当前题目给出下一步思路；提示级别越高越接近解题结构，不会自动改写或执行 SQL。';
+      return;
+    }
+    if (currentTask === 'repair_sql') {
+      contextSummary.textContent = sql
+        ? '自动修正会发送当前 SQL、最近错误或判题反馈、当前题目和表结构；修正结果只会在你确认后插入。'
+        : 'SQL 编辑器为空，请先输入要修正的 SQL。';
+      return;
+    }
     if (currentTask === 'generate_sql') {
       contextSummary.textContent = '生成任务会发送表结构和你的问题；点击“本题提示”时，问题会包含当前练习标题和要求。不会发送练习数据行或对话历史。';
+      return;
+    }
+    if (currentTask === 'wrong_analysis') {
+      contextSummary.textContent = '错题分析只发送本地错题统计、失败 SQL 和错误反馈，不发送练习数据行或聊天历史。';
+      return;
+    }
+    if (currentTask === 'personalized_exercise') {
+      contextSummary.textContent = '个性化出题会发送学习统计和当前表结构，生成的练习需要先保存并检查后才会加入本地题库。';
+      return;
+    }
+    if (currentTask === 'custom_chat') {
+      contextSummary.textContent = '自定义对话会发送当前问题、当前 SQL（可为空）、练习要求和表结构；不发送聊天历史或数据库数据行。AI 提供建议，不会自动执行或替换 SQL。';
       return;
     }
     const schema = currentSchema();
@@ -267,9 +373,17 @@
       ? '描述你希望检查的设计'
       : task === 'explain_sql'
         ? '你希望了解 SQL 的哪些部分？'
-        : task === 'diagnose_sql'
+        : task === 'diagnose_sql' || task === 'repair_sql'
           ? '补充说明（可选）'
-          : '描述你需要的 SQL';
+          : task === 'hint'
+            ? '描述你希望获得的提示方向'
+            : task === 'wrong_analysis'
+              ? '描述你希望重点分析的错题问题'
+              : task === 'personalized_exercise'
+                ? '描述你希望练习的方向'
+                : task === 'custom_chat'
+                  ? '输入你想和数据库学习助手讨论的问题'
+                  : '描述你需要的 SQL';
     promptInput.placeholder = placeholders[task];
     updateContextSummary();
   }
@@ -380,16 +494,100 @@
     }
   }
 
-  function appendMessage(role, text, response) {
-    const responseTask = currentTask;
+  function extractSqlBlock(text) {
+    const match = String(text || '').match(/```(?:sql)?\s*([\s\S]*?)```/i);
+    return match ? match[1].trim() : '';
+  }
+
+  function extractExercisePlan(text) {
+    const source = String(text || '').trim();
+    const fenced = source.match(/```(?:json)?\s*([\s\S]*?)```/i);
+    for (const candidate of [fenced ? fenced[1].trim() : '', source]) {
+      if (!candidate) continue;
+      try {
+        const parsed = JSON.parse(candidate);
+        if (parsed && (Array.isArray(parsed.exercises) || parsed.title)) return parsed;
+      } catch (_) {}
+    }
+    return null;
+  }
+
+  function renderSqlDiff(original, proposed, container) {
+    const before = String(original || '').trim().split(/\r?\n/);
+    const after = String(proposed || '').trim().split(/\r?\n/);
+    const maxCells = 250000;
+    if (before.length * after.length > maxCells) {
+      const fallback = document.createElement('p');
+      fallback.className = 'ai-diff-empty';
+      fallback.textContent = 'SQL 较长，暂不展开逐行差异；请使用复制或插入按钮检查修改。';
+      container.appendChild(fallback);
+      return;
+    }
+    const table = Array.from({ length: before.length + 1 }, () => Array(after.length + 1).fill(0));
+    for (let row = before.length - 1; row >= 0; row -= 1) {
+      for (let column = after.length - 1; column >= 0; column -= 1) {
+        table[row][column] = before[row] === after[column]
+          ? table[row + 1][column + 1] + 1
+          : Math.max(table[row + 1][column], table[row][column + 1]);
+      }
+    }
+    const diff = document.createElement('div');
+    diff.className = 'ai-sql-diff';
+    let row = 0;
+    let column = 0;
+    while (row < before.length || column < after.length) {
+      const line = document.createElement('span');
+      line.className = 'ai-sql-diff-line';
+      if (row < before.length && column < after.length && before[row] === after[column]) {
+        line.classList.add('context');
+        line.textContent = `  ${before[row]}`;
+        row += 1;
+        column += 1;
+      } else if (column < after.length && (row === before.length || table[row][column + 1] >= table[row + 1][column])) {
+        line.classList.add('added');
+        line.textContent = `+ ${after[column]}`;
+        column += 1;
+      } else {
+        line.classList.add('removed');
+        line.textContent = `- ${before[row]}`;
+        row += 1;
+      }
+      diff.appendChild(line);
+    }
+    container.appendChild(diff);
+  }
+
+  function appendMessage(role, text, response, taskOverride, sourceSql, workflowExercise) {
+    const responseTask = taskOverride || currentTask;
     const article = document.createElement('article');
     article.className = `ai-message ${role}`;
     const heading = document.createElement('strong');
     heading.textContent = role === 'user' ? '你' : '助手';
     const content = document.createElement(role === 'assistant' ? 'div' : 'p');
+    const parsedExercisePlan = response && responseTask === 'personalized_exercise' ? extractExercisePlan(text) : null;
+    const exercisePlan = parsedExercisePlan
+      && Array.isArray(parsedExercisePlan.exercises)
+      && parsedExercisePlan.exercises.length >= 1
+      && parsedExercisePlan.exercises.length <= 3
+      && parsedExercisePlan.exercises.every(exercise => exercise && typeof exercise === 'object' && !Array.isArray(exercise))
+      ? parsedExercisePlan
+      : null;
     if (role === 'assistant' && response) {
       content.className = 'ai-message-content';
-      renderMarkdown(text, content);
+      if (exercisePlan && Array.isArray(exercisePlan.exercises)) {
+        const intro = document.createElement('p');
+        intro.textContent = `已生成 ${exercisePlan.exercises.length} 道个性化练习。确认后可保存到本地题库。`;
+        content.appendChild(intro);
+        exercisePlan.exercises.forEach((exercise, index) => {
+          const title = document.createElement('h4');
+          title.textContent = `${index + 1}. ${String(exercise.title || '未命名练习')}`;
+          const details = document.createElement('p');
+          details.textContent = `${exercise.topic || 'SQL'} · ${exercise.difficulty || '基础'}：${exercise.description || ''}`;
+          content.append(title, details);
+        });
+      } else {
+        renderMarkdown(text, content);
+      }
     } else {
       content.textContent = text;
     }
@@ -410,20 +608,70 @@
         }
       });
       actions.appendChild(copy);
-      const sqlCodeBlock = text.match(/```(?:sql)?\s*([\s\S]*?)```/i);
-      if (responseTask === 'generate_sql' || (responseTask === 'diagnose_sql' && sqlCodeBlock)) {
+      const sql = extractSqlBlock(text);
+      if (responseTask === 'repair_sql' && sql) {
+        const diffHeading = document.createElement('strong');
+        diffHeading.className = 'ai-diff-heading';
+        diffHeading.textContent = '修改差异';
+        article.appendChild(diffHeading);
+        renderSqlDiff(sourceSql, sql, article);
+      }
+      if (responseTask === 'generate_sql' || responseTask === 'repair_sql' || (responseTask === 'diagnose_sql' && sql)) {
         const insert = document.createElement('button');
         insert.type = 'button';
-        insert.textContent = responseTask === 'diagnose_sql' ? '插入修正 SQL' : '插入 SQL 编辑器';
+        insert.textContent = responseTask === 'repair_sql' ? '替换为修正 SQL' : responseTask === 'diagnose_sql' ? '插入修正 SQL' : '插入 SQL 编辑器';
         insert.addEventListener('click', () => {
-          const sql = (sqlCodeBlock ? sqlCodeBlock[1] : text).trim();
           const editor = document.querySelector('#sqlEditor');
-          editor.setRangeText(sql, editor.selectionStart, editor.selectionEnd, 'end');
+          if (responseTask === 'repair_sql') {
+            if (editor.value.trim() !== String(sourceSql || '').trim()) {
+              setConnection('编辑器内容已变化，未覆盖当前 SQL。请重新发起修正后再试。', 'error');
+              return;
+            }
+            editor.value = sql;
+            editor.setSelectionRange(sql.length, sql.length);
+          } else {
+            editor.setRangeText(sql, editor.selectionStart, editor.selectionEnd, 'end');
+          }
           editor.dispatchEvent(new Event('input', { bubbles:true }));
           editor.focus();
           setConnection('SQL 已插入编辑器；请检查后再运行。', 'ready');
         });
         actions.appendChild(insert);
+      }
+      if (responseTask === 'personalized_exercise') {
+        const saveExercise = document.createElement('button');
+        saveExercise.type = 'button';
+        saveExercise.textContent = '保存为练习';
+        saveExercise.disabled = !exercisePlan;
+        saveExercise.addEventListener('click', () => {
+          if (typeof window.queryPadImportAiExercises !== 'function') {
+            setConnection('当前页面还未准备好题库，请刷新后重试。', 'error');
+            return;
+          }
+          const result = window.queryPadImportAiExercises(exercisePlan || text);
+          setConnection(result.message, result.saved ? 'ready' : 'error');
+          if (result.saved) {
+            saveExercise.disabled = true;
+            saveExercise.textContent = '已保存到练习题库';
+          }
+        });
+        actions.appendChild(saveExercise);
+      }
+      if (responseTask === 'hint' && workflowExercise && Number(workflowExercise.level) < 3) {
+        const nextHint = document.createElement('button');
+        nextHint.type = 'button';
+        nextHint.textContent = `获取第 ${Number(workflowExercise.level) + 1} 级提示`;
+        nextHint.addEventListener('click', () => {
+          const activeExercise = typeof window.queryPadGetAiExerciseContext === 'function' ? window.queryPadGetAiExerciseContext() : null;
+          if (activeExercise?.id !== workflowExercise.id) {
+            setConnection('当前题目已切换，请为新题重新开始分级提示。', 'error');
+            return;
+          }
+          selectTask('hint');
+          promptInput.value = `请只给我当前题目的第 ${Number(workflowExercise.level) + 1} 级提示，不要重复前面的提示，也不要直接给出完整 SQL。`;
+          form.requestSubmit();
+        });
+        actions.appendChild(nextHint);
       }
       article.appendChild(actions);
     }
@@ -474,7 +722,7 @@
     const heading = document.createElement('strong');
     heading.textContent = '学习助手';
     const text = document.createElement('p');
-    text.textContent = '对话已清空。选择上方快捷功能，或输入你想问的问题。';
+    text.textContent = '对话已清空。可以选择辅导功能，或直接输入你想问的问题。';
     welcome.append(heading, text);
     messages.replaceChildren(welcome);
     promptInput.value = '';
@@ -486,15 +734,25 @@
       ? window.queryPadGetAiExerciseContext()
       : null;
     selectTask(task);
-    if (task === 'explain_sql') {
+    if (task === 'hint') {
+      promptInput.value = '请只给我当前题目的下一步提示，不要直接给出完整 SQL。';
+    } else if (task === 'explain_sql') {
       promptInput.value = '请用初学者能理解的方式逐句解释当前 SQL 的执行逻辑，并指出关键字的作用。';
     } else if (task === 'diagnose_sql') {
       promptInput.value = '请解释这次报错的根因，给出逐步修正思路；如果合适，请提供修正后的 SQL。';
+    } else if (task === 'repair_sql') {
+      promptInput.value = '请检查当前 SQL 是否满足题目要求；如果有执行错误或判题反馈，请说明修改点并给出修正后的 SQL。';
     } else if (task === 'generate_sql') {
       const exerciseDescription = exercise
         ? `当前练习是“${exercise.title}”：${exercise.description}`
         : '请根据当前练习内容';
       promptInput.value = `${exerciseDescription}。先给一个循序渐进的提示，再提供可检查的参考 SQL，并指出容易出错的地方。`;
+    } else if (task === 'wrong_analysis') {
+      promptInput.value = '请分析我的错题模式，按优先级列出需要复习的知识点，并给出下一步练习建议。';
+    } else if (task === 'personalized_exercise') {
+      promptInput.value = '请根据当前练习举一反三，生成一道相似但条件不同的 SQL 练习，并附上分级提示和参考 SQL。';
+    } else if (task === 'custom_chat') {
+      promptInput.value = '';
     } else {
       promptInput.value = '请检查当前表结构的主键、字段设计和表关系，给出优点、风险和改进建议。';
     }
@@ -507,6 +765,24 @@
   closeButton.addEventListener('click', closeAssistant);
   minimizeButton.addEventListener('click', toggleMinimized);
   clearChatButton.addEventListener('click', clearConversation);
+  featureToggle.addEventListener('click', () => {
+    featureSection.hidden = !featureSection.hidden;
+    featureToggle.setAttribute('aria-expanded', String(!featureSection.hidden));
+    featureToggle.textContent = featureSection.hidden ? '展开功能⌄' : '收起功能⌃';
+    featureToggle.setAttribute('aria-label', featureSection.hidden ? '展开功能和示例问题' : '收起功能和示例问题');
+  });
+  document.querySelectorAll('[data-ai-suggestion-task]').forEach(button => {
+    button.addEventListener('click', () => {
+      selectTask(button.dataset.aiSuggestionTask);
+      promptInput.value = button.dataset.aiSuggestionText || '';
+      promptInput.focus();
+      updateContextSummary();
+    });
+  });
+  document.querySelector('#aiHintBtn')?.addEventListener('click', () => {
+    document.querySelector('#aiAssistantBtn').click();
+    useQuickPrompt('hint');
+  });
   document.querySelectorAll('[data-ai-quick]').forEach(button => {
     button.addEventListener('click', () => {
       if (button.disabled) return;
@@ -519,9 +795,6 @@
   document.addEventListener('keydown', event => {
     if (event.key === 'Escape' && modal.classList.contains('open')) closeAssistant();
   });
-  document.querySelectorAll('[data-ai-task]').forEach(button => {
-    button.addEventListener('click', () => selectTask(button.dataset.aiTask));
-  });
   document.querySelector('#sqlEditor').addEventListener('input', () => {
     if (!modal.classList.contains('open')) return;
     window.setTimeout(() => {
@@ -533,12 +806,16 @@
     event.preventDefault();
     let payload;
     try {
+      const exercise = typeof window.queryPadGetAiExerciseContext === 'function' ? window.queryPadGetAiExerciseContext() : null;
+      const learning = typeof window.queryPadGetAiLearningContext === 'function' ? window.queryPadGetAiLearningContext() : null;
       payload = buildPayload(
         currentTask,
         promptInput.value,
         document.querySelector('#sqlEditor').value,
         currentSchema(),
-        window.queryPadLastSqlError
+        window.queryPadLastSqlError,
+        exercise,
+        learning
       );
       updateContextSummary();
     } catch (error) {
@@ -575,8 +852,16 @@
         throw new Error('AI 接口响应缺少有效的 answer 文本');
       }
       if (requestGeneration === conversationGeneration) {
-        appendMessage('assistant', body.answer, true);
-        setConnection('模型服务已响应。请核对 AI 建议和生成内容。', 'ready');
+        let hintProgressSaved = true;
+        if (payload.task === 'hint' && typeof window.queryPadAdvanceAiHint === 'function') {
+          hintProgressSaved = window.queryPadAdvanceAiHint(payload.level, payload.exercise?.id, body.answer) !== false;
+          updateContextSummary();
+        }
+        appendMessage('assistant', body.answer, true, payload.task, payload.sql,
+          payload.task === 'hint' && hintProgressSaved ? { id:payload.exercise?.id, level:payload.level } : null);
+        setConnection(hintProgressSaved
+          ? '模型服务已响应。请核对 AI 建议和生成内容。'
+          : '提示已生成，但本地进度未能保存；当前页面关闭后可能无法恢复。', hintProgressSaved ? 'ready' : 'error');
       }
     } catch (error) {
       if (requestGeneration !== conversationGeneration) return;

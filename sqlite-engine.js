@@ -49,6 +49,23 @@
     return `"${String(identifier).replace(/"/g, '""')}"`;
   }
 
+  function schemaType(field) {
+    const type = String(field?.type || 'TEXT').toUpperCase();
+    if (!/^(?:INT|INTEGER|VARCHAR|CHAR|TEXT|DATE|DATETIME|DECIMAL|NUMERIC|REAL|FLOAT|DOUBLE|BLOB|BOOLEAN)$/.test(type)) throw new Error(`不支持的字段类型：${type}`);
+    const length = String(field?.length || '').replace(/[^0-9,]/g, '');
+    return `${type}${length && /VARCHAR|CHAR|DECIMAL|NUMERIC/.test(type) ? `(${length})` : ''}`;
+  }
+
+  function defaultSql(value) {
+    if (value === undefined || value === null || String(value).trim() === '') return '';
+    const text = String(value).trim();
+    const scalar = /^(?:null|current_timestamp|current_date|current_time|true|false|[+-]?\d+(?:\.\d+)?)$/i;
+    const quoted = /^(?:'(?:''|[^'])*'|"(?:""|[^"])*")$/;
+    const parenthesizedScalar = /^\(\s*(?:null|current_timestamp|current_date|current_time|true|false|[+-]?\d+(?:\.\d+)?|'(?:''|[^'])*'|"(?:""|[^"])*")\s*\)$/i;
+    if (scalar.test(text) || quoted.test(text) || parenthesizedScalar.test(text)) return ` DEFAULT ${text}`;
+    return ` DEFAULT '${text.replace(/'/g, "''")}'`;
+  }
+
   function inferType(rows, column) {
     const values = rows.map(row => row[column]).filter(value => value !== null && value !== undefined);
     if (!values.length) return 'TEXT';
@@ -126,15 +143,16 @@
       this.projectId = String(projectId || defaultProjectId);
       const seedOutdated = this.projectId === defaultProjectId && readSeedVersion() < currentSeedVersion();
       const saved = window.localStorage && window.localStorage.getItem(`${storageKey}:${this.projectId}`) || (this.projectId === defaultProjectId && window.localStorage && window.localStorage.getItem(storageKey));
+      let preserveCorruptSnapshot = false;
       if (saved) {
         try {
           const binary = atob(saved);
           const bytes = Uint8Array.from(binary, character => character.charCodeAt(0));
           this.db = new this.SQL.Database(bytes);
         } catch (error) {
-          this.restoreError = `保存的 SQLite 数据库无法加载，原有数据未被覆盖：${error.message}`;
+          this.restoreError = `保存的 SQLite 数据库损坏，已在内存中打开练习样例；原快照暂时保留。${error.message}`;
+          preserveCorruptSnapshot = true;
           console.error(this.restoreError, error);
-          throw new Error(this.restoreError);
         }
       }
 
@@ -160,7 +178,7 @@
       this.configure();
       this.ready = true;
       if (this.seedUpgraded) writeSeedVersion();
-      this.persist();
+      if (!preserveCorruptSnapshot) this.persist();
       return this;
     }
 
@@ -189,11 +207,14 @@
 
     async initializePersistence(projectId) {
       this.projectId = String(projectId || this.projectId || defaultProjectId);
+      let persistedRecordRead = false;
       try {
         this.snapshotStore = await openSnapshotStore();
         const record = await idbRequest(this.snapshotStore.transaction(databaseStore, 'readonly').objectStore(databaseStore).get(this.projectId));
         if (record && record.data && !this.seedUpgraded) {
+          persistedRecordRead = true;
           this.restoreSnapshot(base64ToBytes(record.data), false);
+          this.restoreError = '';
         } else if (record && record.data) {
           this.persist();
         } else {
@@ -203,8 +224,11 @@
         }
       } catch (error) {
         this.snapshotStore = null;
-        this.restoreError = `IndexedDB 快照不可用，将使用浏览器本地存储：${error.message}`;
-        this.persist();
+        const preserveExistingSnapshot = Boolean(this.restoreError) || persistedRecordRead;
+        this.restoreError = this.restoreError || (persistedRecordRead
+          ? `IndexedDB 中保存的 SQLite 数据库损坏，已保留原快照并继续使用当前内存数据库：${error.message}`
+          : `IndexedDB 快照不可用，将使用浏览器本地存储：${error.message}`);
+        if (!preserveExistingSnapshot) this.persist();
       }
       return this;
     }
@@ -344,7 +368,7 @@
     }
 
     translate(sql) {
-      let statement = sql.replace(/`([^`]+)`/g, (_, name) => quoteIdentifier(name));
+      let statement = sql.replace(/`((?:``|[^`])+?)`/g, (_, name) => quoteIdentifier(name.replace(/``/g, '`')));
       statement = statement.replace(/\s+ENGINE\s*=\s*\w+/gi, '');
       statement = statement.replace(/\s+DEFAULT\s+CHARSET\s*=\s*[\w-]+/gi, '');
       statement = statement.replace(/\s+CHARSET\s*=\s*[\w-]+/gi, '');
@@ -437,6 +461,169 @@
         }
         throw new Error(`SQLite 执行失败：${error.message}`);
       }
+    }
+
+    synchronizeTable(name, createSql, options = {}) {
+      if (!this.ready || !this.db) throw new Error('SQLite 引擎尚未就绪');
+      if (this.transactionDepth) throw new Error('请先提交或回滚当前事务，再同步表结构');
+      const tableName = String(name || '');
+      const ddl = this.translate(String(createSql || '').trim().replace(/;\s*$/, ''));
+      const header = ddl.match(/^CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?("(?:[^"]|"")*"|[A-Za-z_][\w$]*)\s*\(/i);
+      if (!header || header[1].replace(/^"|"$/g, '').replace(/""/g, '"') !== tableName) throw new Error('建表语句与当前数据表不一致');
+      const exists = this.db.exec(`SELECT name FROM sqlite_master WHERE type = 'table' AND name = ${this.sqlString(tableName)};`)[0]?.values.length > 0;
+      const oldDb = this.db;
+      const candidate = new this.SQL.Database(oldDb.export());
+      const tempName = `__querypad_migrate_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
+      const signature = (db, target) => {
+        const columns = db.exec(`PRAGMA table_info(${quoteIdentifier(target)});`)[0]?.values || [];
+        const foreignKeys = db.exec(`PRAGMA foreign_key_list(${quoteIdentifier(target)});`)[0]?.values || [];
+        return JSON.stringify({
+          columns: columns.map(row => [row[1], String(row[2] || '').toUpperCase(), row[3], row[4], row[5]]),
+          foreignKeys: foreignKeys.map(row => [row[2], row[3], row[4], row[5], row[6], row[7]]).sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))
+        });
+      };
+      try {
+        candidate.exec('PRAGMA foreign_keys = OFF;');
+        candidate.exec(ddl.replace(header[0], `CREATE TABLE ${quoteIdentifier(tempName)} (`));
+        if (exists && signature(candidate, tableName) === signature(candidate, tempName)) {
+          candidate.close();
+          return false;
+        }
+        candidate.exec('BEGIN TRANSACTION;');
+        if (exists) {
+          const uniqueIndexes = candidate.exec(`PRAGMA index_list(${quoteIdentifier(tableName)});`)[0]?.values || [];
+          if (uniqueIndexes.some(row => row[3] === 'u')) throw new Error('原表含 UNIQUE 约束，请先用 SQL 手工迁移，以免丢失约束');
+          const dependent = candidate.exec(`SELECT sql FROM sqlite_master WHERE tbl_name = ${this.sqlString(tableName)} AND type IN ('index', 'trigger') AND sql IS NOT NULL ORDER BY type;`)[0]?.values.map(row => row[0]) || [];
+          const oldColumns = (candidate.exec(`PRAGMA table_info(${quoteIdentifier(tableName)});`)[0]?.values || []).map(row => row[1]);
+          const newColumns = (candidate.exec(`PRAGMA table_info(${quoteIdentifier(tempName)});`)[0]?.values || []).map(row => row[1]);
+          const shared = newColumns.map(column => ({ target:column, source:oldColumns.find(oldColumn => oldColumn.toLowerCase() === column.toLowerCase()) })).filter(column => column.source);
+          const rowCount = candidate.exec(`SELECT COUNT(*) FROM ${quoteIdentifier(tableName)};`)[0]?.values[0]?.[0] || 0;
+          if (rowCount && !shared.length) throw new Error('新旧表没有同名字段，无法安全保留原数据');
+          if (shared.length) {
+            const targetColumns = shared.map(column => quoteIdentifier(column.target)).join(', ');
+            const sourceColumns = shared.map(column => quoteIdentifier(column.source)).join(', ');
+            candidate.exec(`INSERT INTO ${quoteIdentifier(tempName)} (${targetColumns}) SELECT ${sourceColumns} FROM ${quoteIdentifier(tableName)};`);
+          }
+          candidate.exec(`DROP TABLE ${quoteIdentifier(tableName)};`);
+          candidate.exec(`ALTER TABLE ${quoteIdentifier(tempName)} RENAME TO ${quoteIdentifier(tableName)};`);
+          dependent.forEach(sql => candidate.exec(sql));
+        } else candidate.exec(`ALTER TABLE ${quoteIdentifier(tempName)} RENAME TO ${quoteIdentifier(tableName)};`);
+        if (!options.skipForeignKeyCheck) {
+          const violations = candidate.exec('PRAGMA foreign_key_check;')[0]?.values || [];
+          if (violations.length) throw new Error(`外键校验未通过：${violations[0].join(' / ')}`);
+        }
+        candidate.exec('COMMIT; PRAGMA foreign_keys = ON;');
+        this.db = candidate;
+        this.configure();
+        try { if (!options.skipPersist) this.persist(); }
+        catch (error) { this.db = oldDb; throw error; }
+        oldDb.close();
+        return true;
+      } catch (error) {
+        if (this.db === candidate) this.db = oldDb;
+        candidate.close();
+        throw new Error(`表结构同步失败：${error.message}`);
+      }
+    }
+
+    async clearStoredSnapshots() {
+      if (this.snapshotStore) {
+        this.snapshotStore.close();
+        this.snapshotStore = null;
+      }
+      if (!window.indexedDB) return;
+      await new Promise((resolve, reject) => {
+        const request = window.indexedDB.deleteDatabase(databaseName);
+        request.onsuccess = resolve;
+        request.onerror = () => reject(request.error || new Error('IndexedDB 删除失败'));
+        request.onblocked = () => reject(new Error('其他页面仍在使用数据库，请关闭本应用的其他标签页后重试'));
+      });
+    }
+
+    inspectSchema() {
+      const tables = this.db.exec("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name;")[0]?.values.map(row => row[0]) || [];
+      const result = { tables: [], relations: [] };
+      tables.forEach(name => {
+        const info = this.db.exec(`PRAGMA table_info(${quoteIdentifier(name)});`)[0]?.values || [];
+        result.tables.push({
+          name,
+          fields: info.map(row => {
+            const rawType = String(row[2] || 'TEXT').toUpperCase();
+            const type = /INT/.test(rawType) ? 'INT' : /VARCHAR/.test(rawType) ? 'VARCHAR' : /CHAR|CLOB|TEXT/.test(rawType) ? 'TEXT' : /DATE|TIME/.test(rawType) ? 'DATE' : /DEC|NUM/.test(rawType) ? 'DECIMAL' : /REAL|FLOA|DOUB/.test(rawType) ? 'REAL' : 'TEXT';
+            const length = rawType.match(/\(([^)]+)\)/)?.[1] || '';
+            return { name: row[1], type, length, pk: Number(row[5]) > 0, nullable: !Number(row[3]), defaultValue: row[4] == null ? '' : String(row[4]), comment: '' };
+          })
+        });
+        const foreignKeys = this.db.exec(`PRAGMA foreign_key_list(${quoteIdentifier(name)});`)[0]?.values || [];
+        foreignKeys.forEach(row => result.relations.push({ fromTable: name, fromColumn: row[3], toTable: row[2], toColumn: row[4], cardinality: 'N:1' }));
+      });
+      return result;
+    }
+
+    syncSchema(schema, options = {}) {
+      if (!schema || !Array.isArray(schema.tables)) throw new Error('待同步的表结构无效');
+      const relations = Array.isArray(schema.relations) ? schema.relations : [];
+      const byName = new Map(schema.tables.map(table => [String(table.name).toLowerCase(), table]));
+      const sorted = [];
+      const seen = new Set();
+      const visiting = new Set();
+      const visit = table => {
+        const key = String(table.name).toLowerCase();
+        if (seen.has(key) || visiting.has(key)) return;
+        visiting.add(key);
+        relations.filter(relation => relation.fromTable?.toLowerCase() === key && relation.cardinality !== 'N:N')
+          .forEach(relation => { const parent = byName.get(relation.toTable?.toLowerCase()); if (parent) visit(parent); });
+        visiting.delete(key);
+        seen.add(key);
+        sorted.push(table);
+      };
+      schema.tables.forEach(visit);
+      const original = this.snapshot();
+      try {
+        sorted.forEach(table => {
+          if (!table || !table.name || !Array.isArray(table.fields) || !table.fields.length) throw new Error('表结构必须包含表名和至少一个字段');
+          const primaryKeys = table.fields.filter(field => field.pk);
+          const fields = table.fields.map(field => `${quoteIdentifier(field.name || 'new_field')} ${schemaType(field)}${field.nullable ? '' : ' NOT NULL'}${primaryKeys.length === 1 && field.pk ? ' PRIMARY KEY' : ''}${defaultSql(field.defaultValue)}`);
+          if (primaryKeys.length > 1) fields.push(`PRIMARY KEY (${primaryKeys.map(field => quoteIdentifier(field.name)).join(', ')})`);
+          const foreignKeys = relations.filter(relation => relation.fromTable === table.name && relation.cardinality !== 'N:N' && relation.fromColumn && relation.toTable && relation.toColumn)
+            .map((relation, index) => `CONSTRAINT ${quoteIdentifier(`fk_${table.name}_${relation.fromColumn}_${index}`)} FOREIGN KEY (${quoteIdentifier(relation.fromColumn)}) REFERENCES ${quoteIdentifier(relation.toTable)} (${quoteIdentifier(relation.toColumn)})`);
+          const ddl = `CREATE TABLE ${quoteIdentifier(table.name)} (${[fields.join(', '), foreignKeys.join(', ')].filter(Boolean).join(', ')});`;
+          this.synchronizeTable(table.name, ddl, { skipForeignKeyCheck:true, skipPersist:true });
+        });
+        const violations = this.db.exec('PRAGMA foreign_key_check;')[0]?.values || [];
+        if (violations.length) throw new Error(`外键校验未通过：${violations[0].join(' / ')}`);
+        if (!options.skipPersist) this.persist();
+        return this.inspectSchema();
+      } catch (error) {
+        this.restoreSnapshot(original, false);
+        throw error;
+      }
+    }
+
+    prepareProjectSnapshot(bytes, schema) {
+      if (bytes !== null && bytes !== undefined && !(bytes instanceof Uint8Array)) throw new Error('数据库快照格式无效');
+      const candidate = new SQLiteEngine(this.SQL);
+      candidate.projectId = '__querypad_import_validation__';
+      candidate.ready = true;
+      candidate.db = bytes ? new this.SQL.Database(bytes) : new this.SQL.Database();
+      candidate.configure();
+      try {
+        if (!bytes) candidate.importTables(candidate.seedTables());
+        const check = candidate.db.exec('PRAGMA quick_check;')[0]?.values?.[0]?.[0];
+        if (check !== 'ok') throw new Error('SQLite 快照完整性检查失败');
+        candidate.syncSchema(schema, { skipPersist: true });
+        return { snapshot: candidate.snapshot(), schema: candidate.inspectSchema() };
+      } finally {
+        candidate.db?.close();
+      }
+    }
+
+    async deleteProjectSnapshot(projectId) {
+      const id = String(projectId || '');
+      if (!id || id === defaultProjectId) throw new Error('不能删除默认项目的 SQLite 快照');
+      if (window.localStorage) window.localStorage.removeItem(`${storageKey}:${id}`);
+      if (!this.snapshotStore) return;
+      await idbRequest(this.snapshotStore.transaction(databaseStore, 'readwrite').objectStore(databaseStore).delete(id));
     }
 
     persist() {

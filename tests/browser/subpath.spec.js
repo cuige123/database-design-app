@@ -10,7 +10,7 @@ const PORT = 4181;
 const ROOT = path.resolve(__dirname, '../..');
 const TEMP_ROOT = path.join(os.tmpdir(), `querypad-subpath-${process.pid}`);
 const SUB_DIR = path.join(TEMP_ROOT, 'sub');
-const STATIC_FILES = ['index.html', 'manifest.json', 'sw.js', 'ai-config.js', 'ai-assistant.js', 'assistant.css', 'brand-logo.jpg', 'er-editor.js', 'er-recognizer.js', 'fallback.js', 'offline-engine.js', 'self-test.js', 'sqlite-engine.js'];
+const STATIC_FILES = ['index.html', 'manifest.json', 'sw.js', 'ai-config.js', 'ai-assistant.js', 'assistant.css', 'brand-logo.jpg', 'er-editor.js', 'concept-er-editor.js', 'er-recognizer.js', 'fallback.js', 'offline-engine.js', 'self-test.js', 'sqlite-engine.js'];
 const VENDOR_FILES = ['sql-wasm.js', 'sql-wasm.wasm', 'LICENSE'];
 const CONTENT_TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.wasm': 'application/wasm', '.jpg': 'image/jpeg' };
 

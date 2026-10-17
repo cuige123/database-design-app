@@ -26,7 +26,7 @@ jobs:
         run: |
           mkdir -p dist/vendor/sql.js
           cp index.html manifest.json sw.js ai-config.js ai-assistant.js assistant.css \
-             brand-logo.jpg er-editor.js er-recognizer.js fallback.js offline-engine.js \
+             brand-logo.jpg er-editor.js concept-er-editor.js er-recognizer.js fallback.js offline-engine.js \
              self-test.js sqlite-engine.js dist/
           cp vendor/sql.js/sql-wasm.js vendor/sql.js/sql-wasm.wasm vendor/sql.js/LICENSE dist/vendor/sql.js/
 

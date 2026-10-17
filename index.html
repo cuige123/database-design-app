@@ -4,11 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#10131e" />
-  <meta name="description" content="适用于移动端和网页端的 MySQL 学习工具" />
+  <meta name="description" content="适用于移动端和网页端的 MySQL 智能学习实验室，提供 SQL 练习、数据库设计和智能学习助手。" />
   <link rel="manifest" href="manifest.json" />
-  <link rel="stylesheet" href="assistant.css?v=9" />
+  <link rel="stylesheet" href="assistant.css?v=15" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='20' fill='%2316345f'/%3E%3Ctext x='32' y='43' fill='white' font-family='Arial' font-size='20' font-weight='700' text-anchor='middle'%3ESQL%3C/text%3E%3C/svg%3E" />
-  <title>MySQL实验室 · MySQL 练习工具</title>
+  <title>MySQL 智能学习实验室 · SQL 练习与智能学习助手</title>
   <style>
     :root {
       --bg: #10131e;
@@ -43,6 +43,7 @@
     .brand p { margin: 3px 0 0; color: var(--muted); font-size: 11px; font-weight: 600; }
     .top-actions { display: flex; gap: 8px; align-items: center; }
     .icon-btn { width: 38px; height: 38px; border-radius: 12px; background: var(--panel); color: var(--muted); border: 1px solid var(--line); display: grid; place-items: center; font-size: 16px; }
+    .help-btn { width: auto; min-width: 76px; padding: 0 12px; font-size: 12px; white-space: nowrap; }
     .avatar { width: 38px; height: 38px; border-radius: 50%; background: #e7eefb; color: var(--navy); display:grid; place-items:center; font-size: 12px; font-weight: 800; }
     .connection { background: var(--panel); border: 1px solid var(--line); border-radius: 15px; box-shadow: var(--shadow); padding: 11px 14px; display:flex; justify-content:space-between; align-items:center; gap: 12px; margin-bottom: 16px; }
     .connection-left { display:flex; align-items:center; gap: 10px; min-width: 0; flex: 1 1 auto; }
@@ -157,6 +158,8 @@
     .mobile-nav { display:flex; position:fixed; z-index:7; left:50%; bottom:16px; transform:translateX(-50%); width:min(640px,calc(100% - 32px)); height:72px; padding:6px; background:rgba(255,255,255,.96); backdrop-filter:blur(14px); border:1px solid var(--line); border-radius:20px; box-shadow:0 12px 32px rgba(29,54,89,.16); justify-content:space-around; align-items:stretch; gap:4px; }
     .nav-item { appearance:none; -webkit-appearance:none; flex:1 1 0; min-width:0; min-height:48px; padding:5px 3px; border:0; border-radius:14px; background:transparent; color:#8291a5; font-size:10px; line-height:1.1; text-align:center; display:flex; flex-direction:column; gap:4px; align-items:center; justify-content:center; transition:background .16s ease,color .16s ease,transform .16s ease; -webkit-tap-highlight-color:transparent; }
     .nav-item strong { width:32px; height:28px; display:grid; place-items:center; border-radius:10px; color:inherit; font-size:18px; line-height:1; font-weight:500; transition:background .16s ease,transform .16s ease; }
+    #erNav { gap:2px; padding:2px 0; }
+    #erNav strong { width:44px; max-width:100%; height:38px; flex-shrink:0; font-size:28px; }
     .nav-item span { white-space:nowrap; }
     .nav-item.active { background:var(--blue-soft); color:var(--blue); font-weight:800; }
     .nav-item.active strong { background:#fff; transform:translateY(-1px); }
@@ -227,7 +230,7 @@
     .relation-head strong { font-size:11px; }
     .relation-head button { border:1px solid var(--line); background:#fff; color:var(--blue); border-radius:7px; padding:6px 8px; font-size:9px; }
     .relation-editor-hint { margin:0; padding:8px 12px; color:var(--muted); background:#fbfcfe; font-size:9px; line-height:1.5; }
-    .relation-row { display:grid; grid-template-columns:1fr .65fr 1fr .6fr .85fr 25px; align-items:center; gap:6px; padding:8px 10px; border-top:1px solid #edf1f6; }
+    .relation-row { display:grid; grid-template-columns:1fr .8fr 1fr .8fr .6fr .85fr 25px; align-items:center; gap:6px; padding:8px 10px; border-top:1px solid #edf1f6; }
     .relation-row select { min-width:0; width:100%; border:1px solid var(--line); border-radius:7px; padding:7px; color:var(--ink); background:#fff; font-size:9px; }
     .relation-row input[data-relation-custom] { min-width:0; width:100%; box-sizing:border-box; border:1px solid var(--line); border-radius:7px; padding:7px; color:var(--ink); background:#fff; font-size:9px; }
     .relation-row input[data-relation-custom][hidden] { display:none; }
@@ -242,6 +245,7 @@
     .sql-preview { margin-top:13px; }
     .sql-preview label { display:block; margin-bottom:6px; color:var(--muted); font-size:10px; font-weight:800; }
     .sql-preview pre { margin:0; max-height:150px; overflow:auto; border-radius:10px; background:#0f1c2e; color:#d9e8ff; padding:12px; font:11px/1.6 'DM Mono',monospace; white-space:pre-wrap; }
+    .design-report { margin-top:12px; padding:11px 13px; border:1px solid #d9e5f7; border-radius:10px; background:#f8fbff; color:var(--ink); font-size:11px; line-height:1.6; white-space:pre-wrap; }
     .design-foot { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:12px; color:var(--muted); font-size:10px; }
     .engine-status { display:inline-flex; align-items:center; gap:5px; color:var(--green); background:var(--green-soft); border-radius:99px; padding:5px 8px; font-size:9px; font-weight:800; }
     .engine-status i { width:6px; height:6px; border-radius:50%; background:var(--green); }
@@ -268,13 +272,15 @@
     .help-close { width:32px; height:32px; flex:0 0 auto; border-radius:9px; background:var(--panel-soft); color:var(--muted); font-size:20px; }
     .help-content { padding:16px 18px 20px; }
     .help-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+    .help-quickstart { grid-column:1 / -1; }
     .help-section { padding:13px; border:1px solid var(--line); border-radius:12px; background:#fff; }
     .help-section h3 { margin:0 0 7px; font-size:12px; color:var(--navy); }
     .help-section p, .help-section li { color:var(--muted); font-size:10px; line-height:1.65; }
     .help-section p { margin:0; }
-    .help-section ul { margin:0; padding-left:17px; }
+    .help-section ul, .help-section ol { margin:0; padding-left:17px; }
     .help-section li + li { margin-top:3px; }
     .help-callout { margin-top:12px; padding:12px 13px; border:1px solid #f0dfb8; border-radius:11px; background:#fff9ed; color:#806632; font-size:10px; line-height:1.65; }
+    .environment-panel { width:min(500px,100%); }
     @media (max-width:740px) {
       .help-modal { padding:8px; }
       .help-panel { max-height:calc(100vh - 16px); border-radius:15px; }
@@ -375,7 +381,7 @@
       .field-row .field-nullable { display:none; }
       .field-row .field-length { display:none; }
       .field-row .field-default, .field-row .field-comment { grid-column:auto; }
-      .relation-row { grid-template-columns:1fr .55fr 1fr .6fr .8fr 25px; }
+      .relation-row { grid-template-columns:1fr .65fr 1fr .65fr .55fr .7fr 25px; }
     }
     .brand h1, .workspace-head h2, .side-title h2, .result-title h3 { color:var(--ink); }
     .icon-btn, .lesson-select, .schema-toggle, .tool, .chip, .project-actions button,
@@ -416,7 +422,7 @@
     .field-row input, .field-row select, .relation-row select, .relation-row input[data-relation-custom],
     .project-new input { background:#111621; border-color:#384155; color:var(--ink); }
     .relation-head button { border-color:var(--line); color:var(--blue); }
-    .relation-editor-hint { background:#1a2030; }
+    .relation-editor-hint, .design-report { background:#1a2030; }
     .local-data-tools { background:#1a2030; }
     .engine-panel { border-color:#34445f; background:#1a2232; }
     .remove-field { background:#3b282c; color:#f0a196; }
@@ -444,6 +450,7 @@
     .hint-row { padding-top:8px; border-top:1px solid var(--line); }
     .hint-row > div { min-width:0; display:grid; gap:3px; }
     .hint-row > div > span { line-height:1.45; }
+    .hint-actions { display:flex; flex:0 0 auto; gap:5px; align-items:center; }
     .hint-row button, #toggleWrongFilter, #saveDraftBtn { flex:0 0 auto; padding:7px 9px; border:1px solid #3a5277; border-radius:8px; background:#202d46; color:#b8ceff; font-size:9px; font-weight:800; }
     .hint-row button:disabled { opacity:.5; cursor:not-allowed; }
     .exercise-filters { display:grid; grid-template-columns:minmax(120px,1fr) minmax(120px,1fr) minmax(90px,.7fr) auto; gap:7px; padding:10px 12px 5px; }
@@ -488,17 +495,18 @@
       .library-controls { grid-template-columns:1fr auto; }
       .library-controls > input { grid-column:1 / -1; }
       .exercise-nav { flex-wrap:wrap; }
+      .hint-actions { flex-wrap:wrap; justify-content:flex-end; }
     }
   </style>
 </head>
 <body>
   <div class="shell">
     <header class="topbar">
-      <div class="brand"><img class="mark" src="brand-logo.jpg" alt="MySQL实验室标识"><div><h1>MySQL实验室</h1><p>移动端＋网页端MySQL</p></div></div>
-      <div class="top-actions"><button class="icon-btn" id="helpBtn" aria-label="帮助">?</button><button class="ai-launch" id="aiAssistantBtn" type="button" aria-controls="aiModal" aria-expanded="false" title="按住拖动可调整位置，点击打开 AI 助手">✦ AI 助手</button></div>
+      <div class="brand"><img class="mark" src="brand-logo.jpg" alt="MySQL 智能学习实验室标识"><div><h1>MySQL 智能学习实验室</h1><p>移动端 · 网页端 · 智能学习助手</p></div></div>
+      <div class="top-actions"><button class="icon-btn help-btn" id="helpBtn" aria-label="打开使用说明">使用说明</button><button class="ai-launch" id="aiAssistantBtn" type="button" aria-controls="aiModal" aria-expanded="false" title="按住拖动可调整位置，点击打开 AI 助手">✦ AI 助手</button></div>
     </header>
 
-    <section class="connection"><div class="connection-left"><i class="pulse"></i><div><strong>本地演示环境 · SQLite WASM</strong><span>student_workspace · 支持 SQLite 与部分 MySQL 常见写法，不连接远程数据库</span></div></div><button class="switch" id="switchBtn">切换环境</button></section>
+    <section class="connection"><div class="connection-left"><i class="pulse"></i><div><strong>本地演示环境 · SQLite WASM</strong><span>student_workspace · 支持 SQLite 与部分 MySQL 常见写法，不连接远程数据库</span></div></div><button class="switch" id="switchBtn" type="button" aria-label="查看运行环境说明">环境说明</button></section>
 
     <div class="layout">
       <aside class="sidebar">
@@ -508,12 +516,12 @@
 
       <main class="main">
         <div class="workspace-head"><div><h2>SQL 工作台</h2><p>输入语句，运行后查看结果</p></div><div class="head-actions"><button class="schema-toggle" id="projectBtnTop" type="button" aria-label="项目" title="项目">项目</button><button class="schema-toggle" id="erBtn" type="button" aria-label="ER 图" title="ER 图">ER 图</button><button class="schema-toggle" id="designBtn" type="button" aria-label="设计表" title="设计表">设计表</button><button class="schema-toggle" id="schemaBtn" type="button" aria-label="表结构" title="表结构">表结构</button><button class="lesson-select" id="lessonBtn" type="button" aria-label="选择练习题" title="选择练习题">第 02 题 · 查询排序⌄</button></div></div>
-        <section class="challenge" id="challenge"><div class="challenge-copy"><div class="challenge-kicker" id="challengeKicker">当前练习 · 查询排序</div><h3 id="challengeTitle">找出成绩最高的 4 位同学</h3><p id="challengeText">查询 students 表，返回姓名和成绩，并按成绩从高到低排列。</p><span class="difficulty-badge" id="challengeDifficulty">基础</span></div><div class="challenge-progress"><div class="progress-ring"><span id="progressText">0/51</span></div><div class="exercise-nav"><button id="previousExercise" type="button">← 上一题</button><button id="nextExercise" type="button">下一题 →</button><button id="reviewWrongBtn" type="button">复习错题</button><button id="exercisePathBtn" type="button">学习路径</button></div></div></section>
+        <section class="challenge" id="challenge"><div class="challenge-copy"><div class="challenge-kicker" id="challengeKicker">当前练习 · 查询排序</div><h3 id="challengeTitle">找出成绩最高的 4 位同学</h3><p id="challengeText">查询 students 表，返回姓名和成绩，并按成绩从高到低排列。</p><span class="difficulty-badge" id="challengeDifficulty">基础</span></div><div class="challenge-progress"><div class="progress-ring" id="exercisePosition" role="img" aria-label="当前题目进度"><span id="progressText">1/51</span></div><div class="exercise-nav"><button id="previousExercise" type="button">← 上一题</button><button id="nextExercise" type="button">下一题 →</button><button id="reviewWrongBtn" type="button">复习错题</button><button id="exercisePathBtn" type="button">学习路径</button></div></div></section>
         <section class="learning-progress card" aria-label="学习路径进度">
           <div class="learning-progress-head"><strong>学习路径</strong><span id="learningProgressLabel">已完成 0 / 51 题</span></div>
           <div class="learning-progress-track"><span id="learningProgressBar"></span></div>
           <div class="learning-stages" id="learningStages"></div>
-          <div class="hint-row"><div><strong>分级提示</strong><span id="hintText">卡住时可以逐级获取提示，不会直接显示完整答案。</span></div><button id="nextHintBtn" type="button">获取提示 1/3</button></div>
+          <div class="hint-row"><div><strong>分级提示</strong><span id="hintText">卡住时可以逐级获取提示，不会直接显示完整答案。</span></div><div class="hint-actions"><button id="nextHintBtn" type="button">获取提示 1/3</button><button id="aiHintBtn" type="button">AI 提示</button></div></div>
         </section>
         <section class="card editor-card">
           <div class="editor-toolbar"><span class="file-label"><i class="sql-dot"></i> SQL练习代码</span><div class="toolbar-actions"><button class="tool" id="formatBtn">格式化</button><button class="tool" id="saveFavoriteBtn">收藏 SQL</button><button class="tool" id="openSqlLibraryBtn">SQL 库</button><button class="tool" id="explainPlanBtn">执行计划</button><button class="tool" id="initializeSqlBtn">初始化</button><button class="tool" id="completeSqlBtn">补全代码</button></div></div>
@@ -533,36 +541,45 @@
       <header class="ai-head">
         <div class="ai-head-main">
           <div class="ai-avatar" aria-hidden="true">✦</div>
-          <div class="ai-head-copy"><h2 id="aiTitle">数据库 AI 学习助手</h2><p>感知当前练习 · SQL 与数据库设计辅导</p></div>
+          <div class="ai-head-copy"><h2 id="aiTitle">数据库 AI 学习助手</h2></div>
         </div>
         <div class="ai-head-tools"><button id="aiMinimize" type="button" aria-expanded="false" aria-controls="aiModal">收起</button><button class="ai-close" id="aiClose" type="button" aria-label="关闭 AI 助手">×</button></div>
       </header>
       <div class="ai-connection" id="aiConnection" role="status"><span class="ai-status-dot"></span><span>通过 Node.js 服务端安全调用 DeepSeek；请在服务端配置 API Key。</span></div>
-      <section class="ai-intro" aria-labelledby="aiIntroTitle">
-        <div class="ai-intro-kicker">AI 学习 · 当前页面感知</div>
-        <h3 id="aiIntroTitle">不懂就问，和你一起拆解 SQL</h3>
-        <p>我会围绕当前练习和表结构提供解释与提示；答案请结合课程要求核对。</p>
-        <div class="ai-current-context" id="aiCurrentContext">✦ 正在读取当前练习…</div>
-      </section>
-      <div class="ai-privacy"><span id="aiContextSummary">每次提问只发送当前任务所需信息；不发送练习数据行或对话历史，API Key 由后端保管。</span></div>
-      <section class="ai-quick-section" aria-labelledby="aiQuickTitle">
-        <h3 class="ai-section-title" id="aiQuickTitle">试试这些辅导功能 <span>点击后可修改问题再发送</span></h3>
+      <div class="ai-helper-content" id="aiHelperContent" tabindex="0" aria-label="辅导功能和示例问题，可在此区域内滚动浏览">
+      <details class="ai-context-details">
+        <summary><span id="aiCurrentContext">正在读取当前练习…</span><span>数据发送说明</span></summary>
+        <p id="aiContextSummary">每次提问只发送当前任务所需信息；不发送练习数据行或对话历史，API Key 由后端保管。</p>
+      </details>
+      <section class="ai-feature-section" aria-labelledby="aiQuickTitle">
+        <h3 class="ai-section-title ai-feature-title" id="aiQuickTitle">辅导功能 <span>选择后可修改问题再发送</span></h3>
+        <div class="ai-quick-section" id="aiQuickSection" aria-label="选择 AI 辅导功能">
         <div class="ai-quick-grid">
-          <button class="ai-quick" type="button" data-ai-quick="explain_sql"><span class="ai-quick-icon">▤</span><strong>解释 SQL</strong><small>逐段理解查询</small></button>
-          <button class="ai-quick" type="button" data-ai-quick="diagnose_sql"><span class="ai-quick-icon">⌕</span><strong>诊断报错</strong><small id="aiErrorQuickHint">先运行失败语句</small></button>
-          <button class="ai-quick" type="button" data-ai-quick="generate_sql"><span class="ai-quick-icon">✎</span><strong>本题提示</strong><small>生成参考 SQL</small></button>
-          <button class="ai-quick" type="button" data-ai-quick="design_review"><span class="ai-quick-icon">◇</span><strong>检查表设计</strong><small>查看结构建议</small></button>
+          <button class="ai-quick active" type="button" data-ai-quick="design_review" data-ai-task="design_review" aria-pressed="true"><span class="ai-quick-icon">◇</span><strong>设计建议</strong><small>检查表结构</small></button>
+          <button class="ai-quick" type="button" data-ai-quick="hint" data-ai-task="hint" aria-pressed="false"><span class="ai-quick-icon">?</span><strong>分级提示</strong><small>按步骤给提示</small></button>
+          <button class="ai-quick" type="button" data-ai-quick="explain_sql" data-ai-task="explain_sql" aria-pressed="false"><span class="ai-quick-icon">▤</span><strong>解释 SQL</strong><small>逐段理解查询</small></button>
+          <button class="ai-quick" type="button" data-ai-quick="diagnose_sql" data-ai-task="diagnose_sql" aria-pressed="false"><span class="ai-quick-icon">⌕</span><strong>诊断报错</strong><small id="aiErrorQuickHint">先运行失败语句</small></button>
+          <button class="ai-quick" type="button" data-ai-quick="repair_sql" data-ai-task="repair_sql" aria-pressed="false"><span class="ai-quick-icon">↺</span><strong>自动修正</strong><small id="aiRepairQuickHint">先运行失败语句</small></button>
+          <button class="ai-quick" type="button" data-ai-quick="generate_sql" data-ai-task="generate_sql" aria-pressed="false"><span class="ai-quick-icon">✎</span><strong>本题提示</strong><small>生成参考 SQL</small></button>
+          <button class="ai-quick" type="button" data-ai-quick="wrong_analysis" data-ai-task="wrong_analysis" aria-pressed="false"><span class="ai-quick-icon">▥</span><strong>错题分析</strong><small>找出薄弱知识点</small></button>
+          <button class="ai-quick" type="button" data-ai-quick="personalized_exercise" data-ai-task="personalized_exercise" aria-pressed="false"><span class="ai-quick-icon">＋</span><strong>个性化出题·举一反三</strong><small>生成变化练习</small></button>
+          <button class="ai-quick" type="button" data-ai-quick="custom_chat" data-ai-task="custom_chat" aria-pressed="false"><span class="ai-quick-icon">💬</span><strong>自定义对话</strong><small>自由提问交流</small></button>
+        </div>
         </div>
       </section>
-      <div class="ai-task-picker" role="group" aria-label="选择助手任务">
-        <button type="button" class="ai-task active" data-ai-task="design_review" aria-pressed="true">设计建议</button>
-        <button type="button" class="ai-task" data-ai-task="explain_sql" aria-pressed="false">解释 SQL</button>
-        <button type="button" class="ai-task" data-ai-task="generate_sql" aria-pressed="false">生成 SQL</button>
-        <button type="button" class="ai-task" data-ai-task="diagnose_sql" aria-pressed="false">错误诊断</button>
+      <section class="ai-suggestions" aria-labelledby="aiSuggestionsTitle">
+        <h3 class="ai-section-title" id="aiSuggestionsTitle">试试这样问</h3>
+        <div class="ai-suggestion-list">
+          <button type="button" class="ai-suggestion" data-ai-suggestion-task="custom_chat" data-ai-suggestion-text="请用简单的例子解释主键和外键的区别。"><span aria-hidden="true">💡</span><span>用简单例子解释主键和外键的区别</span><b aria-hidden="true">↗</b></button>
+          <button type="button" class="ai-suggestion" data-ai-suggestion-task="hint" data-ai-suggestion-text="请结合当前题目，一步一步给我提示，先不要给出完整 SQL。"><span aria-hidden="true">🪜</span><span>一步步提示当前题目，先别给完整答案</span><b aria-hidden="true">↗</b></button>
+          <button type="button" class="ai-suggestion" data-ai-suggestion-task="personalized_exercise" data-ai-suggestion-text="请根据当前练习举一反三，再出一道相似但条件不同的练习，并提供分级提示和参考 SQL。"><span aria-hidden="true">🎯</span><span>根据当前练习举一反三，再出一道变化题</span><b aria-hidden="true">↗</b></button>
+        </div>
+      </section>
       </div>
-      <h3 class="ai-section-title ai-conversation-title"><span>辅导对话</span><button id="aiClearChat" type="button">清空本页对话</button></h3>
+      <button id="aiFeatureToggle" class="ai-feature-collapse" type="button" aria-label="收起功能和示例问题" aria-expanded="true" aria-controls="aiHelperContent">收起功能⌃</button>
+      <h3 class="ai-section-title ai-conversation-title"><span>对话</span><button id="aiClearChat" type="button">清空对话</button></h3>
       <div class="ai-messages" id="aiMessages" role="log" aria-live="polite" aria-relevant="additions">
-        <article class="ai-message assistant ai-welcome"><strong>学习助手</strong><p>你好！我可以先给你思路提示，也可以逐步解释 SQL、诊断刚才的报错或检查当前表结构。选择上方快捷功能开始吧。</p></article>
+        <article class="ai-message assistant ai-welcome"><strong>学习助手</strong><p>你好！直接输入问题开始对话，或选择辅导功能获取针对性帮助。</p></article>
       </div>
       <form class="ai-composer" id="aiForm">
         <label for="aiPrompt" id="aiPromptLabel">描述你希望检查的设计</label>
@@ -573,20 +590,22 @@
   </section>
   <section class="exercise-modal" id="exerciseModal" aria-hidden="true"><div class="exercise-panel" role="dialog" aria-modal="true" aria-labelledby="exercisePickerTitle"><div class="exercise-head"><div><h2 id="exercisePickerTitle">学习路径 · 选择练习</h2><p id="exercisePickerSummary">按知识点、难度筛选；完成情况保存在当前浏览器。</p></div><button class="exercise-close" id="exerciseClose" type="button" aria-label="关闭题目列表">×</button></div><div class="exercise-filters"><input id="exerciseSearch" type="search" placeholder="搜索题目或知识点" aria-label="搜索练习题"><select id="exerciseTopicFilter" aria-label="按知识点筛选"><option value="">全部知识点</option></select><select id="exerciseDifficultyFilter" aria-label="按难度筛选"><option value="">全部难度</option><option>基础</option><option>进阶</option><option>挑战</option></select><button id="toggleWrongFilter" type="button" aria-pressed="false">只看错题</button></div><div class="exercise-progress-grid" id="exerciseProgressGrid"></div><div class="exercise-list" id="exerciseList"></div></div></section>
   <section class="library-modal" id="sqlLibraryModal" aria-hidden="true"><div class="library-panel" role="dialog" aria-modal="true" aria-labelledby="sqlLibraryTitle"><div class="library-head"><div><h2 id="sqlLibraryTitle">SQL 收藏与版本</h2><p>草稿自动保存在此浏览器；收藏和历史版本不会上传。</p></div><button id="closeSqlLibrary" type="button" aria-label="关闭 SQL 库">×</button></div><div class="library-controls"><input id="sqlLibrarySearch" type="search" placeholder="搜索名称或 SQL 内容" aria-label="搜索 SQL 收藏与版本"><div class="library-tabs" role="group" aria-label="SQL 库筛选"><button type="button" class="active" data-library-tab="favorites">收藏</button><button type="button" data-library-tab="versions">历史版本</button></div><button id="saveDraftBtn" type="button">保存当前草稿</button></div><div class="sql-library-list" id="sqlLibraryList"></div></div></section>
-  <section class="help-modal" id="helpModal" aria-hidden="true"><div class="help-panel" role="dialog" aria-modal="true" aria-labelledby="helpTitle" aria-describedby="helpIntro"><div class="help-head"><div><h2 id="helpTitle">功能帮助</h2><p id="helpIntro">MySQL实验室 · 移动端与网页端 MySQL 学习工具</p></div><button class="help-close" id="helpClose" type="button" aria-label="关闭帮助">×</button></div><div class="help-content"><div class="help-grid">
-    <section class="help-section"><h3>SQL 工作台</h3><ul><li>编辑区可保持空白供你自行编写 SQL，点击“运行 SQL”查看结果和错误提示。</li><li>“初始化”清空编辑区；“补全代码”载入当前题目的完整参考 SQL，覆盖现有代码前会先确认。</li><li>编辑器会高亮 SQL 关键字、函数、字符串、数字和注释；输入时可补全关键字、表名和字段名，按 Ctrl+空格可查看建议。</li><li>输入括号或引号会自动配对；Tab 插入缩进。SQL 执行失败时会标出疑似错误行。</li><li>“格式化”整理常见 SQL 子句；下方示例按钮可快速载入排序、分组统计和多表连接示例。</li><li>左侧数据库表名可载入该表的查询模板；“最近运行”可点选历史语句或清空历史。</li></ul></section>
-    <section class="help-section"><h3>学习路径与 SQL 管理</h3><ul><li>练习选择器可按题目、知识点和难度筛选；答错的题目会进入本地错题复习，通过后自动移除。</li><li>“分级提示”逐步给出思路，不会直接展开完整答案；完成进度保存在当前浏览器。</li><li>编辑器可收藏 SQL、保存当前草稿，并自动保留最多 40 个本地历史版本；在 SQL 库中可搜索、载入或取消收藏。</li><li>“执行计划”只分析单条 SELECT/WITH 查询，显示本地 SQLite 计划与通用索引建议；不会运行修改语句或自动创建索引，也不代表 MySQL 服务端计划。</li></ul></section>
-    <section class="help-section"><h3>查看数据库与表结构</h3><ul><li>左侧列出当前练习数据库及 students、courses、enrollments 示例表。</li><li>点击顶部“表结构”打开侧栏；切换表结构/ER 图视图，点字段可插入到 SQL 编辑区。</li><li>数据库侧栏可直接打开数据表设计器或 ER 图画布。</li><li>表结构刷新按钮目前只提示状态，不会连接外部数据库。</li></ul></section>
-    <section class="help-section"><h3>表结构设计器</h3><ul><li>“新建数据表”会将空表加入当前项目、左侧列表和表结构面板，并同步到浏览器内的 SQLite 数据库，可立即用 SQL 查询。</li><li>可新建字段并编辑字段名、类型、长度、主键、NULL、默认值及备注。</li><li>可维护表关系/外键和关系类型；设计器会生成建表 SQL。</li><li>可复制 SQL、在本地 SQLite 引擎中试运行、导出数据字典，并运行基础范式检查。</li><li>“运行自检”可检查页面内置功能状态。</li></ul></section>
-    <section class="help-section"><h3>AI 学习助手</h3><ul><li>点击悬浮“AI 助手”打开辅导面板；可收起面板继续操作工作台，也可清空当前页面显示的对话。</li><li>快捷入口可预填 SQL 解释、错误诊断、本题提示和表结构检查问题；问题可编辑，点击快捷入口不会自动发送。</li><li>错误诊断只在最近运行的 SQL 失败且语句未改变时可用；AI 给出的 SQL 需要检查，不会自动执行。</li><li>每种任务只发送必要的 SQL 或表结构；通过“本题提示”生成 SQL 时，当前练习标题和要求会写入问题文本。不会发送练习数据行或对话历史，API Key 由服务端保管。</li></ul></section>
-    <section class="help-section"><h3>ER 图设计器</h3><ul><li>拖动实体可调整位置；点画布空白处或“新建实体”可添加实体。</li><li>实体标题处可创建关系、添加字段或删除实体；删除前会确认，并同时移除关联关系和本地表。</li><li>点击关系线选中后可删除；关系标签可用于修改关系类型。</li><li>可在实体上添加/删除字段、自动布局，并收起或展开左侧说明。</li><li>关系支持 1:1、1:N、N:1、N:N 和自定义标注；多对多建表建议使用中间表。</li><li>可将 ER 图导出为 PNG 或 SVG。</li></ul></section>
-    <section class="help-section"><h3>导入图片与识别</h3><p>在 ER 图设计器中选择“导入图片 / OCR”。普通浏览器当前只检测版面候选框，不识别图片中的文字或关系；生成的实体候选需要人工核对。Android 环境可调用本地 OCR，但识别结果也建议复核。</p></section>
-    <section class="help-section"><h3>项目与本地数据</h3><ul><li>“项目”可创建并切换项目；每个项目的表结构和 ER 布局保存在本机浏览器。</li><li>练习数据库的数据变更、SQL 编辑内容、最近运行记录和练习进度都会保存在当前浏览器，关闭后再次打开仍可继续。</li><li>打开“项目”可选择“重置练习数据库”（保留项目、草稿和进度）或“重置全部本地数据”（清除本应用本机保存内容）。两项操作都会二次确认。</li><li>表设计器可导入/导出项目 JSON；项目窗口可导出当前项目。数据不会自动同步到其他设备，也没有连接服务器。</li></ul></section>
-    <section class="help-section"><h3>手机与网页端操作</h3><p>页面会根据屏幕宽度调整布局。手机底部导航可快速进入工作台、数据库、ER 图、项目、练习和工具入口；ER 图画布较宽时可在画布内滚动。网页端可直接使用顶部的项目、ER 图、设计表和表结构入口。</p></section>
-    <section class="help-section"><h3>练习、环境与其他按钮</h3><ul><li>题目按钮可打开题库；选择题目后会显示要求并清空编辑区，方便自行练习；需要参考答案时点击“补全代码”。</li><li>提交 SQL 后会按当前题目要求检查查询结构和结果；已完成题目会保存在本机。示例查询按钮也可载入 SQL。</li><li>“切换环境”目前只显示当前为练习环境；页面不会连接真实 MySQL。</li><li>帮助按钮显示本功能说明；底部导航中的练习入口打开题库，工具入口打开表设计器。</li></ul></section>
+  <section class="help-modal" id="helpModal" aria-hidden="true"><div class="help-panel" role="dialog" aria-modal="true" aria-labelledby="helpTitle" aria-describedby="helpIntro"><div class="help-head"><div><h2 id="helpTitle">使用说明</h2><p id="helpIntro">从选择练习、编写 SQL 到查看结果的操作指南</p></div><button class="help-close" id="helpClose" type="button" aria-label="关闭使用说明">×</button></div><div class="help-content"><div class="help-grid">
+    <section class="help-section help-quickstart"><h3>快速开始</h3><ol><li>点击“选择练习题”，按题目、知识点或难度找到要练习的内容。</li><li>在 SQL 编辑器中编写语句；遇到困难可以先看分级提示，或点击“补全代码”查看参考答案。</li><li>等待左下角 SQLite WASM 显示“已就绪”后，点击“运行 SQL”查看结果或错误信息。</li><li>确认查询结果后继续修改、切换下一题；题目进度和草稿会保存在当前浏览器。</li></ol></section>
+    <section class="help-section"><h3>SQL 工作台</h3><ul><li>在编辑器中编写 SQL，点击“运行 SQL”查看结果、行数、耗时和错误提示；SQLite WASM 显示“已就绪”后才能执行。</li><li>“初始化”清空编辑区；“补全代码”载入当前题目的参考 SQL，覆盖现有代码前会先确认。</li><li>编辑器支持关键字、表名和字段名补全（Ctrl+空格）、SQL 高亮、括号/引号配对、Tab 缩进和错误行提示。</li><li>“格式化”整理常见 SQL 子句；“查询并排序”“分组统计”“多表连接”是可直接运行的快捷示例，不会按当前题目判分。</li><li>左侧表名可载入查询模板；“最近运行”可重新载入历史语句，也可以清空运行历史。</li></ul></section>
+    <section class="help-section"><h3>练习与 SQL 管理</h3><ul><li>“选择练习题”支持按题目、知识点和难度筛选；答错的题目可进入“复习错题”，通过后会更新本地进度。</li><li>“分级提示”逐步给出思路，不会直接展开完整答案；“上一题”“下一题”和“学习路径”用于切换练习。</li><li>编辑器可收藏 SQL、保存当前草稿，并自动保留最近 40 个本地版本；在“SQL 库”中可搜索、载入或取消收藏。</li><li>“执行计划”只分析单条 SELECT/WITH 查询，展示本地 SQLite 计划和通用索引建议，不会执行修改语句或创建索引。</li></ul></section>
+    <section class="help-section"><h3>查看数据库与表结构</h3><ul><li>左侧数据库区域显示当前项目和表；点击顶部“表结构”打开侧栏。</li><li>侧栏支持“表结构”“ER 图”“数据预览”三个视图；点击字段可插入到 SQL 编辑区，数据预览可查看表数据并复制 INSERT 或 CSV。</li><li>侧栏中的“编辑数据表”和“打开 ER 图画布”可直接进入对应工具。</li><li>“环境说明”可查看本地引擎、数据保存位置和 MySQL 兼容范围；应用不会连接外部数据库。</li></ul></section>
+  <section class="help-section"><h3>表结构设计器</h3><ul><li>“新建数据表”会把表加入当前项目，并同步到浏览器内的 SQLite 数据库；可添加、编辑和删除字段。</li><li>字段支持名称、类型、长度、主键、允许 NULL、默认值和备注；“表关系 / 外键”可维护表之间的关联和基数。</li><li>设计器会生成建表 SQL，可复制或点击“执行建表”同步到本地引擎；“导出数据字典”生成 Markdown 说明。</li><li>“基础结构检查”只提供结构建议，不等同于完整的 1NF、2NF、3NF 证明；“运行自检”用于检查页面功能状态。</li><li>“启用离线执行”可以暂时关闭或恢复本地 SQL 执行。</li></ul></section>
+    <section class="help-section"><h3>AI 学习助手</h3><ul><li>点击“AI 助手”打开对话面板；上方辅导功能和示例问题可在区域内滚动，点“收起功能”可把更多空间留给回答；输入框固定在面板底部。</li><li>九项辅导功能分别用于：检查表结构、分级提示、解释 SQL、诊断错误、修正 SQL、生成本题参考 SQL、分析错题、生成举一反三练习和自由提问。</li><li>选择功能或点击“试试这样问”后，问题会填入输入框供你修改；点击“发送”才会提交。对话记录可以清空；收起面板可返回工作台。</li><li>分级提示按 1 至 3 级逐步提供思路并在本地记录进度。错误诊断要求当前 SQL 与最近一次失败语句一致；自动修正会展示 SQL 差异，只有点击“替换为修正 SQL”才会写回编辑器。</li><li>AI 生成的个性化练习需要点击“保存为练习”后才加入题库。AI 回答仅供参考，不会自动执行 SQL。</li><li>提问会按任务发送所需的 SQL、练习要求、错题统计或表结构；不发送数据库数据行或对话历史。API Key 由服务端保管。</li></ul></section>
+    <section class="help-section"><h3>ER 图设计器</h3><ul><li>“表 ER 图”显示数据表、字段和外键；“概念 ER 图”采用 Chen 记法，以矩形实体、椭圆属性和菱形关系展示结构。</li><li>拖动图形可调整位置；概念图中可新建实体、添加或删除属性、编辑表结构、连接实体、编辑或删除关系。双击实体可添加属性，双击关系菱形可修改名称和基数。</li><li>可使用工具栏自动布局、放大、缩小或重置缩放；也支持 Ctrl+滚轮缩放。PNG/SVG 导出采用当前图表视图。</li><li>表结构和关系会与当前项目关联；布局保存在本机浏览器。</li></ul></section>
+    <section class="help-section"><h3>导入图片与识别</h3><p>在 ER 图设计器选择“导入图片 / OCR”。普通浏览器目前只检测版面候选框，不识别图片文字和关系，生成的实体与字段需手动核对。Android 环境可调用设备 OCR，识别内容仍建议复核。</p></section>
+    <section class="help-section"><h3>项目与本地数据</h3><ul><li>“项目”可新建和切换工作项目；项目分别保存表结构、ER 图布局和 SQL 草稿。</li><li>练习数据、运行记录和学习进度保存在当前浏览器，关闭页面后通常仍可继续使用，不会自动同步到其他设备。</li><li>“重置练习数据库”恢复练习样例；“重置全部本地数据”会清除本应用保存的数据，执行前会再次确认。</li><li>可导入或导出项目 JSON，也可从项目窗口导出当前项目。重要数据建议定期导出备份。</li></ul></section>
+    <section class="help-section"><h3>手机与网页端操作</h3><p>界面会按屏幕宽度调整。手机可用底部导航切换工作台、数据库、ER 图、项目、练习和工具；图表较宽时可在画布内拖动或滚动。网页端可通过顶部按钮进入项目、ER 图、表设计器和表结构。</p></section>
+    <section class="help-section"><h3>运行环境</h3><ul><li>SQL 使用浏览器中的 SQLite WASM 本地执行，无需单独启动数据库服务；数据保存在当前浏览器。</li><li>引擎支持 SQLite 常用查询和部分 MySQL 写法；MySQL 专有语法、函数及行为可能不兼容。</li><li>“环境说明”会显示本地运行和兼容范围。需要验证 MySQL 专有功能时，请在真实 MySQL 环境中测试。</li></ul></section>
   </div>  <div class="help-callout"><strong>引擎说明：</strong>SQL 由浏览器内的 SQLite WASM 引擎执行，支持 SQLite 的查询、连接、聚合、事务、视图、索引和子查询等能力，并转换部分常见 MySQL 写法（如建表选项、SHOW TABLES、DESC 和 LIMIT offset,count）。这不是 MySQL 服务，MySQL 专有语法、函数和行为仍可能不兼容；数据库保存在当前浏览器中，不会连接远程数据库。</div></div></div></section>
-  <section class="er-modal" id="erModal" aria-hidden="true"><div class="er-panel"><div class="er-head"><div><h2>ER 图设计器</h2><p>拖动实体调整布局，关系来自当前数据库表结构</p></div><div class="er-actions"><button class="er-action" id="autoLayoutBtn">自动布局</button><button class="er-action" id="importErBtn">导入图片 / OCR</button><button class="er-action primary" id="exportErBtn">导出图片</button></div><button class="er-close" id="erClose" aria-label="退出 ER 图设计器" title="退出 ER 图设计器">×</button></div><div class="er-body"><aside class="er-side"><h3>实体关系</h3><p>当前数据库已识别 3 个实体和 2 条关系。</p><div class="er-legend"><i class="legend-key"></i><span>主键 / PK</span></div><div class="er-legend"><i class="legend-line"></i><span>一对多关系</span></div><div class="er-note">浏览器仅检测图片版面框线，不识别文字；实体和字段为候选占位。Android 环境可使用本地 OCR 识别文字。</div><input class="er-file" id="erFile" type="file" accept="image/*" /></aside><div class="er-canvas-wrap"><div class="er-canvas" id="erCanvas"><svg class="er-lines" viewBox="0 0 760 510" preserveAspectRatio="none"><path id="studentLine" class="er-line" d="M 210 148 C 250 148, 250 276, 300 276"/><text id="studentLabel" class="er-line-label" x="235" y="204">1 : N</text><path id="courseLine" class="er-line" d="M 478 276 C 540 276, 540 148, 585 148"/><text id="courseLabel" class="er-line-label" x="525" y="204">1 : N</text></svg><article class="er-node" data-node="students" style="left:32px;top:72px"><div class="er-node-head"><span>实体</span>students</div><div class="er-field"><b class="er-key">◆</b> id <em>INT</em></div><div class="er-field"><b>·</b> name <em>VARCHAR</em></div><div class="er-field"><b>·</b> score <em>INT</em></div><div class="er-field"><b>·</b> major <em>VARCHAR</em></div></article><article class="er-node" data-node="enrollments" style="left:300px;top:200px"><div class="er-node-head"><span>实体</span>enrollments</div><div class="er-field"><b class="er-key">◆</b> id <em>INT</em></div><div class="er-field"><b class="er-fk">↗</b> student_id <em>INT</em></div><div class="er-field"><b class="er-fk">↗</b> course_id <em>INT</em></div><div class="er-field"><b>·</b> enrolled_at <em>DATE</em></div></article>  <article class="er-node" data-node="courses" style="left:585px;top:72px"><div class="er-node-head"><span>实体</span>courses</div><div class="er-field"><b class="er-key">◆</b> id <em>INT</em></div><div class="er-field"><b>·</b> title <em>VARCHAR</em></div><div class="er-field"><b>·</b> credits <em>INT</em></div></article></div></div></div></div></section>
-  <section class="design-modal" id="designModal" aria-hidden="true"><div class="design-panel"><div class="design-head"><div><h2>表结构设计器</h2><p>编辑字段后，建表 SQL、数据字典和范式检查会同步更新</p></div><button class="design-close" id="designClose" aria-label="关闭">×</button></div><div class="design-toolbar"><button class="design-tool primary" id="addTableBtn">＋ 新建数据表</button><button class="design-tool" id="addFieldBtn">＋ 添加字段</button><button class="design-tool" id="normalFormBtn">范式检查</button><button class="design-tool" id="dictBtn">导出数据字典</button><button class="design-tool" id="projectBtn">导出项目</button><button class="design-tool" id="importProjectBtn">导入项目</button><input class="er-file" id="projectFile" type="file" accept="application/json,.json" /></div><div class="table-picker" id="designTablePicker"></div><div class="field-editor" id="fieldEditor"></div><div class="relation-editor"><div class="relation-head"><strong>表关系 / 外键</strong><button id="addRelationBtn">＋ 添加关系</button></div><div id="relationList"></div></div><div class="engine-panel"><div class="engine-panel-head"><strong>本地 SQLite 引擎</strong><label class="engine-switch"><input id="engineEnabled" type="checkbox" checked> 启用离线执行</label></div><p id="engineMessage">SQLite WASM 正在加载…</p></div><div class="sql-preview"><label>自动生成的建表 SQL</label><pre id="designSql"></pre></div><div class="design-foot"><span class="engine-status"><i></i>SQLite WASM · 浏览器本地</span><div class="project-actions"><button id="copyDesignSql">复制 SQL</button><button id="runDesignSql">执行建表</button></div></div></div></section>
+  <section class="help-modal" id="environmentModal" aria-hidden="true"><div class="help-panel environment-panel" role="dialog" aria-modal="true" aria-labelledby="environmentModalTitle" aria-describedby="environmentModalIntro"><div class="help-head"><div><h2 id="environmentModalTitle">运行环境说明</h2><p id="environmentModalIntro">MySQL 实验室当前使用浏览器本地练习环境</p></div><button class="help-close" id="environmentClose" type="button" aria-label="关闭环境说明">×</button></div><div class="help-content"><div class="help-grid"><section class="help-section"><h3>SQL 执行引擎</h3><p>SQL 由浏览器内的 SQLite WASM 引擎执行，无需单独启动数据库服务。</p></section><section class="help-section"><h3>练习数据</h3><p>练习数据、项目和学习进度保存在当前浏览器中；清除浏览器数据可能会移除这些内容。</p></section><section class="help-section"><h3>MySQL 兼容范围</h3><p>支持 SQLite 语法及部分常见 MySQL 写法。MySQL 专有语法、函数和行为可能不兼容。</p></section><section class="help-section"><h3>连接说明</h3><p>这是本地练习环境，不会连接真实或远程 MySQL 数据库。</p></section></div><div class="help-callout"><strong>适用场景：</strong>SQL 入门学习、练习查询和查看结果。需要验证 MySQL 专有功能时，请使用真实 MySQL 环境。</div></div></div></section>
+  <section class="er-modal" id="erModal" aria-hidden="true"><div class="er-panel"><div class="er-head"><div><h2>ER 图设计器</h2><p>拖动实体调整布局，关系来自当前数据库表结构</p></div><div class="er-actions"><button class="er-action" id="conceptErBtn" type="button">概念 ER 图</button><button class="er-action" id="autoLayoutBtn">自动布局</button><button class="er-action" id="importErBtn">导入图片 / OCR</button><button class="er-action primary" id="exportErBtn">导出图片</button></div><button class="er-close" id="erClose" aria-label="退出 ER 图设计器" title="退出 ER 图设计器">×</button></div><div class="er-body"><aside class="er-side"><h3>实体关系</h3><p>当前数据库已识别 3 个实体和 2 条关系。</p><div class="er-legend"><i class="legend-key"></i><span>主键 / PK</span></div><div class="er-legend"><i class="legend-line"></i><span>一对多关系</span></div><div class="er-note">浏览器仅检测图片版面框线，不识别文字；实体和字段为候选占位。Android 环境可使用本地 OCR 识别文字。</div><input class="er-file" id="erFile" type="file" accept="image/*" /></aside><div class="er-canvas-wrap"><div class="er-canvas" id="erCanvas"><svg class="er-lines" viewBox="0 0 760 510" preserveAspectRatio="none"><path id="studentLine" class="er-line" d="M 210 148 C 250 148, 250 276, 300 276"/><text id="studentLabel" class="er-line-label" x="235" y="204">1 : N</text><path id="courseLine" class="er-line" d="M 478 276 C 540 276, 540 148, 585 148"/><text id="courseLabel" class="er-line-label" x="525" y="204">1 : N</text></svg><article class="er-node" data-node="students" style="left:32px;top:72px"><div class="er-node-head"><span>实体</span>students</div><div class="er-field"><b class="er-key">◆</b> id <em>INT</em></div><div class="er-field"><b>·</b> name <em>VARCHAR</em></div><div class="er-field"><b>·</b> score <em>INT</em></div><div class="er-field"><b>·</b> major <em>VARCHAR</em></div></article><article class="er-node" data-node="enrollments" style="left:300px;top:200px"><div class="er-node-head"><span>实体</span>enrollments</div><div class="er-field"><b class="er-key">◆</b> id <em>INT</em></div><div class="er-field"><b class="er-fk">↗</b> student_id <em>INT</em></div><div class="er-field"><b class="er-fk">↗</b> course_id <em>INT</em></div><div class="er-field"><b>·</b> enrolled_at <em>DATE</em></div></article>  <article class="er-node" data-node="courses" style="left:585px;top:72px"><div class="er-node-head"><span>实体</span>courses</div><div class="er-field"><b class="er-key">◆</b> id <em>INT</em></div><div class="er-field"><b>·</b> title <em>VARCHAR</em></div><div class="er-field"><b>·</b> credits <em>INT</em></div></article></div><div class="er-concept-canvas" id="erConceptCanvas" hidden aria-label="概念 ER 图画布"><svg class="er-concept-lines" viewBox="0 0 1100 700" preserveAspectRatio="none"></svg></div></div></div></div></section>
+  <section class="design-modal" id="designModal" aria-hidden="true"><div class="design-panel"><div class="design-head"><div><h2>表结构设计器</h2><p>编辑字段后，建表 SQL、数据字典和结构检查会同步更新</p></div><button class="design-close" id="designClose" aria-label="关闭">×</button></div><div class="design-toolbar"><button class="design-tool primary" id="addTableBtn">＋ 新建数据表</button><button class="design-tool" id="addFieldBtn">＋ 添加字段</button><button class="design-tool" id="normalFormBtn" title="只检查基本结构，不等同于完整范式证明">基础结构检查</button><button class="design-tool" id="dictBtn">导出数据字典</button><button class="design-tool" id="projectBtn">导出项目</button><button class="design-tool" id="importProjectBtn">导入项目</button><input class="er-file" id="projectFile" type="file" accept="application/json,.json" /></div><pre id="designReport" class="design-report" hidden></pre><div class="table-picker" id="designTablePicker"></div><div class="field-editor" id="fieldEditor"></div><div class="relation-editor"><div class="relation-head"><strong>表关系 / 外键</strong><button id="addRelationBtn">＋ 添加关系</button></div><div id="relationList"></div></div><div class="engine-panel"><div class="engine-panel-head"><strong>本地 SQLite 引擎</strong><label class="engine-switch"><input id="engineEnabled" type="checkbox" checked> 启用离线执行</label></div><p id="engineMessage">SQLite WASM 正在加载…</p></div><div class="sql-preview"><label>自动生成的建表 SQL</label><pre id="designSql"></pre></div><div class="design-foot"><span class="engine-status"><i></i>SQLite WASM · 浏览器本地</span><div class="project-actions"><button id="copyDesignSql">复制 SQL</button><button id="runDesignSql">执行建表</button></div></div></div></section>
   <section class="design-modal" id="projectModal" aria-hidden="true"><div class="design-panel"><div class="design-head"><div><h2>本地项目</h2><p>每个项目独立保存表结构、ER 图和练习草稿</p></div><button class="design-close" id="projectClose" aria-label="关闭">×</button></div><div class="project-list" id="projectList"></div><div class="project-new"><input id="projectNameInput" placeholder="输入新项目名称" maxlength="32"><button id="createProjectBtn">新建项目</button></div><section class="local-data-tools"><h3>本地数据管理</h3><p>练习数据库会自动保存在当前浏览器。可以只恢复练习样例，或清除本应用保存的全部本地内容。</p><div class="local-data-actions"><button class="design-tool" id="resetPracticeData" type="button">重置练习数据库</button><button class="design-tool danger" id="resetAllLocalData" type="button">重置全部本地数据</button></div></section><div class="design-foot"><span class="engine-status"><i></i>数据只保存在本机</span><div class="project-actions"><button id="exportCurrentProject">导出当前项目</button></div></div></div></section>
   <div class="drawer-backdrop" id="drawerBackdrop"></div>
   <aside class="schema-drawer" id="schemaDrawer"><div class="drawer-head"><h2>数据库</h2><button class="drawer-close" id="drawerClose" aria-label="关闭">×</button></div><div class="database-tabs"><button class="database-tab active" id="databaseTablesTab">表结构</button><button class="database-tab" id="databaseErTab">ER 图</button><button class="database-tab" id="databaseDataTab">数据预览</button></div><div id="databaseTablesView"><p class="drawer-sub">点击字段即可插入到当前 SQL 中</p><div class="schema-block"><div class="schema-block-head"><span>▦ students</span><button data-drawer-insert="students">插入表名</button></div><div class="schema-field" data-field="id"><span>id</span><em>INT · 主键</em></div><div class="schema-field" data-field="name"><span>name</span><em>VARCHAR(50)</em></div><div class="schema-field" data-field="score"><span>score</span><em>INT</em></div><div class="schema-field" data-field="major"><span>major</span><em>VARCHAR(50)</em></div></div><div class="schema-block"><div class="schema-block-head"><span>▦ courses</span><button data-drawer-insert="courses">插入表名</button></div><div class="schema-field" data-field="id"><span>id</span><em>INT · 主键</em></div><div class="schema-field" data-field="title"><span>title</span><em>VARCHAR(80)</em></div><div class="schema-field" data-field="credits"><span>credits</span><em>INT</em></div></div><div class="schema-block"><div class="schema-block-head"><span>▦ enrollments</span><button data-drawer-insert="enrollments">插入表名</button></div><div class="schema-field" data-field="student_id"><span>student_id</span><em>INT · 外键</em></div><div class="schema-field" data-field="course_id"><span>course_id</span><em>INT · 外键</em></div><div class="schema-field" data-field="enrolled_at"><span>enrolled_at</span><em>DATE</em></div></div><button class="design-tool primary" id="openDatabaseDesigner">编辑数据表</button></div><div id="databaseErView" hidden><p class="drawer-sub">拖动实体设计表关系</p><button class="design-tool primary" id="openDatabaseEr">打开 ER 图画布</button></div><div id="databaseDataView" hidden><p class="drawer-sub">查看每张表的数据，可复制为 INSERT 或 CSV</p></div></aside>
@@ -595,9 +614,10 @@
   <script src="sqlite-engine.js"></script>
   <script src="er-recognizer.js"></script>
   <script src="er-editor.js"></script>
+  <script src="concept-er-editor.js"></script>
   <script src="self-test.js?v=2"></script>
   <script src="ai-config.js"></script>
-  <script src="ai-assistant.js?v=11"></script>
+  <script src="ai-assistant.js?v=15"></script>
   <script>
     const editor = document.querySelector('#sqlEditor');
     const toast = document.querySelector('#toast');
@@ -766,20 +786,155 @@
       group: [['01','计算机科学','2','—'],['02','软件工程','1','—'],['03','数据科学','1','—']],
       join: [['01','陈思远','MySQL 基础','—'],['02','林晓雨','Web 开发实战','—'],['03','周子航','MySQL 基础','—']]
     };
-    const storage = { get(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch (_) { return fallback; } }, set(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch (error) { console.error(`本地数据保存失败：${key}`, error); return false; } } };
+    const storage = { get(key, fallback) { try { const value = localStorage.getItem(key); return value === null ? fallback : JSON.parse(value); } catch (_) { return fallback; } }, set(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch (error) { console.error(`本地数据保存失败：${key}`, error); return false; } } };
     let storageWarningAt = 0;
+    let offlineExecutionEnabled = storage.get('querypad-offline-execution-enabled', true) !== false;
+    let offlineEngineInitialized = false;
     const schemaKey = 'querypad-schema';
     const defaultSchema = { active: 'students', tables: [
       { name:'students', comment:'学生信息', fields:[{name:'id',type:'INT',length:'',pk:true,nullable:false,comment:'主键'},{name:'name',type:'VARCHAR',length:'50',pk:false,nullable:false,comment:'姓名'},{name:'score',type:'INT',length:'',pk:false,nullable:true,comment:'成绩'},{name:'major',type:'VARCHAR',length:'50',pk:false,nullable:true,comment:'专业'}] },
       { name:'courses', comment:'课程信息', fields:[{name:'id',type:'INT',length:'',pk:true,nullable:false,comment:'主键'},{name:'title',type:'VARCHAR',length:'80',pk:false,nullable:false,comment:'课程名'},{name:'credits',type:'INT',length:'',pk:false,nullable:true,comment:'学分'}] },
       { name:'enrollments', comment:'选课关系', fields:[{name:'id',type:'INT',length:'',pk:true,nullable:false,comment:'主键'},{name:'student_id',type:'INT',length:'',pk:false,nullable:false,comment:'学生外键'},{name:'course_id',type:'INT',length:'',pk:false,nullable:false,comment:'课程外键'},{name:'enrolled_at',type:'DATE',length:'',pk:false,nullable:true,comment:'选课日期'}] }
     ]};
-    let schema = storage.get(schemaKey, defaultSchema);
-    if (!Array.isArray(schema.relations)) schema.relations = [
+     const defaultRelations = [
       { fromTable:'enrollments', fromColumn:'student_id', toTable:'students', toColumn:'id', cardinality:'N:1' },
       { fromTable:'enrollments', fromColumn:'course_id', toTable:'courses', toColumn:'id', cardinality:'N:1' }
     ];
-    let activeDesignTable = schema.active || schema.tables[0].name;
+    const schemaTypes = new Set(['INT','INTEGER','VARCHAR','CHAR','TEXT','DATE','DATETIME','DECIMAL','NUMERIC','REAL','FLOAT','DOUBLE','BLOB','BOOLEAN']);
+    function cloneValue(value) { return JSON.parse(JSON.stringify(value)); }
+    function validateSchemaName(value, label) {
+      const name = String(value ?? '').trim();
+      if (!name || name.length > 120 || /[\u0000-\u001f\u007f]/.test(name)) throw new Error(`${label}不能为空或包含控制字符`);
+      return name;
+    }
+    function normalizeSchema(input, options = {}) {
+      if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('表结构格式不正确');
+      const rawTables = input.tables;
+      if (!Array.isArray(rawTables) || rawTables.length < 1 || rawTables.length > 100) throw new Error('表数量必须在 1 到 100 张之间');
+      const tableNames = new Set();
+      const tables = rawTables.map((rawTable, tableIndex) => {
+        if (!rawTable || typeof rawTable !== 'object' || Array.isArray(rawTable)) throw new Error(`第 ${tableIndex + 1} 张表格式不正确`);
+        const name = validateSchemaName(rawTable.name, '表名');
+        const key = name.toLocaleLowerCase();
+        if (tableNames.has(key)) throw new Error(`表名重复：${name}`);
+        tableNames.add(key);
+        if (!Array.isArray(rawTable.fields) || rawTable.fields.length < 1 || rawTable.fields.length > 200) throw new Error(`表“${name}”的字段数量不正确`);
+        const fieldNames = new Set();
+        const fields = rawTable.fields.map((rawField, fieldIndex) => {
+          if (!rawField || typeof rawField !== 'object' || Array.isArray(rawField)) throw new Error(`表“${name}”第 ${fieldIndex + 1} 个字段格式不正确`);
+          const fieldName = validateSchemaName(rawField.name, '字段名');
+          const fieldKey = fieldName.toLocaleLowerCase();
+          if (fieldNames.has(fieldKey)) throw new Error(`表“${name}”字段名重复：${fieldName}`);
+          fieldNames.add(fieldKey);
+          const type = String(rawField.type || 'TEXT').trim().toUpperCase();
+          if (!schemaTypes.has(type)) throw new Error(`字段“${name}.${fieldName}”类型不受支持`);
+          const rawLength = String(rawField.length ?? '').trim();
+          if (rawLength.length > 30 || (rawLength && !/^\d{1,6}(?:,\d{1,6})?$/.test(rawLength))) throw new Error(`字段“${name}.${fieldName}”长度格式不正确`);
+          const length = rawLength;
+          const defaultValue = String(rawField.defaultValue ?? '').slice(0, 1000);
+          const comment = String(rawField.comment ?? '').slice(0, 1000);
+          const pk = rawField.pk === true;
+          return { name: fieldName, type, length, pk, nullable: pk ? false : rawField.nullable === true, defaultValue, comment, foreignKey: rawField.foreignKey === true };
+        });
+        return { name, source: rawTable.source === 'sql' ? 'sql' : rawTable.source === 'designer' ? 'designer' : '', comment: String(rawTable.comment ?? '').slice(0, 1000), fields };
+      });
+      const tableMap = new Map(tables.map(table => [table.name.toLocaleLowerCase(), table]));
+      const hasDefaultRelationTargets = defaultRelations.every(relation => {
+        const from = tableMap.get(relation.fromTable.toLocaleLowerCase());
+        const to = tableMap.get(relation.toTable.toLocaleLowerCase());
+        return from?.fields.some(field => field.name.toLocaleLowerCase() === relation.fromColumn.toLocaleLowerCase())
+          && to?.fields.some(field => field.name.toLocaleLowerCase() === relation.toColumn.toLocaleLowerCase());
+      });
+      const relationInput = Array.isArray(input.relations) ? input.relations : (hasDefaultRelationTargets ? defaultRelations : []);
+      if (relationInput.length > 500) throw new Error('关系数量过多');
+      const relationKeys = new Set();
+      const relations = relationInput.map((rawRelation, relationIndex) => {
+        if (!rawRelation || typeof rawRelation !== 'object' || Array.isArray(rawRelation)) throw new Error(`第 ${relationIndex + 1} 条关系格式不正确`);
+        const fromTable = validateSchemaName(rawRelation.fromTable, '关系起始表');
+        const toTable = validateSchemaName(rawRelation.toTable, '关系目标表');
+        const from = tableMap.get(fromTable.toLocaleLowerCase());
+        const to = tableMap.get(toTable.toLocaleLowerCase());
+        if (!from || !to) throw new Error(`关系引用了不存在的表：${fromTable} → ${toTable}`);
+        const fromField = validateSchemaName(rawRelation.fromColumn, '关系起始字段');
+        const toField = validateSchemaName(rawRelation.toColumn, '关系目标字段');
+        const fromColumn = from.fields.find(field => field.name.toLocaleLowerCase() === fromField.toLocaleLowerCase());
+        const toColumn = to.fields.find(field => field.name.toLocaleLowerCase() === toField.toLocaleLowerCase());
+        if (!fromColumn || !toColumn) throw new Error(`关系引用了不存在的字段：${fromTable}.${fromField} → ${toTable}.${toField}`);
+        const cardinality = String(rawRelation.cardinality || 'N:1').trim().slice(0, 40);
+        if (!cardinality) throw new Error('关系类型不能为空');
+        const key = `${from.name.toLocaleLowerCase()}|${fromColumn.name.toLocaleLowerCase()}|${to.name.toLocaleLowerCase()}|${toColumn.name.toLocaleLowerCase()}|${cardinality.toLocaleLowerCase()}`;
+        if (relationKeys.has(key)) throw new Error(`关系重复：${from.name} → ${to.name}`);
+        relationKeys.add(key);
+        const label = String(rawRelation.label ?? rawRelation.name ?? '').slice(0, 120);
+        return { fromTable: from.name, fromColumn: fromColumn.name, toTable: to.name, toColumn: toColumn.name, cardinality, ...(label ? { label } : {}) };
+      });
+      const layout = Object.create(null);
+      const rawLayout = input.erLayout && typeof input.erLayout === 'object' ? input.erLayout : {};
+      tables.forEach((table, index) => {
+        const candidate = rawLayout[table.name] || rawLayout[Object.keys(rawLayout).find(key => key.toLocaleLowerCase() === table.name.toLocaleLowerCase())];
+        const x = candidate?.x;
+        const y = candidate?.y;
+        layout[table.name] = { x: Number.isFinite(x) ? Math.max(8, Math.min(5000, x)) : 24 + (index % 3) * 245, y: Number.isFinite(y) ? Math.max(8, Math.min(5000, y)) : 50 + Math.floor(index / 3) * 180 };
+      });
+      const conceptLayout = Object.create(null);
+      const rawConceptLayout = input.erConceptLayout && typeof input.erConceptLayout === 'object' ? input.erConceptLayout : {};
+      tables.forEach((table, index) => {
+        const candidate = rawConceptLayout[table.name] || rawConceptLayout[Object.keys(rawConceptLayout).find(key => key.toLocaleLowerCase() === table.name.toLocaleLowerCase())];
+        const x = candidate?.x;
+        const y = candidate?.y;
+        if (Number.isFinite(x) && Number.isFinite(y)) conceptLayout[table.name] = { x: Math.max(0, Math.min(10000, x)), y: Math.max(0, Math.min(10000, y)) };
+        else if (options.includeConceptLayout) conceptLayout[table.name] = { x: 180 + (index % 3) * 550, y: 130 + Math.floor(index / 3) * 360 };
+      });
+      const normalizeCoordinateMap = (value, min, max) => {
+        const result = Object.create(null);
+        if (!value || typeof value !== 'object' || Array.isArray(value)) return result;
+        Object.entries(value).slice(0, 2000).forEach(([key, candidate]) => {
+          if (!key || key.length > 500 || !candidate || typeof candidate !== 'object') return;
+          const x = candidate.x;
+          const y = candidate.y;
+          if (Number.isFinite(x) && Number.isFinite(y)) result[key] = { x: Math.max(min, Math.min(max, x)), y: Math.max(min, Math.min(max, y)) };
+        });
+        return result;
+      };
+      const conceptAttributeLayout = normalizeCoordinateMap(input.erConceptAttributeLayout, -10000, 10000);
+      const conceptRelationLayout = normalizeCoordinateMap(input.erConceptRelationLayout, 0, 10000);
+      const activeInput = String(input.active || tables[0].name).trim();
+      const activeTable = tableMap.get(activeInput.toLocaleLowerCase());
+      if (!activeTable) throw new Error(`当前数据表不存在：${activeInput}`);
+      return { active: activeTable.name, tables, relations, erLayout: layout, erConceptLayout: conceptLayout, erConceptAttributeLayout: conceptAttributeLayout, erConceptRelationLayout: conceptRelationLayout };
+    }
+    function normalizeStoredSchema(value, fallback = defaultSchema) {
+      try { return normalizeSchema(value); } catch (_) { return normalizeSchema(fallback); }
+    }
+    const storedSchema = storage.get(schemaKey, null);
+    let schema = normalizeSchema(defaultSchema);
+    let storedSchemaIsValid = false;
+    if (storedSchema !== null) {
+      try { schema = normalizeSchema(storedSchema); storedSchemaIsValid = true; }
+      catch (_) { schema = normalizeSchema(defaultSchema); }
+    }
+    const projectKey = 'querypad-projects';
+    const activeProjectKey = 'querypad-active-project';
+    let projects = storage.get(projectKey, null);
+    if (!Array.isArray(projects) || !projects.length) {
+      projects = [{ id:'default', name:'我的第一个实验', updatedAt:Date.now(), schema:cloneValue(schema) }];
+    } else {
+      projects = projects.map((project, index) => {
+        const id = String(project?.id || `project-${index + 1}`).slice(0, 120);
+        const name = String(project?.name || `项目 ${index + 1}`).replace(/[\u0000-\u001f\u007f]/g, '').slice(0, 120) || `项目 ${index + 1}`;
+        let projectSchema;
+        try { projectSchema = normalizeSchema(project?.schema || schema); } catch (_) { projectSchema = cloneValue(schema); }
+        return { id, name, updatedAt: Number.isFinite(Number(project?.updatedAt)) ? Number(project.updatedAt) : Date.now(), schema: projectSchema };
+      });
+      if (!projects.some(project => project.id === 'default')) projects.push({ id:'default', name:'我的第一个实验', updatedAt:Date.now(), schema:cloneValue(schema) });
+    }
+    let activeProjectId = String(storage.get(activeProjectKey, projects[0].id));
+    if (!projects.some(project => project.id === activeProjectId)) activeProjectId = projects[0].id;
+    const selectedProject = projects.find(project => project.id === activeProjectId) || projects[0];
+    schema = normalizeStoredSchema(storedSchemaIsValid ? storedSchema : selectedProject.schema, defaultSchema);
+    selectedProject.schema = cloneValue(schema);
+    let activeDesignTable = schema.active || schema.tables[0]?.name || '';
+    window.queryPadProjectId = activeProjectId;
     window.queryPadGetAiSchema = function () {
       return {
         tables: schema.tables.map(table => ({
@@ -801,31 +956,123 @@
         }))
       };
     };
-    const projectKey = 'querypad-projects';
-    const activeProjectKey = 'querypad-active-project';
-    let projects = storage.get(projectKey, null);
-    if (!Array.isArray(projects) || !projects.length) {
-      projects = [{ id:'default', name:'我的第一个实验', updatedAt:Date.now(), schema }];
-      storage.set(projectKey, projects);
-    }
-    let activeProjectId = storage.get(activeProjectKey, projects[0].id);
-    if (!projects.some(project => project.id === activeProjectId)) activeProjectId = projects[0].id;
-    window.queryPadProjectId = activeProjectId;
     function escapeHtml(value) { return String(value).replace(/[&<>"']/g, character => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[character]); }
     function activeProject() { return projects.find(project => project.id === activeProjectId) || projects[0]; }
-    function saveProjects() { const current = activeProject(); if (current) { current.schema = schema; current.updatedAt = Date.now(); } storage.set(projectKey, projects); storage.set(activeProjectKey, activeProjectId); }
+    function saveProjects() {
+      const current = activeProject();
+      if (current) { current.schema = cloneValue(schema); current.updatedAt = Date.now(); }
+      const projectsSaved = storage.set(projectKey, projects);
+      const activeProjectSaved = storage.set(activeProjectKey, activeProjectId);
+      const schemaSaved = storage.set(schemaKey, schema);
+      return projectsSaved && activeProjectSaved && schemaSaved;
+    }
     let projectSwitchPromise = Promise.resolve();
-    function renderProjectList() { const list = document.querySelector('#projectList'); if (!list) return; list.innerHTML = projects.map(project => `<button class="project-item ${project.id === activeProjectId ? 'active' : ''}" data-project-id="${escapeHtml(project.id)}"><span><strong>${escapeHtml(project.name)}</strong><span>最近保存 · ${new Date(project.updatedAt).toLocaleDateString('zh-CN')}</span></span><b class="project-check">${project.id === activeProjectId ? '✓' : '›'}</b></button>`).join(''); list.querySelectorAll('[data-project-id]').forEach(item => item.addEventListener('click', () => { projectSwitchPromise = projectSwitchPromise.then(async () => { const project = projects.find(entry => entry.id === item.dataset.projectId); if (!project || project.id === activeProjectId) return; const previous = { id: activeProjectId, schema }; saveProjects(); try { await window.queryPadEngineReady; if (window.queryPadEngine.switchProject) await window.queryPadEngine.switchProject(project.id); activeProjectId = project.id; window.queryPadProjectId = activeProjectId; schema = project.schema; activeDesignTable = schema.active || schema.tables[0].name; storage.set(schemaKey, schema); storage.set(activeProjectKey, activeProjectId); syncEngineTables(); renderTableCatalog(); renderDesign(); renderProjectList(); showToast(`已切换到项目：${project.name}`); } catch (error) { activeProjectId = previous.id; window.queryPadProjectId = previous.id; schema = previous.schema; activeDesignTable = schema.active || schema.tables[0].name; renderProjectList(); showToast(`项目切换失败：${error.message}`); } }); })); }
+    async function switchProjectTransaction(project) {
+      const engine = await window.queryPadEngineReady;
+      const previous = {
+        id: activeProjectId,
+        schema: cloneValue(schema),
+        projects: cloneValue(projects),
+        draft: editor.value,
+        activeDesignTable,
+        snapshot: engine.snapshot()
+      };
+      try {
+        if (!saveSql()) throw new Error('当前项目 SQL 草稿无法保存，请检查浏览器存储空间');
+        if (!saveProjects()) throw new Error('当前项目无法保存，请检查浏览器存储空间');
+        const nextSchema = normalizeSchema(project.schema);
+        if (engine.switchProject) await engine.switchProject(project.id);
+        activeProjectId = project.id;
+        window.queryPadProjectId = activeProjectId;
+        schema = nextSchema;
+        project.schema = cloneValue(nextSchema);
+        activeDesignTable = schema.active || schema.tables[0].name;
+        loadProjectSqlDraft(project.id);
+        storage.set(activeProjectKey, activeProjectId);
+        storage.set(schemaKey, schema);
+        syncEngineTables();
+        renderTableCatalog();
+        renderDesign();
+        renderProjectList();
+        closeProjects();
+        showToast(`已切换到项目：${project.name}`);
+      } catch (error) {
+        try {
+          if (engine.projectId !== previous.id && engine.switchProject) await engine.switchProject(previous.id);
+          engine.restoreSnapshot(previous.snapshot);
+        } catch (restoreError) {
+          console.error('项目切换回滚失败', restoreError);
+        }
+        projects = previous.projects;
+        activeProjectId = previous.id;
+        window.queryPadProjectId = previous.id;
+        schema = previous.schema;
+        activeDesignTable = previous.activeDesignTable;
+        editor.value = previous.draft;
+        storage.set(projectKey, projects);
+        storage.set(activeProjectKey, activeProjectId);
+        storage.set(schemaKey, schema);
+        saveSql();
+        renderProjectList();
+        renderTableCatalog();
+        renderDesign();
+        showToast(`项目切换失败：${error.message}`);
+      }
+    }
+    function renderProjectList() {
+      const list = document.querySelector('#projectList');
+      if (!list) return;
+      list.innerHTML = projects.map(project => `<button class="project-item ${project.id === activeProjectId ? 'active' : ''}" data-project-id="${escapeHtml(project.id)}"><span><strong>${escapeHtml(project.name)}</strong><span>最近保存 · ${new Date(project.updatedAt).toLocaleDateString('zh-CN')}</span></span><b class="project-check">${project.id === activeProjectId ? '✓' : '›'}</b></button>`).join('');
+      list.querySelectorAll('[data-project-id]').forEach(item => item.addEventListener('click', () => {
+        projectSwitchPromise = projectSwitchPromise.then(async () => {
+          const project = projects.find(entry => entry.id === item.dataset.projectId);
+          if (!project || project.id === activeProjectId) return;
+          await switchProjectTransaction(project);
+        });
+      }));
+    }
     function openProjects() { renderProjectList(); document.querySelector('#projectModal').classList.add('open'); document.querySelector('#projectModal').setAttribute('aria-hidden','false'); }
     function closeProjects() { document.querySelector('#projectModal').classList.remove('open'); document.querySelector('#projectModal').setAttribute('aria-hidden','true'); }
     function currentDesignTable() { return schema.tables.find(item => item.name === activeDesignTable) || schema.tables[0]; }
-    function persistSchema(skipErRefresh) { schema.active = activeDesignTable; storage.set(schemaKey, schema); saveProjects(); renderTableCatalog(); if (!skipErRefresh && window.renderErFromSchema) window.renderErFromSchema(); }
-    function syncEngineTables() { schema.tables.forEach(table => window.queryPadEngine.execute(makeCreateSql(table))); }
-    function makeCreateSql(table) {
-      const columns = table.fields.map(field => `  \`${field.name || 'new_field'}\` ${field.type}${field.length ? `(${field.length})` : ''}${field.nullable ? '' : ' NOT NULL'}${field.pk ? ' PRIMARY KEY' : ''}${field.defaultValue ? ` DEFAULT ${/^\d+$/.test(field.defaultValue) ? field.defaultValue : `'${field.defaultValue}'`}` : ''}${field.comment ? ` COMMENT '${field.comment.replace(/'/g, "''")}'` : ''}`).join(',\n');
-      const relations = (schema.relations || []).filter(relation => relation.fromTable === table.name && relation.cardinality !== 'N:N').map(relation => `  CONSTRAINT \`fk_${relation.fromTable}_${relation.fromColumn}\` FOREIGN KEY (\`${relation.fromColumn}\`) REFERENCES \`${relation.toTable}\` (\`${relation.toColumn}\`)`).join(',\n');
-      return `CREATE TABLE IF NOT EXISTS \`${table.name}\` (\n${[columns, relations].filter(Boolean).join(',\n')}\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`;
-    }
+     function persistSchema(skipErRefresh) { schema.active = activeDesignTable; storage.set(schemaKey, schema); saveProjects(); renderTableCatalog(); if (!skipErRefresh && window.renderErFromSchema) window.renderErFromSchema(); }
+     function syncSchemaFromEngine() {
+       const actual = window.queryPadEngine.inspectSchema();
+       const previousTables = schema.tables || [];
+       const previousRelations = schema.relations || [];
+       schema.tables = actual.tables.map(actualTable => {
+         const previous = previousTables.find(table => table.name.toLowerCase() === actualTable.name.toLowerCase());
+         return { name:actualTable.name, source:previous?.source || (previous ? 'designer' : 'sql'), comment:previous?.comment || '', fields:actualTable.fields.map(field => { const metadata = previous?.fields?.find(item => item.name.toLowerCase() === field.name.toLowerCase()); return { ...field, ...metadata, ...field, comment:metadata?.comment || '' }; }) };
+       });
+       schema.relations = actual.relations.map(relation => { const previous = previousRelations.find(item => item.fromTable.toLowerCase() === relation.fromTable.toLowerCase() && item.fromColumn.toLowerCase() === relation.fromColumn.toLowerCase() && item.toTable.toLowerCase() === relation.toTable.toLowerCase() && item.toColumn.toLowerCase() === relation.toColumn.toLowerCase()); return { ...relation, cardinality:previous?.cardinality || relation.cardinality }; });
+       const tableHasField = (tableName, column) => schema.tables.some(table => table.name.toLowerCase() === tableName.toLowerCase() && table.fields.some(field => field.name.toLowerCase() === column.toLowerCase()));
+       schema.relations.push(...previousRelations.filter(relation => relation.cardinality === 'N:N' && tableHasField(relation.fromTable, relation.fromColumn) && tableHasField(relation.toTable, relation.toColumn) && !schema.relations.some(actualRelation => actualRelation.fromTable === relation.fromTable && actualRelation.fromColumn === relation.fromColumn && actualRelation.toTable === relation.toTable && actualRelation.toColumn === relation.toColumn)));
+       if (!schema.tables.some(table => table.name === activeDesignTable)) activeDesignTable = schema.tables[0]?.name || '';
+       persistSchema();
+       renderDesign();
+       renderDataPreview();
+     }
+     function syncEngineTables() {
+       const actual = window.queryPadEngine.syncSchema(schema);
+       const previousTables = schema.tables || [];
+       const previousRelations = schema.relations || [];
+       schema.tables = actual.tables.map(actualTable => {
+         const previous = previousTables.find(table => table.name.toLowerCase() === actualTable.name.toLowerCase());
+         return { name:actualTable.name, source:previous?.source || (previous ? 'designer' : 'sql'), comment:previous?.comment || '', fields:actualTable.fields.map(field => { const metadata = previous?.fields?.find(item => item.name.toLowerCase() === field.name.toLowerCase()); return { ...field, ...metadata, ...field, comment:metadata?.comment || '' }; }) };
+       });
+       schema.relations = actual.relations.map(relation => { const previous = previousRelations.find(item => item.fromTable.toLowerCase() === relation.fromTable.toLowerCase() && item.fromColumn.toLowerCase() === relation.fromColumn.toLowerCase() && item.toTable.toLowerCase() === relation.toTable.toLowerCase() && item.toColumn.toLowerCase() === relation.toColumn.toLowerCase()); return { ...relation, cardinality:previous?.cardinality || relation.cardinality }; });
+       const hasField = (tableName, column) => schema.tables.some(table => table.name.toLowerCase() === tableName.toLowerCase() && table.fields.some(field => field.name.toLowerCase() === column.toLowerCase()));
+       schema.relations.push(...previousRelations.filter(relation => relation.cardinality === 'N:N' && hasField(relation.fromTable, relation.fromColumn) && hasField(relation.toTable, relation.toColumn) && !schema.relations.some(actualRelation => actualRelation.fromTable === relation.fromTable && actualRelation.fromColumn === relation.fromColumn && actualRelation.toTable === relation.toTable && actualRelation.toColumn === relation.toColumn)));
+       if (!schema.tables.some(table => table.name === activeDesignTable)) activeDesignTable = schema.tables[0]?.name || '';
+       persistSchema();
+     }
+     function escapeSqlIdentifier(value) { return String(value ?? '').replace(/`/g, '``'); }
+     function makeCreateSql(table) {
+        const primaryKeys = table.fields.filter(field => field.pk);
+        const columns = table.fields.map(field => { const value = String(field.defaultValue || '').trim(); const defaultClause = !value ? '' : ` DEFAULT ${/^(?:null|current_timestamp|current_date|current_time|true|false|-?\d+(?:\.\d+)?|'.*'|".*"|\(.*\))$/i.test(value) ? value : `'${value.replace(/'/g, "''")}'`}`; return `  \`${escapeSqlIdentifier(field.name || 'new_field')}\` ${field.type}${field.length ? `(${field.length})` : ''}${field.nullable ? '' : ' NOT NULL'}${primaryKeys.length === 1 && field.pk ? ' PRIMARY KEY' : ''}${defaultClause}${field.comment ? ` COMMENT '${field.comment.replace(/'/g, "''")}'` : ''}`; });
+        if (primaryKeys.length > 1) columns.push(`  PRIMARY KEY (${primaryKeys.map(field => `\`${escapeSqlIdentifier(field.name)}\``).join(', ')})`);
+        const relations = (schema.relations || []).filter(relation => relation.fromTable === table.name && relation.cardinality !== 'N:N' && relation.fromColumn && relation.toColumn).map((relation,index) => `  CONSTRAINT \`fk_${escapeSqlIdentifier(relation.fromTable)}_${escapeSqlIdentifier(relation.fromColumn)}_${index}\` FOREIGN KEY (\`${escapeSqlIdentifier(relation.fromColumn)}\`) REFERENCES \`${escapeSqlIdentifier(relation.toTable)}\` (\`${escapeSqlIdentifier(relation.toColumn)}\`)`);
+        return `CREATE TABLE \`${escapeSqlIdentifier(table.name)}\` (\n${[...columns, ...relations].join(',\n')}\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`;
+     }
     function renderTableCatalog() {
       const tableList = document.querySelector('.table-list');
       tableList.replaceChildren(...schema.tables.map(table => {
@@ -870,7 +1117,7 @@
         tablesView.insertBefore(block, designerButton);
       });
     }
-    function renderDesign() { const picker = document.querySelector('#designTablePicker'); const editor = document.querySelector('#fieldEditor'); const table = currentDesignTable(); const tableOptions = schema.tables.map(item => `<option value="${item.name}">${item.name}</option>`).join(''); picker.innerHTML = schema.tables.map(item => `<button class="table-tab ${item.name === table.name ? 'active' : ''}" data-design-table="${item.name}">${item.name}</button>`).join(''); editor.innerHTML = `<div class="field-row"><span>字段名</span><span>类型</span><span>主键</span><span class="field-nullable">允许 NULL</span><span></span></div>${table.fields.map((field,index) => `<div class="field-row" data-field-index="${index}"><input data-field-key="name" value="${field.name || ''}" placeholder="字段名"><select data-field-key="type"><option ${field.type==='INT'?'selected':''}>INT</option><option ${field.type==='VARCHAR'?'selected':''}>VARCHAR</option><option ${field.type==='TEXT'?'selected':''}>TEXT</option><option ${field.type==='DATE'?'selected':''}>DATE</option><option ${field.type==='DECIMAL'?'selected':''}>DECIMAL</option></select><input class="field-length" data-field-key="length" value="${field.length || ''}" placeholder="长度"><input type="checkbox" data-field-key="pk" ${field.pk?'checked':''} aria-label="主键"><input class="field-nullable" type="checkbox" data-field-key="nullable" ${field.nullable?'checked':''} aria-label="允许 NULL"><input class="field-default" data-field-key="defaultValue" value="${field.defaultValue || ''}" placeholder="默认值"><input class="field-comment" data-field-key="comment" value="${field.comment || ''}" placeholder="字段备注"><button class="remove-field" data-remove-field="${index}" aria-label="删除字段">×</button></div>`).join('')}`; const relationList = document.querySelector('#relationList'); relationList.innerHTML = (schema.relations || []).map((relation,index) => `<div class="relation-row" data-relation-index="${index}"><select data-relation-key="fromTable">${tableOptions}</select><select data-relation-key="fromColumn"></select><select data-relation-key="toTable">${tableOptions}</select><select data-relation-key="cardinality"><option value="N:1">N:1</option><option value="1:N">1:N</option><option value="1:1">1:1</option></select><button class="remove-field" data-remove-relation="${index}" aria-label="删除关系">×</button></div>`).join('') || '<div class="relation-row"><span style="grid-column:1/-1;color:#9aa8b8;font-size:10px">暂无外键关系</span></div>'; relationList.querySelectorAll('[data-relation-index]').forEach(row => { const relation = schema.relations[Number(row.dataset.relationIndex)]; const fromTable = row.querySelector('[data-relation-key="fromTable"]'); const toTable = row.querySelector('[data-relation-key="toTable"]'); fromTable.value = relation.fromTable; toTable.value = relation.toTable; const fillColumns = (select, name) => { const target = schema.tables.find(item => item.name === name); select.innerHTML = (target?.fields || []).map(field => `<option value="${field.name}">${field.name}</option>`).join(''); }; const fromColumn = row.querySelector('[data-relation-key="fromColumn"]'); fillColumns(fromColumn, relation.fromTable); fromColumn.value = relation.fromColumn; const toColumn = row.querySelector('[data-relation-key="toColumn"]'); if (toColumn) fillColumns(toColumn, relation.toTable); row.querySelectorAll('[data-relation-key]').forEach(input => input.addEventListener('change', () => { const key = input.dataset.relationKey; relation[key] = input.value; if (key === 'fromTable' || key === 'toTable') renderDesign(); else { persistSchema(); document.querySelector('#designSql').textContent = makeCreateSql(table); } })); }); document.querySelector('#designSql').textContent = makeCreateSql(table); document.querySelectorAll('[data-design-table]').forEach(button => button.addEventListener('click', () => { activeDesignTable = button.dataset.designTable; persistSchema(); renderDesign(); })); document.querySelectorAll('[data-field-index] input, [data-field-index] select').forEach(input => input.addEventListener('input', () => { const row = input.closest('[data-field-index]'); const field = table.fields[Number(row.dataset.fieldIndex)]; const key = input.dataset.fieldKey; field[key] = input.type === 'checkbox' ? input.checked : input.value; persistSchema(); document.querySelector('#designSql').textContent = makeCreateSql(table); })); document.querySelectorAll('[data-remove-field]').forEach(button => button.addEventListener('click', () => { table.fields.splice(Number(button.dataset.removeField), 1); persistSchema(); renderDesign(); })); document.querySelectorAll('[data-remove-relation]').forEach(button => button.addEventListener('click', () => { schema.relations.splice(Number(button.dataset.removeRelation), 1); persistSchema(); renderDesign(); })); }
+    function renderDesign() { const picker = document.querySelector('#designTablePicker'); const editor = document.querySelector('#fieldEditor'); const report = document.querySelector('#designReport'); if (report) report.hidden = true; const table = currentDesignTable(); if (!table) { picker.replaceChildren(); editor.textContent = '暂无数据表，请先新建数据表或运行 CREATE TABLE。'; document.querySelector('#relationList').textContent = '暂无外键关系'; document.querySelector('#designSql').textContent = ''; return; } const typeChoices = ['INT','INTEGER','VARCHAR','TEXT','DATE','DATETIME','DECIMAL','NUMERIC','REAL','FLOAT','DOUBLE','BLOB','BOOLEAN']; const typeOptions = selected => [...new Set([selected,...typeChoices])].map(type => `<option value="${escapeHtml(type)}" ${type===selected ? 'selected' : ''}>${escapeHtml(type)}</option>`).join(''); const tableOptions = schema.tables.map(item => `<option value="${escapeHtml(item.name)}">${escapeHtml(item.name)}</option>`).join(''); picker.innerHTML = schema.tables.map(item => `<button class="table-tab ${item.name === table.name ? 'active' : ''}" data-design-table="${escapeHtml(item.name)}">${escapeHtml(item.name)}</button>`).join(''); editor.innerHTML = `<div class="field-row"><span>字段名</span><span>类型</span><span>主键</span><span class="field-nullable">允许 NULL</span><span></span></div>${table.fields.map((field,index) => `<div class="field-row" data-field-index="${index}"><input data-field-key="name" value="${escapeHtml(field.name || '')}" placeholder="字段名"><select data-field-key="type">${typeOptions(field.type)}</select><input class="field-length" data-field-key="length" value="${escapeHtml(field.length || '')}" placeholder="长度"><input type="checkbox" data-field-key="pk" ${field.pk?'checked':''} aria-label="主键"><input class="field-nullable" type="checkbox" data-field-key="nullable" ${field.nullable?'checked':''} aria-label="允许 NULL"><input class="field-default" data-field-key="defaultValue" value="${escapeHtml(field.defaultValue || '')}" placeholder="默认值"><input class="field-comment" data-field-key="comment" value="${escapeHtml(field.comment || '')}" placeholder="字段备注"><button class="remove-field" data-remove-field="${index}" aria-label="删除字段">×</button></div>`).join('')}`; const relationList = document.querySelector('#relationList'); relationList.innerHTML = (schema.relations || []).map((relation,index) => `<div class="relation-row" data-relation-index="${index}"><select data-relation-key="fromTable">${tableOptions}</select><select data-relation-key="fromColumn"></select><select data-relation-key="toTable">${tableOptions}</select><select data-relation-key="toColumn"></select><select data-relation-key="cardinality"><option value="N:1">N:1</option><option value="1:N">1:N</option><option value="1:1">1:1</option></select><button class="remove-field" data-remove-relation="${index}" aria-label="删除关系">×</button></div>`).join('') || '<div class="relation-row"><span style="grid-column:1/-1;color:#9aa8b8;font-size:10px">暂无外键关系</span></div>'; relationList.querySelectorAll('[data-relation-index]').forEach(row => { const relation = schema.relations[Number(row.dataset.relationIndex)]; const fromTable = row.querySelector('[data-relation-key="fromTable"]'); const toTable = row.querySelector('[data-relation-key="toTable"]'); fromTable.value = relation.fromTable; toTable.value = relation.toTable; const fillColumns = (select, name) => { const target = schema.tables.find(item => item.name === name); select.innerHTML = (target?.fields || []).map(field => `<option value="${escapeHtml(field.name)}">${escapeHtml(field.name)}</option>`).join(''); }; const fromColumn = row.querySelector('[data-relation-key="fromColumn"]'); fillColumns(fromColumn, relation.fromTable); fromColumn.value = relation.fromColumn; const toColumn = row.querySelector('[data-relation-key="toColumn"]'); if (toColumn) { fillColumns(toColumn, relation.toTable); toColumn.value = relation.toColumn; } row.querySelectorAll('[data-relation-key]').forEach(input => input.addEventListener('change', () => { const key = input.dataset.relationKey; relation[key] = input.value; if (key === 'fromTable' || key === 'toTable') { const columnKey = key === 'fromTable' ? 'fromColumn' : 'toColumn'; const columns = schema.tables.find(item => item.name === relation[key])?.fields || []; if (!columns.some(field => field.name === relation[columnKey])) relation[columnKey] = columns[0]?.name || ''; renderDesign(); } else { persistSchema(); document.querySelector('#designSql').textContent = makeCreateSql(table); } })); }); document.querySelector('#designSql').textContent = makeCreateSql(table); document.querySelectorAll('[data-design-table]').forEach(button => button.addEventListener('click', () => { activeDesignTable = button.dataset.designTable; persistSchema(); renderDesign(); })); document.querySelectorAll('[data-field-index] input, [data-field-index] select').forEach(input => input.addEventListener('input', () => { const row = input.closest('[data-field-index]'); const field = table.fields[Number(row.dataset.fieldIndex)]; const key = input.dataset.fieldKey; const previousName = field.name; field[key] = input.type === 'checkbox' ? input.checked : input.value; if (key === 'name' && previousName !== field.name) (schema.relations || []).forEach(relation => { if (relation.fromTable === table.name && relation.fromColumn === previousName) relation.fromColumn = field.name; if (relation.toTable === table.name && relation.toColumn === previousName) relation.toColumn = field.name; }); persistSchema(); document.querySelector('#designSql').textContent = makeCreateSql(table); })); document.querySelectorAll('[data-remove-field]').forEach(button => button.addEventListener('click', () => { const removed = table.fields.splice(Number(button.dataset.removeField), 1)[0]; schema.relations = (schema.relations || []).filter(relation => !(relation.fromTable === table.name && relation.fromColumn === removed.name) && !(relation.toTable === table.name && relation.toColumn === removed.name)); persistSchema(); renderDesign(); })); document.querySelectorAll('[data-remove-relation]').forEach(button => button.addEventListener('click', () => { schema.relations.splice(Number(button.dataset.removeRelation), 1); persistSchema(); renderDesign(); })); }
     function configureRelationTypes() {
       const builtInTypes = ['1:1', '1:N', 'N:1', 'N:N'];
       const relationEditor = document.querySelector('.relation-editor');
@@ -921,9 +1168,11 @@
     const renderDesignWithRelationTypes = renderDesign;
     renderDesign = function () { renderDesignWithRelationTypes(); configureRelationTypes(); };
     function downloadText(filename, content, type='application/json') { const blob = new Blob([content], { type }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = filename; link.click(); setTimeout(() => URL.revokeObjectURL(link.href), 500); }
-    function dataDictionary() { return schema.tables.map(table => `## ${table.name}\\n\\n| 字段 | 类型 | 主键 | NULL | 说明 |\\n|---|---|---|---|---|\\n${table.fields.map(field => `| ${field.name} | ${field.type}${field.length ? `(${field.length})` : ''} | ${field.pk ? '是' : '否'} | ${field.nullable ? '是' : '否'} | ${field.comment || ''} |`).join('\\n')}`).join('\\n\\n'); }
-    function checkNormalForm() { const problems = []; schema.tables.forEach(table => { if (!table.fields.some(field => field.pk)) problems.push(`${table.name} 没有主键，建议增加能唯一标识记录的字段。`); if (table.fields.some(field => /,|;/.test(field.comment || ''))) problems.push(`${table.name} 可能包含重复组，请检查字段是否保持原子性（1NF）。`); }); showToast(problems.length ? `范式检查发现 ${problems.length} 个提醒` : '基础范式检查通过'); document.querySelector('#designSql').textContent = problems.length ? '范式检查提醒：\\n- ' + problems.join('\\n- ') : '范式检查通过：已发现主键，字段未发现明显重复组。'; }
-    const savedSql = storage.get('querypad-sql', '');
+    function dataDictionary() { return schema.tables.map(table => `## ${table.name}\n\n| 字段 | 类型 | 主键 | NULL | 说明 |\n|---|---|---|---|---|\n${table.fields.map(field => `| ${field.name} | ${field.type}${field.length ? `(${field.length})` : ''} | ${field.pk ? '是' : '否'} | ${field.nullable ? '是' : '否'} | ${field.comment || ''} |`).join('\n')}`).join('\n\n'); }
+    function checkNormalForm() { const report = []; schema.tables.forEach(table => { if (!table.fields.some(field => field.pk)) report.push(`${table.name}：未定义主键，无法确认记录唯一性。`); if (new Set(table.fields.map(field => field.name.toLowerCase())).size !== table.fields.length) report.push(`${table.name}：字段名重复。`); }); const output = report.length ? `基础结构检查发现：\n- ${report.join('\n- ')}\n\n该检查只识别主键和重复字段名；字段清单不足以判断 1NF、2NF、3NF 或函数依赖。` : '基础结构检查未发现缺少主键或重复字段名。\n\n字段清单不足以判断 1NF、2NF、3NF 或函数依赖；请结合实际字段取值、候选键和业务依赖人工分析。'; const reportElement = document.querySelector('#designReport'); reportElement.textContent = output; reportElement.hidden = false; }
+    const projectSqlKey = projectId => `querypad-sql:${projectId}`;
+    const storedProjectSql = storage.get(projectSqlKey(activeProjectId), null);
+    const savedSql = storedProjectSql === null ? storage.get('querypad-sql', '') : storedProjectSql;
     if (savedSql) editor.value = savedSql;
     function persistLocal(key, value) {
       const saved = storage.set(key, value);
@@ -933,12 +1182,16 @@
       }
       return saved;
     }
-    function saveSql() { return persistLocal('querypad-sql', editor.value); }
+    function saveSql() { return persistLocal(projectSqlKey(activeProjectId), editor.value); }
+    function loadProjectSqlDraft(projectId) { editor.value = storage.get(projectSqlKey(projectId), ''); clearEditorError(); closeAutocomplete(); renderSqlHighlight(); updateCursorPosition(); }
+    const migratedDraft = storedProjectSql !== null || !savedSql || storage.set(projectSqlKey(activeProjectId), savedSql);
+    if (migratedDraft) { try { localStorage.removeItem('querypad-sql'); } catch (_) {} }
     function showToast(message) { toast.textContent = message; toast.classList.add('show'); clearTimeout(window.toastTimer); window.toastTimer = setTimeout(() => toast.classList.remove('show'), 1800); }
     renderTableCatalog();
-    try { syncEngineTables(); } catch (error) { showToast(`本地表结构同步失败：${error.message}`); }
     if (window.queryPadEngine.restoreError) showToast(window.queryPadEngine.restoreError);
-    function setQuery(query, chip) { editor.value = query.replace(/\\n/g, '\n'); clearEditorError(); saveSql(); document.querySelectorAll('.chip').forEach(item => item.classList.remove('active')); if (chip) chip.classList.add('active'); editor.focus(); }
+    let exampleQueryMode = false;
+    let exampleQueryText = '';
+    function setQuery(query, chip) { editor.value = query.replace(/\\n/g, '\n'); clearEditorError(); saveSql(); document.querySelectorAll('.chip').forEach(item => item.classList.remove('active')); if (chip) chip.classList.add('active'); exampleQueryMode = Boolean(chip); exampleQueryText = exampleQueryMode ? editor.value : ''; editor.focus(); }
     const exercises = [
       { id:'all-student-details', topic:'基础查询', title:'查看所有学生的完整信息', description:'查询 students 表中的所有学生，并返回每位学生的全部字段信息。', sql:'SELECT *\nFROM students;', validate:(sql,result) => /\bselect\s+\*/.test(sql) && /\bfrom\s+students\b/.test(sql) },
       { id:'student-fields', topic:'基础查询', title:'查看学生基本信息', description:'查询所有学生的学号、姓名和专业，只返回这三个字段。', sql:'SELECT id, name, major\nFROM students;', validate:(sql,result) => sql.includes('from students') && result.columns.join(',') === 'id,name,major' && result.rowCount === 4 },
@@ -990,8 +1243,38 @@
       { id:'recent-enrollment-names', topic:'三表连接与日期', title:'查询 9 月 2 日及之后选课的学生', description:'连接学生和选课表，按日期筛选并显示学生姓名与选课日期。', sql:"SELECT s.name, e.enrolled_at\nFROM students s\nJOIN enrollments e ON s.id = e.student_id\nWHERE e.enrolled_at >= '2026-09-02'\nORDER BY e.enrolled_at ASC;", validate:(sql,result) => sql.includes('join enrollments') && /where e\.enrolled_at\s*>=\s*['"]2026-09-02['"]/.test(sql) && result.columns.join(',') === 'name,enrolled_at' && result.rowCount === 2 && result.values[0][0] === '林晓雨' },
       { id:'enrollment-count-by-student', topic:'连接与分组统计', title:'统计每位学生的选课次数', description:'连接学生与选课表，按学生编号分组统计选课记录数。', sql:'SELECT e.student_id, COUNT(*) AS total\nFROM enrollments e\nJOIN students s ON s.id = e.student_id\nGROUP BY e.student_id\nORDER BY e.student_id ASC;', validate:(sql,result) => sql.includes('join students') && /group by e\.student_id/.test(sql) && /count\s*\(/.test(sql) && result.columns.join(',') === 'student_id,total' && result.rowCount === 3 && result.values.reduce((sum,row) => sum + row[1],0) === 3 },
       { id:'course-title-enrollment-count', topic:'连接与分组统计', title:'按课程名称统计选课人数', description:'连接课程和选课表，按课程名称分组统计人数。', sql:'SELECT c.title, COUNT(*) AS total\nFROM courses c\nJOIN enrollments e ON c.id = e.course_id\nGROUP BY c.title\nORDER BY c.title ASC;', validate:(sql,result) => sql.includes('join enrollments') && /group by c\.title/.test(sql) && /count\s*\(/.test(sql) && result.columns.join(',') === 'title,total' && result.rowCount === 2 && result.values.reduce((sum,row) => sum + row[1],0) === 3 },
-      { id:'non-null-scores', topic:'NULL 判断', title:'查询成绩已填写的学生', description:'使用 IS NOT NULL 筛选成绩不为空的学生，按学号从高到低只显示两条。', sql:'SELECT id, name, score\nFROM students\nWHERE score IS NOT NULL\nORDER BY id DESC\nLIMIT 2;', validate:(sql,result) => /where score is not null/.test(sql) && /order by id desc/.test(sql) && /limit 2\b/.test(sql) && result.columns.join(',') === 'id,name,score' && result.rowCount === 2 && result.values.every(row => row[2] !== null) }
+      { id:'non-null-scores', topic:'NULL 判断', title:'查询成绩已填写的学生', description:'使用 IS NOT NULL 筛选成绩不为空的学生，按学号从高到低只显示两条。', sql:'SELECT id, name, score\nFROM students\nWHERE score IS NOT NULL\nORDER BY id DESC\nLIMIT 2;', validate:(sql,result) => /where score is not null/.test(sql) && /order by id desc/.test(sql) && /limit 2\b/.test(sql) && result.columns.join(',') === 'id,name,score' && result.rowCount === 2 && result.values.every(row => row[2] !== null) },
+      { id:'score-between', topic:'BETWEEN 范围筛选', title:'查询 80 到 90 分的学生', description:'使用 BETWEEN（含边界）筛选成绩在 80 至 90 分之间的学生，按成绩从高到低显示。', sql:'SELECT id, name, score\nFROM students\nWHERE score BETWEEN 80 AND 90\nORDER BY score DESC, id ASC;', validate:(sql,result) => /between\s+80\s+and\s+90/.test(sql) && /order by score desc/.test(sql) && result.values.every(row => row[2] >= 80 && row[2] <= 90) },
+      { id:'course-credit-in', topic:'IN 集合筛选', title:'查询 3 或 4 学分课程', description:'使用 IN 筛选学分为 3 或 4 的课程，并按学分和编号排序。', sql:'SELECT id, title, credits\nFROM courses\nWHERE credits IN (3, 4)\nORDER BY credits ASC, id ASC;', validate:(sql,result) => /where credits in\s*\(\s*3\s*,\s*4\s*\)/.test(sql) && result.values.every(row => [3, 4].includes(row[2])) },
+      { id:'score-null-first', topic:'NULL 判断与排序', title:'找出尚未录入成绩的学生', description:'使用 IS NULL 找出成绩为空的学生，并按学号排序。', sql:'SELECT id, name\nFROM students\nWHERE score IS NULL\nORDER BY id ASC;', validate:(sql,result) => /where score is null/.test(sql) && result.values.every(row => row[0] > 0) },
+      { id:'score-case-band', topic:'CASE 条件表达式', title:'为学生成绩标注等级', description:'用 CASE 将成绩分为优秀、合格和待提高，并显示学号及等级。', sql:"SELECT id, CASE WHEN score >= 90 THEN '优秀' WHEN score >= 60 THEN '合格' ELSE '待提高' END AS level\nFROM students\nWHERE id <= 8\nORDER BY id ASC;", validate:(sql,result) => result.columns.join(',') === 'id,level' && result.rowCount === 8 },
+      { id:'score-average', topic:'AVG 聚合', title:'计算全体学生的平均成绩', description:'使用 AVG 和 ROUND 计算全体学生的平均成绩，保留两位小数。', sql:'SELECT ROUND(AVG(score), 2) AS average_score\nFROM students;', validate:(sql,result) => result.columns[0] === 'average_score' && result.values.length === 1 && Number.isFinite(result.values[0][0]) },
+      { id:'major-average', topic:'分组与聚合', title:'比较各专业平均成绩', description:'按专业分组，计算平均成绩并按平均分降序排列。', sql:'SELECT major, ROUND(AVG(score), 2) AS average_score\nFROM students\nWHERE score IS NOT NULL\nGROUP BY major\nORDER BY average_score DESC, major ASC;', validate:(sql,result) => /group by major/.test(sql) && /avg\s*\(/.test(sql) && result.values.every(row => Number.isFinite(row[1])) },
+      { id:'course-count-having', topic:'HAVING 分组筛选', title:'找出选课记录较多的课程', description:'按课程编号统计选课次数，只保留至少 8 条选课记录的课程。', sql:'SELECT course_id, COUNT(*) AS enrollment_total\nFROM enrollments\nGROUP BY course_id\nHAVING COUNT(*) >= 8\nORDER BY enrollment_total DESC, course_id ASC;', validate:(sql,result) => /having count\s*\(\s*\*\s*\)\s*>=\s*8/.test(sql) && result.values.every(row => row[1] >= 8) },
+      { id:'course-distinct-students', topic:'COUNT DISTINCT', title:'统计每门课的不同选课学生数', description:'连接课程与选课记录，按课程统计不同学生人数，显示至少有一条记录的课程。', sql:'SELECT c.title, COUNT(DISTINCT e.student_id) AS student_total\nFROM courses c\nJOIN enrollments e ON e.course_id = c.id\nGROUP BY c.id, c.title\nORDER BY student_total DESC, c.title ASC;', validate:(sql,result) => /count\s*\(\s*distinct\s+e\.student_id\s*\)/.test(sql) && result.values.every(row => row[1] > 0) },
+      { id:'score-above-average', topic:'子查询', title:'查询高于平均分的学生', description:'用标量子查询计算平均分，筛选高于平均分的学生并按成绩排序。', sql:'SELECT id, name, score\nFROM students\nWHERE score > (SELECT AVG(score) FROM students)\nORDER BY score DESC, id ASC;', validate:(sql,result) => /where score\s*>\s*\(\s*select avg/.test(sql) && /order by score desc/.test(sql) },
+      { id:'students-enrolled-exists', topic:'EXISTS 子查询', title:'查询至少选过一门课的学生', description:'使用 EXISTS 判断学生是否有对应的选课记录，按学号排序。', sql:'SELECT s.id, s.name\nFROM students s\nWHERE EXISTS (SELECT 1 FROM enrollments e WHERE e.student_id = s.id)\nORDER BY s.id ASC;', validate:(sql,result) => /where exists\s*\(/.test(sql) && result.values.every(row => row[0] > 0) },
+      { id:'courses-no-enrollment', topic:'LEFT JOIN 与 NULL', title:'找出还没有选课记录的课程', description:'使用 LEFT JOIN 和 IS NULL 找到没有任何选课记录的课程。', sql:'SELECT c.id, c.title\nFROM courses c\nLEFT JOIN enrollments e ON e.course_id = c.id\nWHERE e.id IS NULL\nORDER BY c.id ASC;', validate:(sql,result) => /left join enrollments/.test(sql) && /where e\.id is null/.test(sql) && result.values.every(row => row.length === 2) },
+      { id:'enrollment-cte', topic:'CTE 公用表表达式', title:'用 CTE 统计课程选课人数', description:'先用 WITH 定义每门课程的选课统计，再连接课程表列出名称和人数。', sql:'WITH course_counts AS (\n  SELECT course_id, COUNT(*) AS total\n  FROM enrollments\n  GROUP BY course_id\n)\nSELECT c.title, cc.total\nFROM course_counts cc\nJOIN courses c ON c.id = cc.course_id\nORDER BY cc.total DESC, c.title ASC\nLIMIT 5;', validate:(sql,result) => /^with\s+course_counts/i.test(sql) && /join courses/.test(sql) && result.rowCount === 5 },
+      { id:'student-row-number', topic:'窗口函数 ROW_NUMBER', title:'为每个专业的学生成绩排名', description:'使用 ROW_NUMBER 窗口函数，在每个专业内按成绩排名，显示前 10 位学生。', sql:'SELECT id, name, major, score, ROW_NUMBER() OVER (PARTITION BY major ORDER BY score DESC, id ASC) AS major_rank\nFROM students\nWHERE score IS NOT NULL\nORDER BY major ASC, major_rank ASC\nLIMIT 10;', validate:(sql,result) => /row_number\s*\(\s*\)\s*over\s*\(\s*partition by major/.test(sql) && result.columns.includes('major_rank') && result.rowCount === 10 },
+      { id:'student-score-rank', topic:'窗口函数 RANK', title:'列出成绩前 10 名及并列名次', description:'使用 RANK 为学生成绩排名，展示前 10 个名次的学生。', sql:'WITH ranked_students AS (\n  SELECT id, name, score, RANK() OVER (ORDER BY score DESC) AS score_rank\n  FROM students\n  WHERE score IS NOT NULL\n)\nSELECT id, name, score, score_rank\nFROM ranked_students\nWHERE score_rank <= 10\nORDER BY score_rank ASC, id ASC;', validate:(sql,result) => /rank\s*\(\s*\)\s*over/.test(sql) && result.columns[3] === 'score_rank' && result.values.every(row => row[3] <= 10) },
+      { id:'monthly-enrollment-summary', topic:'日期函数与分组', title:'按月份统计选课记录', description:'使用 strftime 提取年月，分组统计每月的选课记录数。', sql:"SELECT strftime('%Y-%m', enrolled_at) AS enrollment_month, COUNT(*) AS total\nFROM enrollments\nGROUP BY enrollment_month\nORDER BY enrollment_month ASC\nLIMIT 12;", validate:(sql,result) => /strftime\s*\(/.test(sql) && result.columns.join(',') === 'enrollment_month,total' && result.values.every(row => /^2026-\d\d$/.test(row[0])) },
+      { id:'course-title-length', topic:'字符串函数', title:'查询课程名称长度', description:'使用 LENGTH 计算课程名称字符长度，并按名称长度从长到短排列。', sql:'SELECT title, LENGTH(title) AS title_length\nFROM courses\nORDER BY title_length DESC, title ASC\nLIMIT 10;', validate:(sql,result) => /length\s*\(\s*title\s*\)/.test(sql) && result.rowCount === 10 && result.values.every(row => row[1] > 0) },
+      { id:'credits-case-sort', topic:'CASE 与排序', title:'按学分标注课程类型', description:'使用 CASE 将课程分为高学分和常规学分，展示前 10 门课程。', sql:"SELECT id, title, CASE WHEN credits >= 4 THEN '高学分' ELSE '常规学分' END AS credit_type\nFROM courses\nORDER BY credits DESC, id ASC\nLIMIT 10;", validate:(sql,result) => result.columns.join(',') === 'id,title,credit_type' && result.rowCount === 10 },
+      { id:'enrollment-date-range', topic:'BETWEEN 日期筛选', title:'筛选 9 月 1 日至 9 月 7 日的选课', description:'使用 BETWEEN 查询指定一周内的选课记录，并按日期排列。', sql:"SELECT id, student_id, enrolled_at\nFROM enrollments\nWHERE enrolled_at BETWEEN '2026-09-01' AND '2026-09-07'\nORDER BY enrolled_at ASC, id ASC;", validate:(sql,result) => /between\s+'2026-09-01'\s+and\s+'2026-09-07'/.test(sql) && result.values.every(row => row[2] >= '2026-09-01' && row[2] <= '2026-09-07') },
+      { id:'student-course-count-cte', topic:'CTE 与 LEFT JOIN', title:'显示每位学生的选课次数', description:'用 CTE 统计学生选课次数，再 LEFT JOIN 学生表，让没有选课的学生也显示为 0。', sql:'WITH student_counts AS (\n  SELECT student_id, COUNT(*) AS total\n  FROM enrollments\n  GROUP BY student_id\n)\nSELECT s.id, s.name, COALESCE(sc.total, 0) AS enrollment_total\nFROM students s\nLEFT JOIN student_counts sc ON sc.student_id = s.id\nORDER BY enrollment_total DESC, s.id ASC\nLIMIT 10;', validate:(sql,result) => /^with\s+student_counts/i.test(sql) && /coalesce\s*\(/.test(sql) && /left join student_counts/.test(sql) && result.rowCount === 10 },
+      { id:'major-top-score', topic:'CTE 与分组', title:'找出各专业最高分学生', description:'先计算每个专业的最高分，再连接回学生表列出获得该分数的学生。', sql:'WITH major_scores AS (\n  SELECT major, MAX(score) AS top_score\n  FROM students\n  WHERE score IS NOT NULL\n  GROUP BY major\n)\nSELECT s.major, s.name, s.score\nFROM students s\nJOIN major_scores m ON m.major = s.major AND m.top_score = s.score\nORDER BY s.major ASC, s.name ASC;', validate:(sql,result) => /^with\s+major_scores/i.test(sql) && /max\s*\(\s*score\s*\)/.test(sql) && /join major_scores/.test(sql) && result.values.every(row => row[1] !== null) },
+      { id:'credit-categories-union', topic:'UNION 合并结果', title:'合并不同学分课程清单', description:'用 UNION 合并 2 学分和 5 学分课程，结果中保留统一的课程编号、名称和学分列。', sql:'SELECT id, title, credits\nFROM courses\nWHERE credits = 2\nUNION\nSELECT id, title, credits\nFROM courses\nWHERE credits = 5\nORDER BY credits ASC, id ASC;', validate:(sql,result) => /\bunion\b/.test(sql) && result.columns.join(',') === 'id,title,credits' && result.values.every(row => row[2] === 2 || row[2] === 5) },
+      { id:'course-count-having-join', topic:'JOIN 与 HAVING', title:'查看选课人数达到 8 人的课程名称', description:'连接课程和选课表，分组统计人数，再用 HAVING 筛选人数不少于 8 人的课程。', sql:'SELECT c.id, c.title, COUNT(*) AS enrollment_total\nFROM courses c\nJOIN enrollments e ON e.course_id = c.id\nGROUP BY c.id, c.title\nHAVING COUNT(*) >= 8\nORDER BY enrollment_total DESC, c.id ASC;', validate:(sql,result) => /join enrollments/.test(sql) && /having count\s*\(\s*\*\s*\)\s*>=\s*8/.test(sql) && result.values.every(row => row[2] >= 8) }
     ];
+    const customExerciseKey = 'querypad-ai-generated-exercises';
+    let customExercises = storage.get(customExerciseKey, []);
+    if (!Array.isArray(customExercises)) customExercises = [];
+    customExercises = customExercises.filter(exercise => exercise && /^ai-exercise-[\w-]+$/.test(exercise.id)
+      && ['基础', '进阶', '挑战'].includes(exercise.difficulty)
+      && ['title', 'topic', 'description', 'sql'].every(key => typeof exercise[key] === 'string' && exercise[key].trim()))
+      .slice(-50).map(exercise => ({ ...exercise, customAiExercise:true }));
+    exercises.push(...customExercises);
     const completedExercises = new Set(storage.get('querypad-completed-exercises', []).filter(id => exercises.some(exercise => exercise.id === id)));
     let wrongAnswers = storage.get('querypad-wrong-answers', {});
     if (!wrongAnswers || typeof wrongAnswers !== 'object' || Array.isArray(wrongAnswers)) wrongAnswers = {};
@@ -1000,6 +1283,8 @@
     ));
     let hintLevels = storage.get('querypad-hint-levels', {});
     if (!hintLevels || typeof hintLevels !== 'object' || Array.isArray(hintLevels)) hintLevels = {};
+    let aiHintProgress = storage.get('querypad-ai-hint-progress', {});
+    if (!aiHintProgress || typeof aiHintProgress !== 'object' || Array.isArray(aiHintProgress)) aiHintProgress = {};
     const savedFavorites = storage.get('querypad-sql-favorites', []);
     const savedVersions = storage.get('querypad-sql-versions', []);
     const sqlFavorites = Array.isArray(savedFavorites) ? savedFavorites.filter(item => item && typeof item.sql === 'string') : [];
@@ -1009,6 +1294,7 @@
     let versionTimer = 0;
     exercises.forEach(exercise => {
       const topic = exercise.topic;
+      if (exercise.customAiExercise) return;
       exercise.difficulty = /综合|三表|子查询|窗口|CTE|事务|多表/i.test(topic)
         ? '挑战'
         : /连接|JOIN|分组|聚合|COUNT|GROUP|HAVING/i.test(topic) ? '进阶' : '基础';
@@ -1026,8 +1312,6 @@
       const percent = exercises.length ? Math.round(done / exercises.length * 100) : 0;
       document.querySelector('#learningProgressLabel').textContent = `已完成 ${done} / ${exercises.length} 题 · ${percent}%`;
       document.querySelector('#learningProgressBar').style.width = `${percent}%`;
-      document.querySelector('#progressText').textContent = `${done}/${exercises.length}`;
-      document.querySelector('.progress-ring').style.background = `conic-gradient(var(--blue) ${percent}%, #30394b 0)`;
       const stageItems = ['基础', '进阶', '挑战'].map(difficulty => {
         const tier = exercises.filter(exercise => exercise.difficulty === difficulty);
         const finished = tier.filter(exercise => completedExercises.has(exercise.id)).length;
@@ -1079,6 +1363,7 @@
       };
     };
     function hintFor(exercise, level) {
+      if (exercise.customAiExercise && Array.isArray(exercise.hints) && exercise.hints[level - 1]) return `第 ${level} 步：${exercise.hints[level - 1]}`;
       if (level === 1) return `第 1 步：先找出题目要求的结果字段，以及需要读取的主表。知识点：${exercise.topic}。`;
       if (level === 2) {
         if (/连接|JOIN/i.test(exercise.topic)) return '第 2 步：先确认两张表之间对应的主键和外键，再逐步增加 JOIN；暂时不要一次连接所有表。';
@@ -1184,12 +1469,23 @@
       const badgeColors = difficultyColors[exercise.difficulty];
       document.querySelector('#challengeDifficulty').style.background = badgeColors[0];
       document.querySelector('#challengeDifficulty').style.color = badgeColors[1];
+      const exercisePosition = document.querySelector('#exercisePosition');
+      const position = activeExerciseIndex + 1;
+      const positionPercent = Math.round(position / exercises.length * 100);
+      document.querySelector('#progressText').textContent = `${position}/${exercises.length}`;
+      exercisePosition.setAttribute('aria-label', `当前第 ${position} / ${exercises.length} 题`);
+      exercisePosition.style.background = `conic-gradient(var(--blue) ${positionPercent}%, #30394b 0)`;
       exercisePickerButton.textContent = `第 ${String(activeExerciseIndex + 1).padStart(2,'0')} 题 · ${exercise.topic}⌄`;
       document.querySelector('#challenge').classList.toggle('done', completedExercises.has(exercise.id));
       const hintLevel = Math.min(3, Number(hintLevels[exercise.id]) || 0);
       document.querySelector('#hintText').textContent = hintLevel ? hintFor(exercise, hintLevel) : '卡住时可以逐级获取提示，不会直接显示完整答案。';
       document.querySelector('#nextHintBtn').textContent = hintLevel >= 3 ? '提示已全部查看' : `获取提示 ${hintLevel + 1}/3`;
       document.querySelector('#nextHintBtn').disabled = hintLevel >= 3;
+      const aiHint = aiHintProgress[exercise.id] || { level:0, answers:[] };
+      const aiHintButton = document.querySelector('#aiHintBtn');
+      aiHintButton.textContent = aiHint.level >= 3 ? 'AI 提示已完成' : `AI 提示 ${aiHint.level + 1}/3`;
+      aiHintButton.disabled = aiHint.level >= 3;
+      if (aiHint.level && aiHint.answers?.[aiHint.level - 1]) document.querySelector('#hintText').textContent = `AI 第 ${aiHint.level} 级提示：${aiHint.answers[aiHint.level - 1]}`;
       if (loadQuery === true) setQuery(exercise.sql, null);
       else if (loadQuery === false) setQuery('', null);
       renderExerciseList();
@@ -1252,18 +1548,165 @@
     document.querySelector('#nextExercise').addEventListener('click', () => selectExercise(activeExerciseIndex + 1));
     document.addEventListener('keydown', event => { if (event.key === 'Escape' && exerciseModal.classList.contains('open')) { exerciseModal.classList.remove('open'); exerciseModal.setAttribute('aria-hidden','true'); } });
     selectExercise(activeExerciseIndex, null);
+    window.queryPadExerciseReferences = () => exercises.map(({ id, topic, title, sql }) => ({ id, topic, title, sql }));
+    window.queryPadValidateExercise = (id, query) => { const exercise = exercises.find(item => item.id === id); if (!exercise) throw new Error(`未知练习：${id}`); const result = window.queryPadEngine.execute(query); const expected = window.queryPadEngine.execute(exercise.sql); return exerciseAnswerMatches(exercise, String(query).replace(/`/g, '').replace(/\s+/g, ' ').trim().toLowerCase(), result, expected); };
     window.queryPadGetAiExerciseContext = function () {
       const exercise = exercises[activeExerciseIndex];
       return {
+        id: exercise.id,
         index: activeExerciseIndex + 1,
         total: exercises.length,
         title: exercise.title,
         topic: exercise.topic,
-        description: exercise.description
+        description: exercise.description,
+        difficulty: exercise.difficulty,
+        lastFeedback: String(wrongAnswers[exercise.id]?.lastError || '').slice(0, 1000)
       };
     };
-    function renderResult(kind, duration = 12) { window.queryPadLastSqlError = null; const data = rows[kind]; const heads = kind === 'select' ? ['#','name','score','major'] : kind === 'group' ? ['#','major','total','备注'] : ['#','name','title','备注']; table.querySelector('thead tr').innerHTML = heads.map(h => `<th>${h}</th>`).join(''); table.querySelector('tbody').innerHTML = data.map(row => `<tr>${row.map((cell, i) => `<td class="${cell === '—' ? 'null' : ''}">${cell}</td>`).join('')}</tr>`).join(''); status.textContent = '执行成功'; status.style.color = 'var(--green)'; status.style.background = 'var(--green-soft)'; meta.textContent = `${data.length} 行 · ${duration} ms`; foot.textContent = '结果已保存到本次练习'; }
-    function showError(message) { window.queryPadLastSqlError = { sql: editor.value.trim(), message: String(message) }; setEditorError(editor.value, message); status.textContent = '需要修改'; status.style.color='var(--error)'; status.style.background='var(--error-soft)'; meta.textContent='未返回结果'; foot.textContent = `${message}（约第 ${editorErrorLine} 行）`; table.querySelector('tbody').innerHTML = '<tr><td colspan="4" class="error-cell">请检查 SQL 关键字、表名和排序条件后重试。</td></tr>'; }
+    window.queryPadGetAiHintLevel = function (exerciseId) {
+      return Number(aiHintProgress[exerciseId]?.level || 0) + 1;
+    };
+    window.queryPadAdvanceAiHint = function (level, exerciseId, answer) {
+      const exercise = exercises.find(item => item.id === exerciseId);
+      if (!exercise) return false;
+      const progress = aiHintProgress[exerciseId] || { level:0, answers:[] };
+      const previousLevel = progress.level;
+      const previousAnswers = progress.answers.slice();
+      const hadProgress = Object.prototype.hasOwnProperty.call(aiHintProgress, exerciseId);
+      const next = Math.min(3, Number(level) || 1);
+      if (next > progress.level + 1) return false;
+      progress.level = Math.max(progress.level, next);
+      progress.answers[next - 1] = String(answer || '').trim().slice(0, 4000);
+      aiHintProgress[exerciseId] = progress;
+      if (!persistLocal('querypad-ai-hint-progress', aiHintProgress)) {
+        progress.level = previousLevel;
+        progress.answers = previousAnswers;
+        if (!hadProgress) delete aiHintProgress[exerciseId];
+        return false;
+      }
+      if (exercises[activeExerciseIndex]?.id === exerciseId) {
+        document.querySelector('#hintText').textContent = `AI 第 ${progress.level} 级提示：${progress.answers[progress.level - 1]}`;
+        const button = document.querySelector('#aiHintBtn');
+        button.textContent = progress.level >= 3 ? 'AI 提示已完成' : `AI 提示 ${progress.level + 1}/3`;
+        button.disabled = progress.level >= 3;
+      }
+      return true;
+    };
+    window.queryPadGetAiLearningContext = function () {
+      const topicMap = new Map();
+      exercises.forEach(exercise => {
+        const record = wrongAnswers[exercise.id];
+        const current = topicMap.get(exercise.topic) || { topic:exercise.topic, attempts:0, wrong:0, completed:0 };
+        if (record) {
+          current.attempts += Number(record.attempts) || 0;
+          current.wrong += 1;
+        }
+        if (completedExercises.has(exercise.id)) current.completed += 1;
+        topicMap.set(exercise.topic, current);
+      });
+      return {
+        total: exercises.length,
+        completed: completedExercises.size,
+        wrong: Object.keys(wrongAnswers).length,
+        difficultyCounts: ['基础', '进阶', '挑战'].map(difficulty => ({
+          difficulty,
+          total: exercises.filter(exercise => exercise.difficulty === difficulty).length,
+          completed: exercises.filter(exercise => exercise.difficulty === difficulty && completedExercises.has(exercise.id)).length
+        })),
+        topicCounts: Array.from(topicMap.values()).filter(item => item.attempts || item.completed).slice(0, 40),
+        mistakes: Object.entries(wrongAnswers).map(([id, record]) => {
+          const exercise = exercises.find(item => item.id === id);
+          const error = String(record.lastError || '').toLowerCase();
+          const submitted = String(record.lastQuery || '').toLowerCase();
+          const reference = String(exercise?.sql || '').toLowerCase();
+          const errorCategory = /syntax error|near ".*syntax/i.test(error) ? 'SQL 语法错误'
+           : /no such table|找不到(?:这张)?表|找不到数据表/.test(error) ? '表名或数据表选择错误'
+              : /no such column|unknown column/.test(error) ? '字段名选择错误'
+                : /order by|排序/.test(error) || (/\border\s+by\b/.test(reference) && !/\border\s+by\b/.test(submitted)) ? '排序子句遗漏或方向错误'
+                  : /limit/.test(error) || (/\blimit\b/.test(reference) && !/\blimit\b/.test(submitted)) ? '返回条数限制错误'
+                    : /where|筛选|条件/.test(error) || (/\bwhere\b/.test(reference) && !/\bwhere\b/.test(submitted)) ? '筛选条件错误'
+                      : /join|连接/.test(error) || (/\bjoin\b/.test(reference) && !/\bjoin\b/.test(submitted)) ? '多表连接错误'
+                        : /group by|聚合|分组/.test(error) || (/\bgroup\s+by\b/.test(reference) && !/\bgroup\s+by\b/.test(submitted)) ? '分组或聚合错误'
+                          : '查询结果与题目要求不一致';
+          return exercise ? {
+            id,
+            title: exercise.title,
+            topic: exercise.topic,
+            difficulty: exercise.difficulty,
+            attempts: Number(record.attempts) || 0,
+            lastQuery: String(record.lastQuery || '').slice(0, 4000),
+            lastError: String(record.lastError || '').slice(0, 1000),
+            errorCategory
+          } : null;
+        }).filter(Boolean).sort((left, right) => right.attempts - left.attempts).slice(0, 40)
+      };
+    };
+    window.queryPadImportAiExercises = function (plan) {
+      let input = plan;
+      if (typeof plan === 'string') {
+        try { input = JSON.parse(plan); } catch (_) { return { saved:false, message:'AI 返回内容不是可识别的新题 JSON，未保存。' }; }
+      }
+      const candidates = input && Array.isArray(input.exercises) ? input.exercises : [input];
+       if (!candidates.length || candidates.length > 3) return { saved:false, message:'新题数量应为 1 到 3 道。' };
+      const allowedDifficulties = new Set(['基础', '进阶', '挑战']);
+      const titleSet = new Set(exercises.map(exercise => exercise.title));
+      const topic = window.queryPadGetAiExerciseContext()?.topic || 'AI 个性化练习';
+      const created = [];
+      for (const candidate of candidates) {
+        if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) return { saved:false, message:'AI 练习内容格式不正确，未保存。' };
+        const title = String(candidate.title || '').trim();
+        const questionTopic = String(candidate.topic || '').trim();
+        const description = String(candidate.description || '').trim();
+        const difficulty = String(candidate.difficulty || '').trim();
+        const hints = Array.isArray(candidate.hints) ? candidate.hints.map(hint => String(hint || '').trim()) : [];
+        const rawSql = String(candidate.sql || '').trim();
+        if (!title || title.length > 200 || !questionTopic || questionTopic.length > 120 || !description || description.length > 1000
+          || !allowedDifficulties.has(difficulty) || hints.length !== 3 || hints.some(hint => !hint || hint.length > 400)
+          || !rawSql || rawSql.length > 4000) return { saved:false, message:'AI 新题信息不完整或长度超限，未保存。' };
+        const sql = rawSql.replace(/;\s*$/, '').trim();
+        const executable = sql.replace(/'(?:''|[^'])*'|"(?:""|[^"])*"|`(?:``|[^`])*`|--[^\n]*|\/\*[\s\S]*?\*\//g, ' ');
+        if (!/^(?:select|with)\b/i.test(sql) || /;|\b(?:insert|update|delete|replace|create|alter|drop|attach|detach|pragma|vacuum|reindex)\b/i.test(executable)
+          || /\bwith\s+recursive\b/i.test(executable)) return { saved:false, message:'AI 新题的参考 SQL 不是安全的单条只读查询，未保存。' };
+        try {
+          if (!window.queryPadEngine?.ready) return { saved:false, message:'SQLite 引擎尚未就绪，暂时不能验证新题。' };
+          window.queryPadEngine.execute(sql);
+        } catch (error) {
+          return { saved:false, message:`AI 新题的参考 SQL 无法在当前数据库执行：${error.message}` };
+        }
+        if (titleSet.has(title)) return { saved:false, message:`题库中已有“${title}”，请重新生成一道不同题目。` };
+        titleSet.add(title);
+        created.push({
+          id:`ai-exercise-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}-${created.length}`,
+          topic:`AI · ${questionTopic || topic}`,
+          title,
+          description,
+          hints,
+          sql,
+          difficulty,
+          customAiExercise:true
+        });
+      }
+       const nextCustomExercises = [...customExercises, ...created].slice(-50);
+       const saved = storage.set(customExerciseKey, nextCustomExercises);
+      if (!saved) return { saved:false, message:'题目生成成功，但浏览器存储空间不足，未能保存。' };
+       customExercises = nextCustomExercises;
+      const existingIds = new Set(exercises.map(exercise => exercise.id));
+      exercises.push(...created.filter(exercise => !existingIds.has(exercise.id)));
+      created.forEach(exercise => {
+        if (!Array.from(topicFilter.options).some(option => option.value === exercise.topic)) {
+          const option = document.createElement('option');
+          option.value = exercise.topic;
+          option.textContent = exercise.topic;
+          topicFilter.appendChild(option);
+        }
+      });
+      const firstIndex = exercises.findIndex(exercise => exercise.id === created[0].id);
+       if (firstIndex >= 0) selectExercise(firstIndex, false);
+      renderExerciseList();
+      return { saved:true, message:`已保存 ${created.length} 道 AI 练习，并已打开第一题。练习答案不会显示在题目说明中。` };
+    };
+    function renderResult(kind, duration = 12) { window.queryPadLastSqlError = null; const data = rows[kind]; const heads = kind === 'select' ? ['#','name','score','major'] : kind === 'group' ? ['#','major','total','备注'] : ['#','name','title','备注']; const header = document.createDocumentFragment(); heads.forEach(label => { const cell = document.createElement('th'); cell.textContent = String(label); header.appendChild(cell); }); table.querySelector('thead tr').replaceChildren(header); const body = document.createDocumentFragment(); data.forEach(rowData => { const row = document.createElement('tr'); rowData.forEach(value => { const cell = document.createElement('td'); cell.classList.toggle('null', value === '—'); cell.textContent = String(value ?? ''); row.appendChild(cell); }); body.appendChild(row); }); table.querySelector('tbody').replaceChildren(body); status.textContent = '执行成功'; status.style.color = 'var(--green)'; status.style.background = 'var(--green-soft)'; meta.textContent = `${data.length} 行 · ${duration} ms`; foot.textContent = '结果已保存到本次练习'; }
+    function showError(message) { window.queryPadLastSqlError = { sql: editor.value.trim(), message: String(message) }; setEditorError(editor.value, message); status.textContent = '需要修改'; status.style.color='var(--error)'; status.style.background='var(--error-soft)'; meta.textContent='未返回结果'; foot.textContent = `${message}（约第 ${editorErrorLine} 行）`; const row = document.createElement('tr'); const cell = document.createElement('td'); cell.colSpan = 4; cell.className = 'error-cell'; cell.textContent = '请检查 SQL 关键字、表名和排序条件后重试。'; row.appendChild(cell); table.querySelector('tbody').replaceChildren(row); }
     function gradeQuery(query, kind) { const lower = query.toLowerCase(); if (kind === 'select' && lower.includes('from students') && lower.includes('order by') && lower.includes('score')) return true; if (kind === 'group' && lower.includes('group by') && lower.includes('count')) return true; if (kind === 'join' && lower.includes('join') && lower.includes('enrollments')) return true; return false; }
     function runQuery() { const button = document.querySelector('#runBtn'); const query = editor.value.trim(); if (!query) { status.textContent = '请输入 SQL'; status.style.color='var(--error)'; status.style.background='var(--error-soft)'; meta.textContent='等待输入'; foot.textContent='编辑器为空'; showToast('先输入一条 SQL 语句'); return; } button.classList.add('running'); button.innerHTML = '<span>◌</span> 执行中'; setTimeout(() => { const lower = query.toLowerCase(); let kind = lower.includes('join') ? 'join' : lower.includes('group by') || lower.includes('count') ? 'group' : 'select'; const validTable = lower.includes('from students') || lower.includes('from courses') || lower.includes('from enrollments'); if (!validTable) { showError('找不到这张表：请从左侧或表结构中选择可用表名。'); button.classList.remove('running'); button.innerHTML = '<span>▶</span> 运行 SQL'; showToast('SQL 执行失败'); return; } renderResult(kind, Math.floor(Math.random()*10)+8); const passed = gradeQuery(query, kind); const challenge = document.querySelector('#challenge'); if (passed) { challenge.classList.add('done'); document.querySelector('#challengeTitle').textContent = '练习完成，结果符合要求'; document.querySelector('#challengeText').textContent = '做得很好！可以继续挑战下一道题。'; document.querySelector('#progressText').textContent = '2/4'; foot.textContent = '自动判题：通过'; showToast('执行成功，练习通过'); } else { foot.textContent = 'SQL 已执行 · 题目条件尚未满足'; showToast('语句已执行，但还没有满足题目要求'); } button.classList.remove('running'); button.innerHTML = '<span>▶</span> 运行 SQL'; addHistory(query, rows[kind].length); }, 520); }
     function addHistory(query, count) { const holder = document.querySelector('#history'); const item = document.createElement('div'); item.className = 'history-item'; item.dataset.query = query; const code = document.createElement('code'); const normalized = query.replace(/\\s+/g,' '); code.textContent = `${normalized.slice(0,34)}${query.length > 34 ? '...' : ''}`; const detail = document.createElement('span'); detail.textContent = count === '历史' ? '历史记录' : `刚刚 · ${count} 行`; item.append(code, detail); item.addEventListener('click', () => setQuery(item.dataset.query)); holder.prepend(item); while (holder.children.length > 4) holder.lastElementChild.remove(); storage.set('querypad-history', Array.from(holder.children).map(entry => entry.dataset.query)); }
@@ -1344,6 +1787,7 @@
     window.queryPadRenderResult = renderOfflineResult;
     window.queryPadMaxResultRows = MAX_RESULT_ROWS;
     runQuery = function () {
+      if (!offlineExecutionEnabled) { showToast('离线 SQL 执行已关闭，请在表结构设计器中重新启用'); return; }
       const query = editor.value.trim();
       const button = document.querySelector('#runBtn');
       if (!query) { showToast('先输入一条 SQL 语句'); return; }
@@ -1352,9 +1796,18 @@
       setTimeout(() => {
         try {
           const result = window.queryPadEngine.execute(query);
+          if (/\b(?:create|alter|drop)\s+(?:temp(?:orary)?\s+)?table\b/i.test(query)) syncSchemaFromEngine();
           clearEditorError();
           renderOfflineResult(result);
           addHistory(query, result.rowCount || 0);
+          const isExampleQuery = exampleQueryMode && query === exampleQueryText;
+          if (isExampleQuery) {
+            foot.textContent = '快捷示例已执行；未按当前练习判分';
+            showToast('示例 SQL 执行成功');
+            return;
+          }
+          exampleQueryMode = false;
+          exampleQueryText = '';
           const exercise = exercises[activeExerciseIndex];
           const normalizedQuery = query.replace(/`/g,'').replace(/\s+/g,' ').trim().toLowerCase();
           const expected = window.queryPadEngine.execute(exercise.sql);
@@ -1394,6 +1847,7 @@
       }, 120);
     };
     function analyzeQueryPlan() {
+      if (!offlineExecutionEnabled) { showToast('请先启用离线执行'); return; }
       const query = editor.value.trim();
       if (!window.queryPadEngine?.ready) {
         showToast('SQLite 引擎尚未准备好，请稍后重试');
@@ -1492,8 +1946,15 @@
     });
     document.querySelector('#formatBtn').addEventListener('click', () => { editor.value = editor.value.replace(/\\s+/g,' ').replace(/\\s+(FROM|WHERE|ORDER BY|GROUP BY|JOIN|LIMIT)\\s+/gi, '\n$1 ').trim(); clearEditorError(); saveSql(); showToast('SQL 已格式化'); });
     document.querySelector('#refreshBtn').addEventListener('click', () => showToast('数据库结构已是最新'));
-    document.querySelector('#clearHistory').addEventListener('click', () => { document.querySelector('#history').innerHTML=''; showToast('运行历史已清空'); });
-    document.querySelector('#switchBtn').addEventListener('click', () => showToast('当前为老师提供的练习环境'));
+    document.querySelector('#clearHistory').addEventListener('click', () => { document.querySelector('#history').replaceChildren(); storage.set('querypad-history', []); showToast('运行历史已清空'); });
+    const environmentModal = document.querySelector('#environmentModal');
+    const environmentButton = document.querySelector('#switchBtn');
+    const environmentCloseButton = document.querySelector('#environmentClose');
+    function openEnvironmentInfo() { environmentModal.classList.add('open'); environmentModal.setAttribute('aria-hidden', 'false'); environmentCloseButton.focus(); }
+    function closeEnvironmentInfo() { if (!environmentModal.classList.contains('open')) return; environmentModal.classList.remove('open'); environmentModal.setAttribute('aria-hidden', 'true'); environmentButton.focus(); }
+    environmentButton.addEventListener('click', openEnvironmentInfo);
+    environmentCloseButton.addEventListener('click', closeEnvironmentInfo);
+    environmentModal.addEventListener('click', event => { if (event.target === environmentModal) closeEnvironmentInfo(); });
     const helpModal = document.querySelector('#helpModal');
     const helpButton = document.querySelector('#helpBtn');
     const helpCloseButton = document.querySelector('#helpClose');
@@ -1502,7 +1963,7 @@
     helpButton.addEventListener('click', openHelp);
     helpCloseButton.addEventListener('click', closeHelp);
     helpModal.addEventListener('click', event => { if (event.target === helpModal) closeHelp(); });
-    document.addEventListener('keydown', event => { if (event.key === 'Escape') closeHelp(); });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') { closeHelp(); closeEnvironmentInfo(); } });
     function displayWidth(text) { return [...String(text)].reduce((sum, char) => sum + (char.charCodeAt(0) > 255 ? 2 : 1), 0); }
     function padPreviewCell(text, width) { return String(text) + ' '.repeat(Math.max(0, width - displayWidth(text))); }
     function formatPreviewRows(result) {
@@ -1595,7 +2056,7 @@
     if (historyNav) historyNav.addEventListener('click', () => { document.querySelector('.history-item')?.scrollIntoView({behavior:'smooth'}); showToast('已定位到最近运行'); });
     const settingsNav = document.querySelector('#settingsNav');
     if (settingsNav) settingsNav.addEventListener('click', () => showToast('练习设置：MySQL 8.0 兼容模式'));
-    editor.addEventListener('input', () => { editorErrorLine = 0; window.queryPadLastSqlError = null; editorWrap.classList.remove('has-error'); renderSqlHighlight(); updateCursorPosition(); saveSql(); renderAutocomplete(); clearTimeout(versionTimer); versionTimer = window.setTimeout(() => recordSqlVersion(editor.value), 700); });
+    editor.addEventListener('input', () => { exampleQueryMode = false; exampleQueryText = ''; editorErrorLine = 0; window.queryPadLastSqlError = null; editorWrap.classList.remove('has-error'); renderSqlHighlight(); updateCursorPosition(); saveSql(); renderAutocomplete(); clearTimeout(versionTimer); versionTimer = window.setTimeout(() => recordSqlVersion(editor.value), 700); });
     editor.addEventListener('scroll', () => { sqlHighlight.scrollTop = editor.scrollTop; sqlHighlight.scrollLeft = editor.scrollLeft; });
     editor.addEventListener('click', updateCursorPosition);
     editor.addEventListener('keyup', updateCursorPosition);
@@ -1632,23 +2093,88 @@
     editor.addEventListener('blur', () => window.setTimeout(closeAutocomplete, 100));
     refreshSqlEditor();
     const savedHistory = storage.get('querypad-history', []);
-    savedHistory.slice(0, 4).reverse().forEach(query => addHistory(query, '历史'));
+    document.querySelector('#history').replaceChildren();
+    if (Array.isArray(savedHistory)) savedHistory.slice(0, 4).reverse().forEach(query => addHistory(query, '历史'));
+    function findErNode(name) { const canvas = document.querySelector('#erCanvas'); return canvas ? Array.from(canvas.querySelectorAll('.er-node')).find(node => node.dataset.node === String(name)) || null : null; }
     function bindRecognizedNode(node) { let dragging = false; let offsetX = 0; let offsetY = 0; node.addEventListener('pointerdown', event => { dragging = true; const rect = node.getBoundingClientRect(); offsetX = event.clientX - rect.left; offsetY = event.clientY - rect.top; node.setPointerCapture?.(event.pointerId); }); node.addEventListener('pointermove', event => { if (!dragging) return; const canvas = document.querySelector('#erCanvas').getBoundingClientRect(); node.style.left = `${Math.max(8, Math.min(760 - node.offsetWidth - 8, event.clientX - canvas.left - offsetX))}px`; node.style.top = `${Math.max(8, Math.min(510 - node.offsetHeight - 8, event.clientY - canvas.top - offsetY))}px`; }); node.addEventListener('pointerup', () => { dragging = false; }); node.addEventListener('pointercancel', () => { dragging = false; }); }
-    window.renderRecognizedEr = function (result) { const canvas = document.querySelector('#erCanvas'); if (!canvas) return; canvas.querySelectorAll('.er-node').forEach(node => node.remove()); const svg = canvas.querySelector('.er-lines'); svg.innerHTML = ''; const entities = result.entities || []; entities.forEach((entity, index) => { const node = document.createElement('article'); node.className = 'er-node'; node.dataset.node = entity.name || `识别实体${index + 1}`; node.style.left = `${entity.x || 30 + index * 235}px`; node.style.top = `${entity.y || 60 + (index % 2) * 150}px`; const head = document.createElement('div'); head.className = 'er-node-head'; head.innerHTML = `<span>识别实体</span>${entity.name || `识别实体${index + 1}`}`; node.appendChild(head); (entity.fields || []).forEach(field => { const row = document.createElement('div'); row.className = 'er-field'; row.innerHTML = `<b class="${field.pk ? 'er-key' : ''}">${field.pk ? '◆' : '·'}</b> ${field.name || 'field'} <em>${field.type || 'TEXT'}</em>`; node.appendChild(row); }); canvas.appendChild(node); bindRecognizedNode(node); }); (result.relations || []).forEach(relation => { const from = entities[relation.from]; const to = entities[relation.to]; if (!from || !to) return; const x1 = (from.x || 0) + 178; const y1 = (from.y || 0) + 60; const x2 = to.x || 0; const y2 = (to.y || 0) + 60; const path = document.createElementNS('http://www.w3.org/2000/svg', 'path'); path.setAttribute('class', 'er-line'); path.setAttribute('d', `M ${x1} ${y1} C ${(x1 + x2) / 2} ${y1}, ${(x1 + x2) / 2} ${y2}, ${x2} ${y2}`); svg.appendChild(path); const label = document.createElementNS('http://www.w3.org/2000/svg', 'text'); label.setAttribute('class', 'er-line-label'); label.setAttribute('x', (x1 + x2) / 2); label.setAttribute('y', (y1 + y2) / 2 - 8); label.textContent = relation.cardinality || '1:N'; svg.appendChild(label); }); };
+    window.renderRecognizedEr = function (result) {
+      const canvas = document.querySelector('#erCanvas');
+      if (!canvas) return;
+      canvas.querySelectorAll('.er-node').forEach(node => node.remove());
+      const svg = canvas.querySelector('.er-lines');
+      if (!svg) return;
+      svg.replaceChildren();
+      const entities = Array.isArray(result?.entities) ? result.entities : [];
+      const positions = entities.map((entity, index) => ({ x: Number.isFinite(Number(entity?.x)) ? Number(entity.x) : 30 + index * 235, y: Number.isFinite(Number(entity?.y)) ? Number(entity.y) : 60 + (index % 2) * 150 }));
+      entities.forEach((entity, index) => {
+        const name = String(entity?.name || `识别实体${index + 1}`);
+        const node = document.createElement('article');
+        node.className = 'er-node';
+        node.dataset.node = name;
+        node.style.left = `${Math.max(8, Math.min(5000, positions[index].x))}px`;
+        node.style.top = `${Math.max(8, Math.min(5000, positions[index].y))}px`;
+        const head = document.createElement('div');
+        head.className = 'er-node-head';
+        const kind = document.createElement('span');
+        kind.textContent = '识别实体';
+        const title = document.createElement('span');
+        title.textContent = name;
+        head.append(kind, title);
+        node.appendChild(head);
+        const fields = Array.isArray(entity?.fields) ? entity.fields : [];
+        fields.forEach(field => {
+          const row = document.createElement('div');
+          row.className = 'er-field';
+          const marker = document.createElement('b');
+          marker.className = field?.pk ? 'er-key' : '';
+          marker.textContent = field?.pk ? '◆' : '·';
+          const fieldName = document.createTextNode(` ${String(field?.name || 'field')} `);
+          const type = document.createElement('em');
+          type.textContent = String(field?.type || 'TEXT');
+          row.append(marker, fieldName, type);
+          node.appendChild(row);
+        });
+        canvas.appendChild(node);
+        bindRecognizedNode(node);
+      });
+      const relations = Array.isArray(result?.relations) ? result.relations : [];
+      relations.forEach(relation => {
+        const fromIndex = Number(relation?.from);
+        const toIndex = Number(relation?.to);
+        const from = entities[fromIndex];
+        const to = entities[toIndex];
+        if (!from || !to || !positions[fromIndex] || !positions[toIndex]) return;
+        const x1 = positions[fromIndex].x + 178;
+        const y1 = positions[fromIndex].y + 60;
+        const x2 = positions[toIndex].x;
+        const y2 = positions[toIndex].y + 60;
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('class', 'er-line');
+        path.setAttribute('d', `M ${x1} ${y1} C ${(x1 + x2) / 2} ${y1}, ${(x1 + x2) / 2} ${y2}, ${x2} ${y2}`);
+        svg.appendChild(path);
+        const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        label.setAttribute('class', 'er-line-label');
+        label.setAttribute('x', (x1 + x2) / 2);
+        label.setAttribute('y', (y1 + y2) / 2 - 8);
+        label.textContent = String(relation.cardinality || '1:N');
+        svg.appendChild(label);
+      });
+    };
     const erModal = document.querySelector('#erModal');
-    function syncErNodes() { schema.tables.slice(0, 3).forEach(table => { const node = document.querySelector(`[data-node="${table.name}"]`); if (!node) return; const header = node.querySelector('.er-node-head'); if (header) header.innerHTML = `<span>实体</span>${table.name}`; node.querySelectorAll('.er-field').forEach(field => field.remove()); table.fields.slice(0, 6).forEach(field => { const row = document.createElement('div'); row.className = 'er-field'; row.innerHTML = `<b class="${field.pk ? 'er-key' : ''}">${field.pk ? '◆' : '·'}</b> ${field.name} <em>${field.type}${field.length ? `(${field.length})` : ''}</em>`; node.appendChild(row); }); }); }
-    function openEr() { syncErNodes(); erModal.classList.add('open'); erModal.setAttribute('aria-hidden', 'false'); }
+    function syncErNodes() { schema.tables.slice(0, 3).forEach(table => { const node = findErNode(table.name); if (!node) return; const header = node.querySelector('.er-node-head'); if (header) { header.replaceChildren(); const kind = document.createElement('span'); kind.textContent = '实体'; const title = document.createElement('span'); title.textContent = table.name; header.append(kind, title); } node.querySelectorAll('.er-field').forEach(field => field.remove()); table.fields.slice(0, 6).forEach(field => { const row = document.createElement('div'); row.className = 'er-field'; const marker = document.createElement('b'); marker.className = field.pk ? 'er-key' : ''; marker.textContent = field.pk ? '◆' : '·'; const fieldName = document.createTextNode(` ${String(field.name)} `); const type = document.createElement('em'); type.textContent = `${String(field.type || 'TEXT')}${field.length ? `(${String(field.length)})` : ''}`; row.append(marker, fieldName, type); node.appendChild(row); }); }); }
+    function openEr() { if (window.renderErFromSchema) window.renderErFromSchema(); else syncErNodes(); erModal.classList.add('open'); erModal.setAttribute('aria-hidden', 'false'); }
     function closeEr() { erModal.classList.remove('open'); erModal.setAttribute('aria-hidden', 'true'); }
     document.querySelector('#erBtn').addEventListener('click', openEr); document.querySelector('#erClose').addEventListener('click', closeEr); erModal.addEventListener('click', event => { if (event.target === erModal) closeEr(); });
-    function updateErLines() { const read = name => { const node = document.querySelector(`[data-node="${name}"]`); return { x: parseFloat(node.style.left) || 0, y: parseFloat(node.style.top) || 0, w: node.offsetWidth || 178, h: node.offsetHeight || 150 }; }; const students = read('students'); const enrollments = read('enrollments'); const courses = read('courses'); const sx = students.x + students.w, sy = students.y + students.h / 2, ex = enrollments.x, ey = enrollments.y + enrollments.h / 2, ecx = enrollments.x + enrollments.w, cy = enrollments.y + enrollments.h / 2, cx = courses.x, ccy = courses.y + courses.h / 2; document.querySelector('#studentLine').setAttribute('d', `M ${sx} ${sy} C ${(sx + ex) / 2} ${sy}, ${(sx + ex) / 2} ${ey}, ${ex} ${ey}`); document.querySelector('#studentLabel').setAttribute('x', (sx + ex) / 2 - 10); document.querySelector('#studentLabel').setAttribute('y', (sy + ey) / 2 - 8); document.querySelector('#courseLine').setAttribute('d', `M ${ecx} ${cy} C ${(ecx + cx) / 2} ${cy}, ${(ecx + cx) / 2} ${ccy}, ${cx} ${ccy}`); document.querySelector('#courseLabel').setAttribute('x', (ecx + cx) / 2 - 10); document.querySelector('#courseLabel').setAttribute('y', (cy + ccy) / 2 - 8); }
+    function updateErLines() { const read = name => { const node = findErNode(name); if (!node) return null; return { x: parseFloat(node.style.left) || 0, y: parseFloat(node.style.top) || 0, w: node.offsetWidth || 178, h: node.offsetHeight || 150 }; }; const students = read('students'); const enrollments = read('enrollments'); const courses = read('courses'); if (!students || !enrollments || !courses) return; const sx = students.x + students.w, sy = students.y + students.h / 2, ex = enrollments.x, ey = enrollments.y + enrollments.h / 2, ecx = enrollments.x + enrollments.w, cy = enrollments.y + enrollments.h / 2, cx = courses.x, ccy = courses.y + courses.h / 2; const studentLine = document.querySelector('#studentLine'); const studentLabel = document.querySelector('#studentLabel'); const courseLine = document.querySelector('#courseLine'); const courseLabel = document.querySelector('#courseLabel'); if (studentLine) studentLine.setAttribute('d', `M ${sx} ${sy} C ${(sx + ex) / 2} ${sy}, ${(sx + ex) / 2} ${ey}, ${ex} ${ey}`); if (studentLabel) { studentLabel.setAttribute('x', (sx + ex) / 2 - 10); studentLabel.setAttribute('y', (sy + ey) / 2 - 8); } if (courseLine) courseLine.setAttribute('d', `M ${ecx} ${cy} C ${(ecx + cx) / 2} ${cy}, ${(ecx + cx) / 2} ${ccy}, ${cx} ${ccy}`); if (courseLabel) { courseLabel.setAttribute('x', (ecx + cx) / 2 - 10); courseLabel.setAttribute('y', (cy + ccy) / 2 - 8); } }
     document.querySelector('#importErBtn').addEventListener('click', () => { document.querySelector('#erFile').click(); });
     function xmlEscape(value) { return String(value).replace(/[<>&'"]/g, character => ({ '<':'&lt;', '>':'&gt;', '&':'&amp;', "'":'&apos;', '"':'&quot;' }[character])); }
     function erSvgMarkup() { const canvas = document.querySelector('#erCanvas'); const width = Math.max(760, canvas.scrollWidth || 760); const height = Math.max(510, canvas.scrollHeight || 510); const lines = Array.from(canvas.querySelectorAll('.er-line')).map(line => `<path d="${line.getAttribute('d') || ''}" fill="none" stroke="#7790b0" stroke-width="1.5"/>`).join(''); const labels = Array.from(canvas.querySelectorAll('.er-line-label')).map(label => `<text x="${label.getAttribute('x') || 0}" y="${label.getAttribute('y') || 0}" fill="#7890ac" font-family="monospace" font-size="11">${xmlEscape(label.textContent)}</text>`).join(''); const nodes = Array.from(canvas.querySelectorAll('.er-node')).map(node => { const x = parseFloat(node.style.left) || 0; const y = parseFloat(node.style.top) || 0; const title = node.querySelector('.er-node-head')?.textContent?.trim() || '实体'; const fields = Array.from(node.querySelectorAll('.er-field')).map((field, index) => { const text = field.textContent.trim(); return `<text x="${x + 12}" y="${y + 58 + index * 24}" fill="#536881" font-family="monospace" font-size="10">${xmlEscape(text)}</text>`; }).join(''); const height = 42 + Math.max(1, node.querySelectorAll('.er-field').length) * 24; return `<g><rect x="${x}" y="${y}" width="178" height="${height}" rx="10" fill="#fff" stroke="#c9d8eb"/><rect x="${x}" y="${y}" width="178" height="34" rx="10" fill="#eaf1ff"/><text x="${x + 10}" y="${y + 22}" fill="#315a9b" font-family="sans-serif" font-size="12" font-weight="700">${xmlEscape(title)}</text>${fields}</g>`; }).join(''); return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="100%" height="100%" fill="#f7f9fc"/>${lines}${labels}${nodes}</svg>`; }
     function downloadBlob(filename, blob) { const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = filename; link.click(); setTimeout(() => URL.revokeObjectURL(link.href), 500); }
-    window.queryPadErSvg = erSvgMarkup;
+    function activeErSvgMarkup() { return window.queryPadConceptErActive && typeof window.queryPadConceptErSvg === 'function' ? window.queryPadConceptErSvg() : erSvgMarkup(); }
+    window.queryPadErSvg = activeErSvgMarkup;
     window.showQueryPadToast = showToast;
-    function exportErSvg() { downloadBlob('querypad-er-diagram.svg', new Blob([erSvgMarkup()], { type:'image/svg+xml;charset=utf-8' })); showToast('ER 图 SVG 已导出'); }
-    function exportErPng() { const svgBlob = new Blob([erSvgMarkup()], { type:'image/svg+xml;charset=utf-8' }); const url = URL.createObjectURL(svgBlob); const image = new Image(); image.onload = () => { const canvas = document.createElement('canvas'); canvas.width = image.width * 2; canvas.height = image.height * 2; const context = canvas.getContext('2d'); context.scale(2, 2); context.drawImage(image, 0, 0); canvas.toBlob(blob => { if (blob) downloadBlob('querypad-er-diagram.png', blob); URL.revokeObjectURL(url); showToast('ER 图 PNG 已导出'); }, 'image/png'); }; image.onerror = () => { URL.revokeObjectURL(url); showToast('PNG 导出失败，请改用 SVG'); }; image.src = url; }
+    function exportErSvg() { downloadBlob('querypad-er-diagram.svg', new Blob([activeErSvgMarkup()], { type:'image/svg+xml;charset=utf-8' })); showToast('ER 图 SVG 已导出'); }
+    function exportErPng() { const svgBlob = new Blob([activeErSvgMarkup()], { type:'image/svg+xml;charset=utf-8' }); const url = URL.createObjectURL(svgBlob); const image = new Image(); image.onload = () => { const canvas = document.createElement('canvas'); canvas.width = image.width * 2; canvas.height = image.height * 2; const context = canvas.getContext('2d'); context.scale(2, 2); context.drawImage(image, 0, 0); canvas.toBlob(blob => { if (blob) downloadBlob('querypad-er-diagram.png', blob); URL.revokeObjectURL(url); showToast('ER 图 PNG 已导出'); }, 'image/png'); }; image.onerror = () => { URL.revokeObjectURL(url); showToast('PNG 导出失败，请改用 SVG'); }; image.src = url; }
     document.querySelector('#erFile').addEventListener('change', event => { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => { const canvas = document.querySelector('#erCanvas'); canvas.style.backgroundImage = `url("${reader.result}")`; canvas.style.backgroundRepeat = 'no-repeat'; canvas.style.backgroundPosition = 'center'; canvas.style.backgroundSize = 'contain'; canvas.dataset.importedImage = 'true'; }; reader.readAsDataURL(file); if (window.queryPadRecognizeEr) window.queryPadRecognizeEr(file); else showToast('识别模块尚未加载，请刷新页面'); });
     document.querySelector('#autoLayoutBtn').addEventListener('click', () => window.queryPadAutoLayout());
     document.querySelector('#exportErBtn').addEventListener('click', exportErPng);
@@ -1661,21 +2187,92 @@
     function openDesign() { renderDesign(); designModal.classList.add('open'); designModal.setAttribute('aria-hidden','false'); }
     function closeDesign() { designModal.classList.remove('open'); designModal.setAttribute('aria-hidden','true'); }
     document.querySelector('#designBtn').addEventListener('click', openDesign); document.querySelector('#designClose').addEventListener('click', closeDesign); designModal.addEventListener('click', event => { if (event.target === designModal) closeDesign(); });
-    document.querySelector('#addTableBtn').addEventListener('click', () => { let suffix = schema.tables.length + 1; let name = `table_${suffix}`; while (schema.tables.some(table => table.name === name)) name = `table_${++suffix}`; const table = { name, comment:'', fields:[{name:'id',type:'INT',length:'',pk:true,nullable:false,comment:'主键'}] }; try { window.queryPadEngine.execute(makeCreateSql(table)); } catch (error) { showToast(`建表失败：${error.message}`); return; } schema.tables.push(table); activeDesignTable = name; persistSchema(); renderDesign(); showToast(`已创建数据表：${name}`); });
+    document.querySelector('#addTableBtn').addEventListener('click', () => { let suffix = schema.tables.length + 1; let name = `table_${suffix}`; while (schema.tables.some(table => table.name === name)) name = `table_${++suffix}`; const table = { name, source:'designer', comment:'', fields:[{name:'id',type:'INT',length:'',pk:true,nullable:false,comment:'主键'}] }; try { window.queryPadEngine.execute(makeCreateSql(table)); } catch (error) { showToast(`建表失败：${error.message}`); return; } schema.tables.push(table); activeDesignTable = name; persistSchema(); renderDesign(); showToast(`已创建数据表：${name}`); });
     document.querySelector('#addFieldBtn').addEventListener('click', () => { currentDesignTable().fields.push({name:`field_${currentDesignTable().fields.length + 1}`,type:'VARCHAR',length:'50',pk:false,nullable:true,defaultValue:'',comment:''}); persistSchema(); renderDesign(); showToast('已添加字段'); });
-    document.querySelector('#addRelationBtn').addEventListener('click', () => { const first = schema.tables.find(table => table.name === 'enrollments') || schema.tables[0]; const target = schema.tables.find(table => table.name !== first.name) || schema.tables[0]; schema.relations = schema.relations || []; schema.relations.push({ fromTable:first.name, fromColumn:first.fields[0]?.name || 'id', toTable:target.name, toColumn:target.fields[0]?.name || 'id', cardinality:'N:1' }); persistSchema(); renderDesign(); showToast('已添加表关系'); });
+    document.querySelector('#addRelationBtn').addEventListener('click', () => { const first = schema.tables.find(table => table.name === 'enrollments' && schema.tables.some(target => target.name !== table.name && table.fields.some(field => field.name.toLowerCase() === `${target.name.toLowerCase()}_id`))) || schema.tables[0]; const target = schema.tables.find(table => table.name !== first?.name && first?.fields.some(field => field.name.toLowerCase() === `${table.name.toLowerCase()}_id`)) || schema.tables.find(table => table.name !== first?.name) || first; if (!first || !target) { showToast('请至少创建两张表后再添加关系'); return; } const fromColumn = first.fields.find(field => field.name.toLowerCase() === `${target.name.toLowerCase()}_id`) || first.fields.find(field => !field.pk) || first.fields[0]; const toColumn = target.fields.find(field => field.pk) || target.fields[0]; schema.relations = schema.relations || []; schema.relations.push({ fromTable:first.name, fromColumn:fromColumn?.name || '', toTable:target.name, toColumn:toColumn?.name || '', cardinality:'N:1' }); persistSchema(); renderDesign(); showToast('已添加表关系'); });
     document.querySelector('#normalFormBtn').addEventListener('click', checkNormalForm);
     document.querySelector('#dictBtn').addEventListener('click', () => { downloadText('querypad-data-dictionary.md', dataDictionary(), 'text/markdown'); showToast('数据字典已导出'); });
-    document.querySelector('#projectBtn').addEventListener('click', () => { const current = activeProject(); const snapshot = window.queryPadEngine?.snapshot ? Array.from(window.queryPadEngine.snapshot()) : null; downloadText('querypad-project.json', JSON.stringify({ project:'QueryPad 本地项目', version:2, projectData:{ id:current.id, name:current.name, updatedAt:current.updatedAt }, schema, sqliteSnapshot:snapshot, exportedAt:new Date().toISOString() }, null, 2)); showToast('项目及 SQLite 数据已导出'); });
+    document.querySelector('#projectBtn').addEventListener('click', () => { const data = exportProjectData(); if (data) downloadText('querypad-project.json', JSON.stringify(data, null, 2)); showToast('项目结构和 SQLite 数据已导出'); });
     document.querySelector('#importProjectBtn').addEventListener('click', () => document.querySelector('#projectFile').click());
-    document.querySelector('#projectFile').addEventListener('change', event => { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = async () => { try { const data = JSON.parse(reader.result); if (!data.schema || !Array.isArray(data.schema.tables) || !data.schema.tables.length) throw new Error('invalid'); saveProjects(); const importedId = `project-${Date.now().toString(36)}`; const imported = { id: importedId, name: data.projectData?.name || `导入项目 ${new Date().toLocaleDateString('zh-CN')}`, updatedAt: Date.now(), schema: data.schema }; projects.push(imported); activeProjectId = importedId; window.queryPadProjectId = importedId; schema = imported.schema; activeDesignTable = schema.active || schema.tables[0].name; storage.set(projectKey, projects); storage.set(activeProjectKey, activeProjectId); await window.queryPadEngineReady; if (window.queryPadEngine.switchProject) await window.queryPadEngine.switchProject(importedId); if (Array.isArray(data.sqliteSnapshot) && data.sqliteSnapshot.length) window.queryPadEngine.restoreSnapshot(Uint8Array.from(data.sqliteSnapshot)); else window.queryPadEngine.reset(); syncEngineTables(); persistSchema(); renderDesign(); renderProjectList(); showToast('项目及 SQLite 数据已导入'); } catch (_) { showToast('项目文件格式不正确'); } finally { event.target.value = ''; } }; reader.readAsText(file); });
+    document.querySelector('#projectFile').addEventListener('change', event => {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async () => {
+        let importedId = '';
+        let committed = false;
+        try {
+          const data = JSON.parse(reader.result);
+          if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('项目文件格式不正确');
+          const importedSchema = normalizeSchema(data.schema, { includeConceptLayout: true });
+          if (typeof data.sqlDraft !== 'undefined' && typeof data.sqlDraft !== 'string') throw new Error('SQL 草稿格式不正确');
+          if (typeof data.sqlDraft === 'string' && data.sqlDraft.length > 200000) throw new Error('SQL 草稿过大');
+          let importedBytes = null;
+          if (data.sqliteSnapshot !== undefined && data.sqliteSnapshot !== null) {
+            if (!Array.isArray(data.sqliteSnapshot) || data.sqliteSnapshot.length < 16 || data.sqliteSnapshot.length > 50 * 1024 * 1024 || data.sqliteSnapshot.some(value => !Number.isInteger(value) || value < 0 || value > 255)) throw new Error('SQLite 快照格式不正确');
+            importedBytes = Uint8Array.from(data.sqliteSnapshot);
+          }
+          const engine = await window.queryPadEngineReady;
+          const prepared = engine.prepareProjectSnapshot(importedBytes, importedSchema);
+          const previous = { id: activeProjectId, schema: cloneValue(schema), projects: cloneValue(projects), draft: editor.value, activeDesignTable, snapshot: engine.snapshot() };
+          importedId = `project-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+          const imported = { id: importedId, name: String(data.projectData?.name || `导入项目 ${new Date().toLocaleDateString('zh-CN')}`).replace(/[\u0000-\u001f\u007f]/g, '').slice(0, 120) || '导入项目', updatedAt: Date.now(), schema: importedSchema };
+          try {
+            if (engine.switchProject) await engine.switchProject(importedId);
+            engine.restoreSnapshot(prepared.snapshot);
+            projects = [...projects, imported];
+            activeProjectId = importedId;
+            window.queryPadProjectId = importedId;
+            schema = cloneValue(importedSchema);
+            activeDesignTable = schema.active || schema.tables[0].name;
+            editor.value = typeof data.sqlDraft === 'string' ? data.sqlDraft : '';
+            projects[projects.length - 1].schema = cloneValue(schema);
+            storage.set(projectKey, projects);
+            storage.set(activeProjectKey, activeProjectId);
+            storage.set(schemaKey, schema);
+            saveSql();
+            syncEngineTables();
+            renderDesign();
+            renderProjectList();
+            committed = true;
+            showToast('项目及 SQLite 数据已导入');
+          } catch (commitError) {
+            try {
+              if (engine.projectId !== previous.id && engine.switchProject) await engine.switchProject(previous.id);
+              engine.restoreSnapshot(previous.snapshot);
+              if (engine.deleteProjectSnapshot && importedId) await engine.deleteProjectSnapshot(importedId);
+            } catch (rollbackError) { console.error('项目导入回滚失败', rollbackError); }
+            projects = previous.projects;
+            activeProjectId = previous.id;
+            window.queryPadProjectId = previous.id;
+            schema = previous.schema;
+            activeDesignTable = previous.activeDesignTable;
+            editor.value = previous.draft;
+            storage.set(projectKey, projects);
+            storage.set(activeProjectKey, activeProjectId);
+            storage.set(schemaKey, schema);
+            saveSql();
+            throw commitError;
+          }
+        } catch (error) {
+          if (!committed) showToast(`项目导入失败：${error.message}`);
+        } finally {
+          event.target.value = '';
+        }
+      };
+      reader.readAsText(file);
+    });
     document.querySelector('#projectBtnTop').addEventListener('click', openProjects); document.querySelector('#projectClose').addEventListener('click', closeProjects); document.querySelector('#projectModal').addEventListener('click', event => { if (event.target.id === 'projectModal') closeProjects(); });
     document.querySelector('#resetPracticeData').addEventListener('click', () => {
-      if (!window.confirm('将练习数据库中的数据和通过 SQL 创建的临时表恢复到初始状态。项目、表结构、SQL 草稿、历史和练习进度会保留。继续吗？')) return;
+      if (!window.confirm('将恢复练习样例并删除直接通过 SQL 创建的临时表；设计器中的表结构、项目、SQL 草稿、历史和练习进度会保留。继续吗？')) return;
       try {
         window.queryPadEngine.reset();
+        const removedTables = new Set(schema.tables.filter(table => table.source === 'sql').map(table => table.name));
+        schema.tables = schema.tables.filter(table => table.source !== 'sql');
+        schema.relations = (schema.relations || []).filter(relation => !removedTables.has(relation.fromTable) && !removedTables.has(relation.toTable));
         syncEngineTables();
         renderTableCatalog();
+        renderDataPreview();
         status.textContent = '练习数据已重置';
         status.style.color = 'var(--green)';
         status.style.background = 'var(--green-soft)';
@@ -1686,9 +2283,11 @@
         showToast(`重置练习数据库失败：${error.message}`);
       }
     });
-    document.querySelector('#resetAllLocalData').addEventListener('click', () => {
+    document.querySelector('#resetAllLocalData').addEventListener('click', async () => {
       if (!window.confirm('此操作会删除本浏览器中本应用保存的数据库数据、项目、SQL 草稿、历史记录和练习进度，且无法撤销。确定全部重置吗？')) return;
       try {
+        await window.queryPadEngineReady;
+        await window.queryPadEngine.clearStoredSnapshots();
         const keys = [];
         for (let index = 0; index < window.localStorage.length; index += 1) {
           const key = window.localStorage.key(index);
@@ -1721,17 +2320,70 @@
     ['databaseTablesTab', 'databaseErTab', 'databaseDataTab'].forEach(id => { document.querySelector('#' + id).addEventListener('click', () => activateDatabaseTab(id)); });
     document.querySelector('#openDatabaseDesigner').addEventListener('click', () => { document.body.classList.remove('drawer-open'); openDesign(); });
     document.querySelector('#openDatabaseEr').addEventListener('click', () => { document.body.classList.remove('drawer-open'); openEr(); });
-    document.querySelector('#createProjectBtn').addEventListener('click', async () => { const input = document.querySelector('#projectNameInput'); const name = input.value.trim(); if (!name) { showToast('请输入项目名称'); return; } saveProjects(); const previous = { id:activeProjectId, schema }; const next = { id:`project-${Date.now()}`, name, updatedAt:Date.now(), schema:JSON.parse(JSON.stringify(defaultSchema)) }; projects.unshift(next); try { await window.queryPadEngineReady; if (window.queryPadEngine.switchProject) await window.queryPadEngine.switchProject(next.id); activeProjectId = next.id; window.queryPadProjectId = next.id; schema = next.schema; activeDesignTable = schema.tables[0].name; storage.set(schemaKey, schema); storage.set(activeProjectKey, activeProjectId); saveProjects(); input.value=''; renderProjectList(); syncEngineTables(); renderTableCatalog(); renderDesign(); showToast(`已创建项目：${name}`); } catch (error) { projects = projects.filter(project => project.id !== next.id); activeProjectId = previous.id; window.queryPadProjectId = previous.id; schema = previous.schema; renderProjectList(); showToast(`创建项目失败：${error.message}`); } });
-    document.querySelector('#exportCurrentProject').addEventListener('click', () => { const project = activeProject(); if (project) downloadText(`${project.name}.json`, JSON.stringify(project, null, 2)); showToast('当前项目已导出'); });
+     document.querySelector('#createProjectBtn').addEventListener('click', async () => {
+       const input = document.querySelector('#projectNameInput');
+       const name = input.value.trim();
+       if (!name) { showToast('请输入项目名称'); return; }
+       const engine = await window.queryPadEngineReady;
+       const previous = { id: activeProjectId, schema: cloneValue(schema), projects: cloneValue(projects), draft: editor.value, activeDesignTable, snapshot: engine.snapshot() };
+       const next = { id:`project-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, name: name.slice(0, 120), updatedAt:Date.now(), schema:normalizeSchema(defaultSchema, { includeConceptLayout: true }) };
+       try {
+         if (!saveSql() || !saveProjects()) throw new Error('当前项目无法保存，请检查浏览器存储空间');
+         if (engine.switchProject) await engine.switchProject(next.id);
+         projects = [next, ...projects];
+         activeProjectId = next.id;
+         window.queryPadProjectId = next.id;
+         schema = cloneValue(next.schema);
+         activeDesignTable = schema.tables[0].name;
+         editor.value = '';
+         storage.set(schemaKey, schema);
+         storage.set(activeProjectKey, activeProjectId);
+         saveSql();
+         syncEngineTables();
+         saveProjects();
+         input.value='';
+         renderProjectList();
+         renderTableCatalog();
+         renderDesign();
+         showToast(`已创建项目：${next.name}`);
+       } catch (error) {
+         try {
+           if (engine.projectId !== previous.id && engine.switchProject) await engine.switchProject(previous.id);
+           engine.restoreSnapshot(previous.snapshot);
+           if (engine.deleteProjectSnapshot) await engine.deleteProjectSnapshot(next.id);
+         } catch (restoreError) { console.error('创建项目回滚失败', restoreError); }
+         projects = previous.projects;
+         activeProjectId = previous.id;
+         window.queryPadProjectId = previous.id;
+         schema = previous.schema;
+         activeDesignTable = previous.activeDesignTable;
+         editor.value = previous.draft;
+         storage.set(projectKey, projects);
+         storage.set(activeProjectKey, activeProjectId);
+         storage.set(schemaKey, schema);
+         saveSql();
+         renderProjectList();
+         renderTableCatalog();
+         renderDesign();
+         showToast(`创建项目失败：${error.message}`);
+       }
+     });
+    function exportProjectData() { const project = activeProject(); if (!project) return null; return { project:'QueryPad 本地项目', version:2, projectData:{ id:project.id, name:project.name, updatedAt:project.updatedAt }, schema:JSON.parse(JSON.stringify(project.schema || schema)), sqlDraft:editor.value, sqliteSnapshot:Array.from(window.queryPadEngine.snapshot()), exportedAt:new Date().toISOString() }; }
+    window.queryPadExportCurrentProject = exportProjectData;
+    document.querySelector('#exportCurrentProject').addEventListener('click', () => { const data = exportProjectData(); if (data) downloadText(`${activeProject().name}.json`, JSON.stringify(data, null, 2)); showToast('项目结构和 SQLite 数据已导出'); });
     document.querySelector('#copyDesignSql').addEventListener('click', async () => { try { await navigator.clipboard.writeText(document.querySelector('#designSql').textContent); showToast('建表 SQL 已复制'); } catch (_) { showToast('请长按 SQL 内容复制'); } });
     if (!document.querySelector('#selfTestBtn')) { const testButton = document.createElement('button'); testButton.id = 'selfTestBtn'; testButton.className = 'design-tool'; testButton.textContent = '运行自检'; document.querySelector('#designModal .design-toolbar').appendChild(testButton); }
     document.querySelector('#selfTestBtn').addEventListener('click', () => { const result = window.queryPadSelfTest ? window.queryPadSelfTest() : null; if (result && result.failed) console.warn(result.detail); });
-    document.querySelector('#runDesignSql').addEventListener('click', () => { try { window.queryPadEngine.execute(document.querySelector('#designSql').textContent); showToast('SQLite 已执行建表 SQL'); } catch (error) { showToast(error.message); } });
-    if (/^select\b/i.test(editor.value.trim())) {
-      try { renderOfflineResult(window.queryPadEngine.execute(editor.value)); }
-      catch (error) { showError(error.message); }
+    const engineEnabledInput = document.querySelector('#engineEnabled');
+    engineEnabledInput.checked = offlineExecutionEnabled;
+    function updateOfflineExecutionState() {
+      ['#runBtn', '#mobileRun', '#runDesignSql', '#explainPlanBtn', '#selfTestBtn'].forEach(selector => { const button = document.querySelector(selector); if (button) button.disabled = !offlineExecutionEnabled || !offlineEngineInitialized; });
+      const message = document.querySelector('#engineMessage');
+      if (message && offlineEngineInitialized) message.textContent = offlineExecutionEnabled ? 'SQLite WASM 浏览器内引擎已就绪；支持本地查询与建表。' : '离线 SQL 执行已关闭；本地数据库数据仍保存在浏览器中。';
     }
-    document.querySelector('#engineMessage').textContent = 'SQLite WASM 浏览器内引擎已就绪；支持完整 SQLite 查询，并兼容常见 MySQL 建表选项、SHOW TABLES、DESC、LIMIT offset,count 等写法。';
+    engineEnabledInput.addEventListener('change', () => { offlineExecutionEnabled = engineEnabledInput.checked; storage.set('querypad-offline-execution-enabled', offlineExecutionEnabled); updateOfflineExecutionState(); showToast(offlineExecutionEnabled ? '离线 SQL 执行已启用' : '离线 SQL 执行已关闭'); });
+    updateOfflineExecutionState();
+    document.querySelector('#runDesignSql').addEventListener('click', () => { if (!offlineExecutionEnabled) { showToast('请先启用离线执行'); return; } try { syncEngineTables(); renderTableCatalog(); renderDataPreview(); showToast('表结构已同步；同名字段数据已保留'); } catch (error) { showToast(error.message); } });
     document.querySelector('.engine-status').innerHTML = '<i></i>SQLite WASM · 浏览器本地';
     if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(() => {});
     window.queryPadReady = true;
@@ -1749,9 +2401,10 @@
       }
 
       const runButton = document.querySelector('#runBtn');
-      runButton.disabled = false;
       runButton.innerHTML = '<span>▶</span> 运行 SQL';
-      if (/^(?:select|with|pragma|explain)\b/i.test(editor.value.trim())) {
+      offlineEngineInitialized = true;
+      updateOfflineExecutionState();
+      if (offlineExecutionEnabled && /^(?:select|with|pragma|explain)\b/i.test(editor.value.trim())) {
         try { renderOfflineResult(window.queryPadEngine.execute(editor.value)); }
         catch (error) { showError(error.message); }
       }
@@ -1759,8 +2412,11 @@
       else if (window.queryPadEngine.seedUpgraded) showToast('练习样例数据已扩充：120 名学生 · 40 门课程 · 360 条选课记录');
     }).catch(error => {
       console.error('SQLite 引擎初始化失败', error);
-      document.querySelector('#engineMessage').textContent = `SQLite 引擎加载失败：${error.message}`;
-      document.querySelector('#statusLabel').textContent = '引擎加载失败';
+      const fileProtocol = location.protocol === 'file:';
+      document.querySelector('#engineMessage').textContent = fileProtocol
+        ? '当前通过本地文件直接打开，浏览器会阻止 SQLite WASM 加载。请在项目目录运行 npm start，再访问 http://localhost:4173。'
+        : `SQLite 引擎加载失败：${error.message}`;
+      document.querySelector('#statusLabel').textContent = fileProtocol ? '请通过本地服务打开' : '引擎加载失败';
       document.querySelector('#runBtn').disabled = true;
     });
   </script>

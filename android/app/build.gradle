@@ -26,8 +26,17 @@ android {
             assets.exclude("android/**")
             assets.exclude("node_modules/**")
             assets.exclude(".git/**")
+            assets.exclude(".github/**")
             assets.exclude(".codex/**")
             assets.exclude(".agents/**")
+            assets.exclude("tests/**")
+            assets.exclude("deploy/**")
+            assets.exclude("server.js")
+            assets.exclude("package.json")
+            assets.exclude("package-lock.json")
+            assets.exclude("README.md")
+            assets.exclude("启动MySQL实验室.bat")
+            assets.exclude("*.log")
         }
     }
 }
