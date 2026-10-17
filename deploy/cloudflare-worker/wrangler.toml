@@ -1,6 +1,8 @@
 name = "querypad-ai"
 main = "worker.js"
 compatibility_date = "2024-11-01"
+# 发布到账号的 workers.dev 子域名，启用后会生成可访问的 Worker URL。
+workers_dev = true
 
 # ALLOWED_ORIGINS：允许调用该代理的网页来源，逗号分隔。
 # 请改成你的实际地址，避免他人直接盗用你的 DeepSeek 额度。
