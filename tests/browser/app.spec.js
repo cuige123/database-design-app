@@ -176,6 +176,65 @@ test('AI assistant renders text-event-stream answers as they arrive', async ({ p
   expect(errors).toEqual([]);
 });
 
+test('AI assistant can call DeepSeek directly from a static frontend with a streaming request', async ({ page }) => {
+  let requestData;
+  let authorization;
+  await page.route('https://api.deepseek.com/chat/completions', async route => {
+    if (route.request().method() === 'OPTIONS') {
+      await route.fulfill({
+        status:200,
+        headers:{
+          'Access-Control-Allow-Origin':'http://127.0.0.1:4173',
+          'Access-Control-Allow-Methods':'POST, OPTIONS',
+          'Access-Control-Allow-Headers':'authorization,content-type,accept'
+        }
+      });
+      return;
+    }
+    authorization = route.request().headers().authorization;
+    requestData = route.request().postDataJSON();
+    const body = 'data: {"choices":[{"delta":{"content":"DeepSeek 直连成功"}}]}\n\ndata: {"choices":[{"delta":{},"finish_reason":"stop"}]}\n\ndata: [DONE]\n\n';
+    await route.fulfill({
+      status:200,
+      contentType:'text/event-stream; charset=utf-8',
+      headers:{'Access-Control-Allow-Origin':'http://127.0.0.1:4173'},
+      body
+    });
+  });
+  const errors = await openApp(page);
+  await page.evaluate(() => {
+    window.queryPadAiDirect = true;
+    window.queryPadAiEndpoint = 'https://api.deepseek.com/chat/completions';
+    window.queryPadAiApiKey = 'test-browser-key';
+    window.queryPadAiModel = 'deepseek-test-model';
+  });
+  await page.locator('#aiAssistantBtn').click();
+  await chooseAiQuick(page, 'explain_sql');
+  await page.locator('#sqlEditor').fill('SELECT 1;');
+  await page.locator('#aiPrompt').fill('请解释这条语句');
+  await page.locator('#aiSend').click();
+  await expect(page.locator('#aiMessages .ai-message.assistant').last()).toContainText('DeepSeek 直连成功');
+  expect(authorization).toBe('Bearer test-browser-key');
+  expect(requestData.model).toBe('deepseek-test-model');
+  expect(requestData.stream).toBe(true);
+  expect(requestData.messages.at(-1).content).toContain('SELECT 1;');
+  expect(JSON.stringify(requestData)).not.toContain('test-browser-key');
+  expect(errors).toEqual([]);
+});
+
+test('AI direct mode explains how to configure a missing frontend key', async ({ page }) => {
+  const errors = await openApp(page);
+  await page.evaluate(() => {
+    window.queryPadAiDirect = true;
+    window.queryPadAiApiKey = 'PASTE_YOUR_DEEPSEEK_API_KEY_HERE';
+  });
+  await page.locator('#aiAssistantBtn').click();
+  await page.locator('#aiPrompt').fill('你好');
+  await page.locator('#aiSend').click();
+  await expect(page.locator('#aiMessages .ai-message.assistant').last()).toContainText('请先在 ai-config.js 中填写 DeepSeek API Key');
+  expect(errors).toEqual([]);
+});
+
 test('AI assistant scrolls its feature menu and suggestions and collapses them to expand the conversation', async ({ page }) => {
   const errors = await openApp(page);
   await page.setViewportSize({ width:390, height:844 });

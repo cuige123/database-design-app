@@ -1,9 +1,11 @@
-// AI 助手接口地址配置。
-//
-// 本地服务使用同源 Node 接口；部署到静态站点时使用 Cloudflare Worker。
-//
-// 不要把 DeepSeek API Key 填在这里：这个文件会被公开发布。密钥只能配置在服务端环境变量中。
+// AI 助手接口配置。
+// 部署为静态网页时，浏览器会直接请求 DeepSeek；填写密钥后，访问者可在开发者工具中看到它。
+// 本地 localhost 仍默认走 node server.js，避免把本地密钥放进网页配置。
+// 用自己的密钥替换下面的占位文本，然后重新部署网页。
 const isLocalServer = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+window.queryPadAiDirect = !isLocalServer;
 window.queryPadAiEndpoint = isLocalServer
   ? '/api/ai/chat'
-  : 'https://database-design-app.3259143991.workers.dev/api/ai/chat';
+  : 'https://api.deepseek.com/chat/completions';
+window.queryPadAiApiKey = 'PASTE_YOUR_DEEPSEEK_API_KEY_HERE';
+window.queryPadAiModel = 'deepseek-chat';

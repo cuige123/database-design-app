@@ -1,4 +1,4 @@
-const CACHE_NAME = 'querypad-offline-v42';
+const CACHE_NAME = 'querypad-offline-v43';
 const APP_SHELL = ['./', './index.html', './ai-config.js', './assistant.css', './ai-assistant.js', './manifest.json', './brand-logo.jpg', './offline-engine.js', './sqlite-engine.js', './vendor/sql.js/sql-wasm.js', './vendor/sql.js/sql-wasm.wasm', './er-recognizer.js', './er-editor.js', './concept-er-editor.js', './self-test.js', './fallback.js'];
 
 // 这些文件在部署后会更新，采用“网络优先”以保证刷新即可看到新版本；离线时回退到缓存。

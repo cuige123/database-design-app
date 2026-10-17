@@ -545,11 +545,11 @@
         </div>
         <div class="ai-head-tools"><button id="aiMinimize" type="button" aria-expanded="false" aria-controls="aiModal">收起</button><button class="ai-close" id="aiClose" type="button" aria-label="关闭 AI 助手">×</button></div>
       </header>
-      <div class="ai-connection" id="aiConnection" role="status"><span class="ai-status-dot"></span><span>通过 Node.js 服务端安全调用 DeepSeek；请在服务端配置 API Key。</span></div>
+      <div class="ai-connection" id="aiConnection" role="status"><span class="ai-status-dot"></span><span>正在读取 AI 配置…</span></div>
       <div class="ai-helper-content" id="aiHelperContent" tabindex="0" aria-label="辅导功能和示例问题，可在此区域内滚动浏览">
       <details class="ai-context-details">
         <summary><span id="aiCurrentContext">正在读取当前练习…</span><span>数据发送说明</span></summary>
-        <p id="aiContextSummary">每次提问只发送当前任务所需信息；不发送练习数据行或对话历史，API Key 由后端保管。</p>
+        <p id="aiContextSummary">每次提问只发送当前任务所需信息；不发送练习数据行或对话历史。网页直连模式下，API Key 会发送给模型服务并可被访问者查看。</p>
       </details>
       <section class="ai-feature-section" aria-labelledby="aiQuickTitle">
         <h3 class="ai-section-title ai-feature-title" id="aiQuickTitle">辅导功能 <span>选择后可修改问题再发送</span></h3>
@@ -596,7 +596,7 @@
     <section class="help-section"><h3>练习与 SQL 管理</h3><ul><li>“选择练习题”支持按题目、知识点和难度筛选；答错的题目可进入“复习错题”，通过后会更新本地进度。</li><li>“分级提示”逐步给出思路，不会直接展开完整答案；“上一题”“下一题”和“学习路径”用于切换练习。</li><li>编辑器可收藏 SQL、保存当前草稿，并自动保留最近 40 个本地版本；在“SQL 库”中可搜索、载入或取消收藏。</li><li>“执行计划”只分析单条 SELECT/WITH 查询，展示本地 SQLite 计划和通用索引建议，不会执行修改语句或创建索引。</li></ul></section>
     <section class="help-section"><h3>查看数据库与表结构</h3><ul><li>左侧数据库区域显示当前项目和表；点击顶部“表结构”打开侧栏。</li><li>侧栏支持“表结构”“ER 图”“数据预览”三个视图；点击字段可插入到 SQL 编辑区，数据预览可查看表数据并复制 INSERT 或 CSV。</li><li>侧栏中的“编辑数据表”和“打开 ER 图画布”可直接进入对应工具。</li><li>“环境说明”可查看本地引擎、数据保存位置和 MySQL 兼容范围；应用不会连接外部数据库。</li></ul></section>
   <section class="help-section"><h3>表结构设计器</h3><ul><li>“新建数据表”会把表加入当前项目，并同步到浏览器内的 SQLite 数据库；可添加、编辑和删除字段。</li><li>字段支持名称、类型、长度、主键、允许 NULL、默认值和备注；“表关系 / 外键”可维护表之间的关联和基数。</li><li>设计器会生成建表 SQL，可复制或点击“执行建表”同步到本地引擎；“导出数据字典”生成 Markdown 说明。</li><li>“基础结构检查”只提供结构建议，不等同于完整的 1NF、2NF、3NF 证明；“运行自检”用于检查页面功能状态。</li><li>“启用离线执行”可以暂时关闭或恢复本地 SQL 执行。</li></ul></section>
-    <section class="help-section"><h3>AI 学习助手</h3><ul><li>点击“AI 助手”打开对话面板；上方辅导功能和示例问题可在区域内滚动，点“收起功能”可把更多空间留给回答；输入框固定在面板底部。</li><li>九项辅导功能分别用于：检查表结构、分级提示、解释 SQL、诊断错误、修正 SQL、生成本题参考 SQL、分析错题、生成举一反三练习和自由提问。</li><li>选择功能或点击“试试这样问”后，问题会填入输入框供你修改；点击“发送”才会提交。对话记录可以清空；收起面板可返回工作台。</li><li>分级提示按 1 至 3 级逐步提供思路并在本地记录进度。错误诊断要求当前 SQL 与最近一次失败语句一致；自动修正会展示 SQL 差异，只有点击“替换为修正 SQL”才会写回编辑器。</li><li>AI 生成的个性化练习需要点击“保存为练习”后才加入题库。AI 回答仅供参考，不会自动执行 SQL。</li><li>提问会按任务发送所需的 SQL、练习要求、错题统计或表结构；不发送数据库数据行或对话历史。API Key 由服务端保管。</li></ul></section>
+    <section class="help-section"><h3>AI 学习助手</h3><ul><li>点击“AI 助手”打开对话面板；上方辅导功能和示例问题可在区域内滚动，点“收起功能”可把更多空间留给回答；输入框固定在面板底部。</li><li>九项辅导功能分别用于：检查表结构、分级提示、解释 SQL、诊断错误、修正 SQL、生成本题参考 SQL、分析错题、生成举一反三练习和自由提问。</li><li>选择功能或点击“试试这样问”后，问题会填入输入框供你修改；点击“发送”才会提交。对话记录可以清空；收起面板可返回工作台。</li><li>分级提示按 1 至 3 级逐步提供思路并在本地记录进度。错误诊断要求当前 SQL 与最近一次失败语句一致；自动修正会展示 SQL 差异，只有点击“替换为修正 SQL”才会写回编辑器。</li><li>AI 生成的个性化练习需要点击“保存为练习”后才加入题库。AI 回答仅供参考，不会自动执行 SQL。</li><li>提问会按任务发送所需的 SQL、练习要求、错题统计或表结构；不发送数据库数据行或对话历史。网页直连模式会向 DeepSeek 发送 API Key，网页访问者可以查看该密钥。</li></ul></section>
     <section class="help-section"><h3>ER 图设计器</h3><ul><li>“表 ER 图”显示数据表、字段和外键；“概念 ER 图”采用 Chen 记法，以矩形实体、椭圆属性和菱形关系展示结构。</li><li>拖动图形可调整位置；概念图中可新建实体、添加或删除属性、编辑表结构、连接实体、编辑或删除关系。双击实体可添加属性，双击关系菱形可修改名称和基数。</li><li>可使用工具栏自动布局、放大、缩小或重置缩放；也支持 Ctrl+滚轮缩放。PNG/SVG 导出采用当前图表视图。</li><li>表结构和关系会与当前项目关联；布局保存在本机浏览器。</li></ul></section>
     <section class="help-section"><h3>导入图片与识别</h3><p>在 ER 图设计器选择“导入图片 / OCR”。普通浏览器目前只检测版面候选框，不识别图片文字和关系，生成的实体与字段需手动核对。Android 环境可调用设备 OCR，识别内容仍建议复核。</p></section>
     <section class="help-section"><h3>项目与本地数据</h3><ul><li>“项目”可新建和切换工作项目；项目分别保存表结构、ER 图布局和 SQL 草稿。</li><li>练习数据、运行记录和学习进度保存在当前浏览器，关闭页面后通常仍可继续使用，不会自动同步到其他设备。</li><li>“重置练习数据库”恢复练习样例；“重置全部本地数据”会清除本应用保存的数据，执行前会再次确认。</li><li>可导入或导出项目 JSON，也可从项目窗口导出当前项目。重要数据建议定期导出备份。</li></ul></section>
@@ -617,7 +617,7 @@
   <script src="concept-er-editor.js"></script>
   <script src="self-test.js?v=2"></script>
   <script src="ai-config.js"></script>
-  <script src="ai-assistant.js?v=15"></script>
+  <script src="ai-assistant.js?v=16"></script>
   <script>
     const editor = document.querySelector('#sqlEditor');
     const toast = document.querySelector('#toast');

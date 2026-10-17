@@ -20,7 +20,7 @@
 - **移动端结果卡片**：窄屏下查询结果自动从表格切换为逐行卡片，避免横向滚动。
 - **可视化 ER 图设计**：包含表结构 ER 图和 Chen 记法概念 ER 图两种视图。概念视图使用矩形实体、椭圆属性、菱形关系，并可标注 1:1、1:N、N:1、N:N 基数；支持拖动布局、创建/编辑/删除实体、编辑/删除属性、创建/编辑/删除关系、进入表结构编辑器、主键标识、自动排列和放大缩小（按钮、Ctrl + 滚轮、触屏双指）。两种视图共用项目中的表与关系数据，布局保存在本地项目中。
 - **表结构与 SQL 辅助**：可编辑表和字段信息，生成建表 SQL 与数据字典；同步表结构时保留同名字段的数据、创建实际外键并校验约束。结构检查只检查主键和重复字段名，不声称能仅凭字段名验证 1NF、2NF 或 3NF。
-- **DeepSeek AI 助手**：提供当前练习的三级 AI 提示、SQL 自动修正与逐行差异对比、错题模式分析和个性化出题，也支持 SQL 解释、错误诊断和表结构建议。提示逐级解锁；修正 SQL 只有在用户确认后替换；新题先检查只读 SQL 并确认保存，再加入本地题库。快捷问题可编辑后再发送，前端按任务最小化请求，不发送练习数据行或对话历史，API Key 只保存在服务端环境变量中。
+- **DeepSeek AI 助手**：提供当前练习的三级 AI 提示、SQL 自动修正与逐行差异对比、错题模式分析和个性化出题，也支持 SQL 解释、错误诊断和表结构建议。提示逐级解锁；修正 SQL 只有在用户确认后替换；新题先检查只读 SQL 并确认保存，再加入本地题库。快捷问题可编辑后再发送，前端按任务最小化请求，不发送练习数据行或对话历史。本地 Node.js 模式把 API Key 放在服务端；静态网页直连模式从 `ai-config.js` 读取 API Key，网页访问者可以查看并使用它。
 - **自定义 AI 对话**：在 AI 助手中选择“自定义对话”，自由输入概念、SQL 思路或项目使用问题；按本次问题附带当前 SQL（可为空）、练习要求和表结构，不发送数据库数据行或旧聊天记录，也不会自动执行或改写 SQL。
 - **项目与图表管理**：支持在本地保存和切换独立项目草稿，导入和导出包含 SQLite 数据快照的项目，并按当前视图将 ER 图导出为 PNG 或 SVG。
 - **本地数据重置**：项目窗口可单独恢复练习数据库初始样例并保留项目/草稿/进度，也可清除本应用保存在当前浏览器中的全部本地数据；均需用户确认。
@@ -40,18 +40,18 @@ SQLite WASM 需要从 HTTP(S) 加载 WebAssembly 文件。直接以 `file://` �
 
 ### 使用本地静态服务器
 
-网页纯静态运行仍可用于 SQL 练习，但不能调用 AI。若要启用 AI 助手，请使用 Node.js 20 或更高版本启动同源后端：
+本地 Node.js 模式需要 Node.js 20 或更高版本启动同源后端，AI 密钥通过环境变量读取：
 
 ```powershell
 $env:DEEPSEEK_API_KEY="在服务器环境中配置你的新密钥"
 npm start
 ```
 
-然后访问 <http://localhost:4173/index.html>。部署到托管平台时，在平台服务端环境变量中设置 `DEEPSEEK_API_KEY`，并使用平台提供的 `PORT`；可选用 `DEEPSEEK_MODEL` 覆盖默认模型 `deepseek-flash`。不要把真实密钥写入源代码、网页或提交到 Git。
+然后访问 <http://localhost:4173/index.html>。本地 AI 请求由 Node.js 服务端转发，密钥放在 `DEEPSEEK_API_KEY` 环境变量中。部署到其他 Node 托管平台时，在平台服务端设置同名变量，并使用平台提供的 `PORT`；可选用 `DEEPSEEK_MODEL` 覆盖默认模型。
 
 ## 部署到 GitHub Pages
 
-前端是纯静态页面，可以直接部署到 GitHub Pages；AI 助手需要另配一个代理后端，因为 API Key 不能放进网页。
+前端是纯静态页面，可以部署到 GitHub Pages 或 Cloudflare Pages。当前配置为静态网页直接请求 DeepSeek API，不需要部署 Worker。直接调用时必须在 `ai-config.js` 填写密钥；该密钥会出现在公开网页的源代码和浏览器网络请求中，任何访客都能复制并使用。
 
 ### 第一步：部署前端
 
@@ -63,7 +63,7 @@ npm start
 
 页面内所有资源都使用相对路径，因此项目站点这种子路径部署可以直接工作，Service Worker 也能在子目录下正常注册和离线缓存。注意：`index.html` 和 `ai-config.js` 采用网络优先策略，部署后刷新即可看到新版本；其余资源由缓存版本号控制。
 
-### 第二步：部署 AI 代理（可选，但 AI 助手需要）
+### 可选：使用 Worker 代理代替网页直连
 
 GitHub Pages 不能运行服务端代码，因此用 Cloudflare Worker 承载 AI 代理，免费额度足够个人使用：
 
@@ -74,23 +74,23 @@ npx wrangler deploy
 npx wrangler secret put DEEPSEEK_API_KEY
 ```
 
-`wrangler.toml` 里的 `ALLOWED_ORIGINS` 必须改成你的实际来源（默认已包含 `https://cuige123.github.io` 和本机 `http://localhost:4173`），否则代理会返回 403；这是防止他人直接盗用额度的第一道限制。如需更换模型，取消注释 `DEEPSEEK_MODEL`。
+如果不希望将密钥放进网页，可部署 Worker 代理。`wrangler.toml` 里的 `ALLOWED_ORIGINS` 需要包含你的实际网站来源；Worker Secret 使用 `DEEPSEEK_API_KEY`。如需更换模型，取消注释 `DEEPSEEK_MODEL`。
 
-### 第三步：让网页指向代理
+配置网页直连
 
-编辑 `ai-config.js`，把地址改成刚部署的 Worker：
+编辑 `ai-config.js`，填写 DeepSeek API Key：
 
 ```js
-window.queryPadAiEndpoint = 'https://querypad-ai.<你的子域>.workers.dev/api/ai/chat';
+window.queryPadAiApiKey = '在这里粘贴你的 DeepSeek API Key';
 ```
 
-提交后工作流会自动重新发布。若只部署前端、不部署代理，AI 助手会显示无法连接的提示，其余功能不受影响。
+推送后 Pages 会自动重新发布。由于密钥在前端公开，使用前请在 DeepSeek 控制台设置消费上限；若不接受公开密钥，请改用上方 Worker 代理，并将 `queryPadAiDirect` 设为 `false`、把接口地址设为 Worker 的 `/api/ai/chat` 路由。
 
 ### 其他可选后端
 
 `server.js` 同样可以部署到任意 Node 托管平台。此时设置环境变量 `ALLOWED_ORIGINS`（逗号分隔，留空表示不启用跨域）即可让它在独立域名上为 GitHub Pages 提供 AI 接口，再在 `ai-config.js` 里填写该地址。
 
-安全提醒：任何情况下都不要把 DeepSeek API Key 写进前端代码、`ai-config.js` 或提交到 Git；应用级频率限制不能替代账户预算保护，请在 DeepSeek 控制台设置额度或消费告警。
+静态网页直连时，API Key 会公开给所有访客。设置消费上限并定期检查用量；怀疑密钥泄露时应立即在 DeepSeek 控制台撤销并重建。本项目静态页面默认使用直连模式；要切换成 Worker 代理，请将 `window.queryPadAiDirect` 设为 `false`，并把接口地址改为 Worker URL 加 `/api/ai/chat`。
 
 该 Node.js 服务同时提供网页静态文件和 `POST /api/ai/chat`，代理请求到 DeepSeek。服务端会校验并限制请求大小和任务数据、设置每 IP 每 15 分钟最多 20 次及每服务实例每小时最多 30 次的调用限制、限制模型回答长度并设置上游超时，不记录密钥或用户请求内容。部署在纯静态托管上时，需要另行部署此 Node.js 服务或编写对应的服务端函数，并把网页/API 配置到同源；仅上传前端文件无法调用模型。若面向公众开放，还应接入用户鉴权，并在模型服务商侧设置额度/消费告警；应用级频率限制不能代替账户预算保护。
 
@@ -100,7 +100,7 @@ window.queryPadAiEndpoint = 'https://querypad-ai.<你的子域>.workers.dev/api/
 | --- | --- |
 | `index.html` | 网页界面、题库和主要交互逻辑 |
 | `启动MySQL实验室.bat` | Windows 一键启动脚本：启动本地服务器并打开浏览器 |
-| `ai-config.js` | AI 接口地址配置（部署到其他域名时在此填写代理地址） |
+| `ai-config.js` | AI 接口模式、模型地址和前端直连密钥配置 |
 | `offline-engine.js` | 旧版练习数据种子和本地数据迁移兼容 |
 | `sqlite-engine.js` | SQLite WASM 数据库、MySQL 语法兼容和本地持久化 |
 | `vendor/sql.js/` | sql.js WASM/JavaScript 运行时和 MIT 许可证 |
@@ -119,7 +119,7 @@ window.queryPadAiEndpoint = 'https://querypad-ai.<你的子域>.workers.dev/api/
 
 ### AI 助手配置
 
-AI 请求发送到同源 `POST /api/ai/chat`，API Key 不会发送到浏览器。接口约定：
+本地 Node.js 模式向同源 `POST /api/ai/chat` 发送任务数据；静态网页直连模式则发送 OpenAI 兼容格式的流式请求到 DeepSeek。接口任务数据约定：
 
 - 设计建议和 SQL 生成：`{ "task": "design_review" | "generate_sql", "prompt": "...", "schema": { "tables": [...], "relations": [...] } }`
 - SQL 解释：`{ "task": "explain_sql", "prompt": "...", "sql": "..." }`
@@ -130,7 +130,7 @@ AI 请求发送到同源 `POST /api/ai/chat`，API Key 不会发送到浏览器�
 - 错题分析和个性化出题：`{ "task": "wrong_analysis" | "personalized_exercise", "prompt": "...", "learning": { ... }, "schema": { ... } }`。个性化出题要求模型返回 JSON 练习列表；每题包含 `title`、`topic`、`difficulty`、`description`、三个 `hints` 和只读参考 `sql`。
 - 成功响应：`{ "answer": "模型回答" }`；失败响应建议为 `{ "error": "可向用户展示的错误信息" }`。
 
-设计建议和 SQL 生成只传当前设计的表名、字段与关系；SQL 解释只传 SQL 文本；错误诊断发送失败 SQL、SQLite 错误文本和表结构，不发送练习数据或聊天历史。错误诊断需先运行一条失败的 SQL；修改编辑器中的 SQL 后，旧错误会清除。生成或诊断的 SQL 仅供检查，不会自动执行。请在 DeepSeek 控制台管理 API Key 和额度；如果密钥曾粘贴到聊天、代码仓库或其他不可信位置，应先撤销并重新创建，再只把新密钥配置到服务端环境变量。
+设计建议和 SQL 生成只传当前设计的表名、字段与关系；SQL 解释只传 SQL 文本；错误诊断发送失败 SQL、SQLite 错误文本和表结构，不发送练习数据或聊天历史。错误诊断需先运行一条失败的 SQL；修改编辑器中的 SQL 后，旧错误会清除。生成或诊断的 SQL 仅供检查，不会自动执行。请在 DeepSeek 控制台管理 API Key 和额度；如果密钥曾粘贴到聊天或公开仓库，应立即撤销并创建新密钥。
 
 AI 分级提示、自动修正、错题分析和个性化出题会按当前任务发送当前 SQL、题目说明或本地学习统计；错题分析只提交有限条错题记录，个性化出题只提交薄弱知识点、错误分类与当前表结构。以上任务都不发送数据库记录行或聊天历史。AI 自动修正不会运行结果对比，逐行差异只对照原 SQL 和模型建议；替换前请检查，运行验证仍由你决定。生成的新题保存在当前浏览器，可在题目列表继续选择；清理站点数据会移除这些本地题目。
 
