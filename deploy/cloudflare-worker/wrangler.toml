@@ -8,7 +8,7 @@ workers_dev = true
 # 请改成你的实际地址，避免他人直接盗用你的 DeepSeek 额度。
 # 本地开发时可临时加上 http://localhost:4173
 [vars]
-ALLOWED_ORIGINS = "https://cuige123.github.io,http://localhost:4173"
+ALLOWED_ORIGINS = "https://cuige123.github.io,https://cuige-mysql-lab.pages.dev,http://localhost:4173"
 
 # DEEPSEEK_MODEL = "deepseek-flash"
 
