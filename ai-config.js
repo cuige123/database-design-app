@@ -7,5 +7,5 @@ window.queryPadAiDirect = !isLocalServer;
 window.queryPadAiEndpoint = isLocalServer
   ? '/api/ai/chat'
   : 'https://api.deepseek.com/chat/completions';
-window.queryPadAiApiKey = 'PASTE_YOUR_DEEPSEEK_API_KEY_HERE';
+window.queryPadAiApiKey = 'sk-5e1339c5f73f49c284c4eb36b32c0671';
 window.queryPadAiModel = 'deepseek-chat';
